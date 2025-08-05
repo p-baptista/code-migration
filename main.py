@@ -17,17 +17,34 @@ def get_client_by_model(model_name):
 
 def save_result_to_file(input_path, language_name, model_name, result_content):
     try:
-        path_obj = Path(input_path)
+        has_think_tag = '<think>' in result_content
 
+        if has_think_tag:
+            processed_content = result_content.split('</think>', 1)[-1].lstrip()
+        else:
+            processed_content = result_content
+
+        path_obj = Path(input_path)
         repo_name = path_obj.parts[3]
         original_filename = path_obj.name
 
         output_dir = Path("output") / language_name / model_name / repo_name
         output_dir.mkdir(parents=True, exist_ok=True)
         output_file_path = output_dir / original_filename
-        output_file_path.write_text(result_content, encoding="utf-8")
+        
+        output_file_path.write_text(processed_content, encoding="utf-8")
 
+        if has_think_tag:
+            raw_output_dir = output_dir / "raw"
+            raw_output_dir.mkdir(parents=True, exist_ok=True)
+            raw_output_file_path = raw_output_dir / original_filename
+            raw_output_file_path.write_text(result_content, encoding="utf-8")
+            
         return str(output_file_path)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
     except IndexError:
         return (
