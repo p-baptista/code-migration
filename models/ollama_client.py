@@ -1,4 +1,5 @@
 import ollama
+import requests
 
 from models.base_client import BaseClient
 
@@ -6,6 +7,27 @@ from models.base_client import BaseClient
 class OllamaClient(BaseClient):
     def __init__(self):
         self.client = ollama
+
+    def start_ollama():
+        """Starts the Ollama server as a background process."""
+        try:
+            # Check if Ollama is already running
+            subprocess.run(["ollama"], capture_output=True, text=True, check=True)
+            print("Ollama is already running.")
+            return None
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("Starting Ollama server...")
+            process = subprocess.Popen(["ollama", "serve"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            time.sleep(5)  # Give the server a moment to start
+            print("Ollama server started.")
+            return process
+
+    def is_ollama_running(self):
+        try:
+            response = requests.get("http://localhost:11434")
+            return response.status_code == 200 and "Ollama is running" in response.text
+        except requests.ConnectionError:
+            return False
 
     def generate_prompt(self, template, **kwargs):
         formatted = template.format(**kwargs)
@@ -37,6 +59,8 @@ class OllamaClient(BaseClient):
                 NEW_LIB_NAME=args.NEW_LIB_NAME,
                 CODE_BEFORE_MIGRATION=input_code,
             )
+            self.client.pull(args.VERSION)
+            print(f"Pulled model {args.VERSION}")
             response = self.client.chat(model=args.VERSION, messages=prompt)
             return response["message"]["content"]
         except ValueError as e:

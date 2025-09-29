@@ -15,7 +15,7 @@ def get_client_by_model(model_name):
         raise Exception(f"Unsupported model: {model_name}")
 
 
-def save_result_to_file(input_path, language_name, model_name, result_content):
+def save_result_to_file(input_path, language_name, model_name, version_name, result_content):
     try:
         has_think_tag = '<think>' in result_content
 
@@ -28,23 +28,30 @@ def save_result_to_file(input_path, language_name, model_name, result_content):
         repo_name = path_obj.parts[3]
         original_filename = path_obj.name
 
-        output_dir = Path("output") / language_name / model_name / repo_name
+        output_dir = Path("output") / language_name / model_name / version_name / repo_name
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_file_path = output_dir / original_filename
         
+        output_file_path = output_dir / original_filename
+        counter = 1
+        
+        file_stem = output_file_path.stem
+        file_suffix = output_file_path.suffix
+        
+        while output_file_path.exists():
+            new_filename = f"{file_stem}({counter}){file_suffix}"
+            output_file_path = output_dir / new_filename
+            counter += 1
+            
         output_file_path.write_text(processed_content, encoding="utf-8")
 
         if has_think_tag:
             raw_output_dir = output_dir / "raw"
             raw_output_dir.mkdir(parents=True, exist_ok=True)
-            raw_output_file_path = raw_output_dir / original_filename
+            # Use the 'name' of the unique path for the raw file to ensure they match
+            raw_output_file_path = raw_output_dir / output_file_path.name
             raw_output_file_path.write_text(result_content, encoding="utf-8")
             
         return str(output_file_path)
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
 
     except IndexError:
         return (
@@ -76,6 +83,7 @@ def main():
             input_path=args.INPUT_PATH,
             language_name=args.LANGUAGE_NAME,
             model_name=args.MODEL,
+            version_name=args.VERSION,
             result_content=result,
         )
         print("\nMigração concluída com sucesso!")
