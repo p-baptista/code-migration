@@ -15,7 +15,7 @@ def get_client_by_model(model_name):
         raise Exception(f"Unsupported model: {model_name}")
 
 
-def save_result_to_file(input_path, language_name, model_name, version_name, result_content):
+def save_result_to_file(input_path, language_name, model_name, version_name, result_content, prompt_template):
     try:
         has_think_tag = '<think>' in result_content
 
@@ -28,7 +28,7 @@ def save_result_to_file(input_path, language_name, model_name, version_name, res
         repo_name = path_obj.parts[3]
         original_filename = path_obj.name
 
-        output_dir = Path("output") / language_name / model_name / version_name / repo_name
+        output_dir = Path("output") / language_name / model_name / version_name / prompt_template / repo_name
         output_dir.mkdir(parents=True, exist_ok=True)
         
         output_file_path = output_dir / original_filename
@@ -85,6 +85,7 @@ def main():
             model_name=args.MODEL,
             version_name=args.VERSION,
             result_content=result,
+            prompt_template=args.PROMPT
         )
         print("\nMigração concluída com sucesso!")
         print(f"Resultado salvo em: {saved_path}")

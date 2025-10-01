@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 import os
 
-def run_all_migrations(csv_path):
+def run_all_migrations(csv_path, prompt_template):
     """
     Reads a CSV file, creates a temporary file for the source code,
     and runs the main.py script for each row.
@@ -38,10 +38,10 @@ def run_all_migrations(csv_path):
                         language = "java"
                         old_lib = row['rmv_lib']
                         repo_name = row['repo']
-                        filename = f"java_mockito_easymock" + row['id']
+                        filename = f"java_{row['rmv_lib']}_{row['add_lib']}" + row['id']
                         source_code = row['before']
                         
-                        temp_source_file = temp_dir_path / 'input' / language / old_lib / repo_name / filename
+                        temp_source_file = temp_dir_path / 'input' / language / prompt_template / old_lib / repo_name / filename
 
                         parent_dir = temp_source_file.parent
 
@@ -59,7 +59,7 @@ def run_all_migrations(csv_path):
                             row['add_lib'],
                             "ollama",
                             "codeqwen:latest",
-                            "zero_shot",
+                            prompt_template,
                             str(temp_source_file)
                         ]
 
@@ -98,6 +98,10 @@ if __name__ == "__main__":
         "csv_file", 
         help="Path to the CSV file containing migration parameters."
     )
+    parser.add_argument(
+        "prompt_template", 
+        help="Prompt template name (zero_shot, one_shot or chain_of_thoughts)"
+    )
     args = parser.parse_args()
     
-    run_all_migrations(args.csv_file)
+    run_all_migrations(args.csv_file, args.prompt_template)
