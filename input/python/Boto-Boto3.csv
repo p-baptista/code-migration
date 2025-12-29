@@ -1,0 +1,3421 @@
+id,repo_name,commit_code,file_name,type,legacy_lib,target_lib,code_before,code_after
+1,ENCODE-DCC/encoded,efac433594736756def3c8e3daa797503585f7e8,src/encoded/commands/deploy.py,simple,boto,boto3,"from boto.ec2.blockdevicemapping import (
+    BlockDeviceMapping,
+    BlockDeviceType,
+)
+import boto.ec2
+import boto.exception","import boto3
+"
+2,ENCODE-DCC/encoded,efac433594736756def3c8e3daa797503585f7e8,src/encoded/commands/deploy.py,complex,boto,boto3,"conn = boto.ec2.connect_to_region(""us-west-2"", profile_name=profile_name)
+
+
+    domain = 'production' if profile_name == 'production' else 'instance'
+
+    if any(name == i.tags.get('Name')
+           for reservation in conn.get_all_instances()
+           for i in reservation.instances
+           if i.state != 'terminated'):","session = boto3.Session(region_name='us-west-2', profile_name=profile_name)
+    ec2 = session.resource('ec2')
+
+    domain = 'production' if profile_name == 'production' else 'instance'
+
+    if any(ec2.instances.filter(
+            Filters=[
+                {'Name': 'tag:Name', 'Values': [name]},
+                {'Name': 'instance-state-name',
+                 'Values': ['pending', 'running', 'stopping', 'stopped']},
+            ])):"
+3,ENCODE-DCC/encoded,efac433594736756def3c8e3daa797503585f7e8,src/encoded/commands/deploy.py,simple,boto,boto3,"reservation = conn.run_instances(
+        image_id=image_id,
+        instance_type=instance_type,
+        security_groups=security_groups,
+        user_data=user_data,
+        block_device_map=bdm,
+        instance_initiated_shutdown_behavior='terminate',
+        instance_profile_name='encoded-instance',","    reservation = ec2.create_instances(
+        ImageId=image_id,
+        MinCount=1,
+        MaxCount=1,
+        InstanceType=instance_type,
+        SecurityGroups=security_groups,
+        UserData=user_data,
+        BlockDeviceMappings=bdm,
+        instanceInitiatedShutdownBehavior='terminate',
+        IamInstanceProfile={
+            ""Name"": 'encoded-instance',
+        }"
+4,FCP-INDI/C-PAC,a0b38702cab01112752ba1870cb945946eef0388,CPAC/AWS/fetch_creds.py,complex,boto,boto3,"import boto
+import boto.s3.connection
+
+# Init variables
+cf = boto.s3.connection.OrdinaryCallingFormat()
+
+# Get AWS credentials if a creds_path is specified
+if creds_path:
+    aws_access_key_id, aws_secret_access_key = return_aws_keys(creds_path)
+
+# Init connection
+s3_conn = boto.connect_s3(aws_access_key_id, aws_secret_access_key,calling_format=cf)
+
+else:
+    s3_conn= boto.connect_s3(anon=True, calling_format=cf)
+
+try:
+    bucket = s3_conn.get_bucket(bucket_name)
+except S3ResponseError as exc:
+    err_msg = 'Unable to connect to bucket: %s; check credentials or ' \
+              'bucket name spelling and try again. Error message: %s' \","    try:
+        import boto3
+        import botocore
+    except ImportError as exc:
+        err_msg = 'Boto3 package is not installed - install boto3 and '\
+                  'try again.'
+        raise Exception(err_msg)
+
+    # Try and get AWS credentials if a creds_path is specified
+    if creds_path:
+        try:
+            aws_access_key_id, aws_secret_access_key = \
+                return_aws_keys(creds_path)
+        except Exception as exc:
+            err_msg = 'There was a problem extracting the AWS credentials '\
+                      'from the credentials file provided: %s. Error:\n%s'\
+                      % (creds_path, exc)
+            raise Exception(err_msg)
+        # Init connection
+        print 'Connecting to S3 bucket: %s with credentials from %s ...'\
+              % (bucket_name, creds_path)
+        # Use individual session for each instance of DataSink
+        # Better when datasinks are being used in multi-threading, see:
+        # http://boto3.readthedocs.org/en/latest/guide/resources.html#multithreading
+        session = boto3.session.Session(aws_access_key_id=aws_access_key_id,
+                                        aws_secret_access_key=aws_secret_access_key)
+        s3_resource = session.resource('s3', use_ssl=True)
+
+    # Otherwise, connect anonymously
+    else:
+        print 'Connecting to AWS: %s anonymously...' % bucket_name
+        session = boto3.session.Session()
+        s3_resource = session.resource('s3', use_ssl=True)
+        s3_resource.meta.client.meta.events.register('choose-signer.s3.*',
+                                                     botocore.handlers.disable_signing)
+
+    # Explicitly declare a secure SSL connection for bucket object
+    bucket = s3_resource.Bucket(bucket_name)
+
+    # And try fetch the bucket with the name argument
+    try:
+        s3_resource.meta.client.head_bucket(Bucket=bucket_name)
+    except botocore.exceptions.ClientError as exc:
+        error_code = int(exc.response['Error']['Code'])
+        if error_code == 403:
+            err_msg = 'Access to bucket: %s is denied; check credentials'\
+                      % bucket_name
+            raise Exception(err_msg)
+        elif error_code == 404:
+            err_msg = 'Bucket: %s does not exist; check spelling and try '\
+                      'again' % bucket_name
+            raise Exception(err_msg)
+        else:
+            err_msg = 'Unable to connect to bucket: %s. Error message:\n%s'\
+                      % (bucket_name, exc)
+    except Exception as exc:
+        err_msg = 'Unable to connect to bucket: %s. Error message:\n%s'\"
+5,GeoNode/geonode,e9658b4ef958b97b916091fea01e161f2c8d59f3,geonode/settings.py,simple,boto,boto3,"if S3_STATIC_ENABLED:
+    STATICFILES_LOCATION = 'static'
+    STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    STATIC_URL = ""https://%s/%s/"" % (AWS_S3_BUCKET_DOMAIN,
+                                     STATICFILES_LOCATION)
+
+if S3_MEDIA_ENABLED:
+    MEDIAFILES_LOCATION = 'media'
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    MEDIA_URL = ""https://%s/%s/"" % (AWS_S3_BUCKET_DOMAIN, MEDIAFILES_LOCATION)","if S3_STATIC_ENABLED:
+    STATICFILES_LOCATION = 'static'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STATIC_URL = ""https://%s/%s/"" % (AWS_S3_BUCKET_DOMAIN,
+                                     STATICFILES_LOCATION)
+
+if S3_MEDIA_ENABLED:
+    MEDIAFILES_LOCATION = 'media'
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    MEDIA_URL = ""https://%s/%s/"" % (AWS_S3_BUCKET_DOMAIN, MEDIAFILES_LOCATION)"
+6,GeoNode/geonode,e9658b4ef958b97b916091fea01e161f2c8d59f3,scripts/cloud/ec2.py,simple,boto,boto3,"import os, time, boto","import botocore
+
+import boto3"
+7,GeoNode/geonode,e9658b4ef958b97b916091fea01e161f2c8d59f3,scripts/cloud/ec2.py,complex,boto,boto3,"def set_alpha_ip():
+    config = readconfig()
+    conn = boto.connect_ec2()
+    # Assign elastic ip to instance
+    instance_id = config.get('ec2', 'INSTANCE')
+    conn.associate_address(instance_id=instance_id, public_ip=ALPHA_ELASTIC_IP)","def set_alpha_ip():
+    config = readconfig()
+
+
+    instance_id = config.get('ec2', 'INSTANCE')
+    ec2 = boto3.client('ec2')
+    try:
+        allocation = ec2.allocate_address(Domain='vpc')
+        response = ec2.associate_address(
+            AllocationId=allocation['AllocationId'],
+            InstanceId=instance_id,
+            PublicIp=ALPHA_ELASTIC_IP)
+        return response
+    except botocore.exceptions.ClientError as e:
+        print(e)
+        return None"
+8,GeoNode/geonode,e9658b4ef958b97b916091fea01e161f2c8d59f3,scripts/cloud/ec2.py,complex,boto,boto3,"def terminate():
+    config = readconfig()
+    instance_id = config.get('ec2', 'INSTANCE')
+    conn = boto.connect_ec2()
+    conn.get_all_instances()
+    instance = None
+    for reservation in conn.get_all_instances():
+        for ins in reservation.instances:
+            if ins.id == instance_id:
+                instance = ins
+
+    print 'Terminating instance'
+    instance.terminate()
+    # Give it 10 minutes to terminate
+    for i in range(120):
+        time.sleep(5)
+        instance.update()
+        print instance.state
+        if instance.state == ""terminated"":
+            config.set('ec2', 'HOST', '')
+            config.set('ec2', 'INSTANCE', '')
+            configfile = open(CONFIG_FILE, 'wb')
+            config.write(configfile)
+            configfile.close()
+            break
+
+if sys.argv[1] == ""launch_geonode"":
+    launch_geonode()
+elif sys.argv[1] == ""launch_base"":
+    launch_base()
+elif sys.argv[1] == ""set_alpha_ip"":
+    set_alpha_ip()
+elif sys.argv[1] == ""terminate"":
+    terminate()
+elif sys.argv[1] == ""host"":
+    config = readconfig()
+    print config.get('ec2', 'HOST')
+elif sys.argv[1] == ""key"":
+    config = readconfig()
+    print config.get('ec2', 'KEY_PATH')
+else:
+    print ""Usage:\n    python %s launch_base\n     python %s launch_geonode\n    python %s terminate"" % (sys.argv[0], sys.argv[0], sys.argv[0])","def terminate():
+    config = readconfig()
+    instance_id = config.get('ec2', 'INSTANCE')
+
+    ec2 = boto3.client('ec2')
+    ec2.terminate_instances(InstanceIds=[instance_id])
+
+    print(""Terminating instance..."")
+    wait_for_state(ec2, instance_id, 'terminated')
+    print(""Instance terminated."")
+
+    config.set('ec2', 'HOST', '')
+    config.set('ec2', 'INSTANCE', '')
+    configfile = open(CONFIG_FILE, 'wb')
+    config.write(configfile)
+    configfile.close()
+
+
+if __name__ == '__main__':
+    if sys.argv[1] == ""launch_geonode"":
+        launch_geonode()
+    elif sys.argv[1] == ""launch_base"":
+        launch_base()
+    elif sys.argv[1] == ""set_alpha_ip"":
+        set_alpha_ip()
+    elif sys.argv[1] == ""terminate"":
+        terminate()
+    elif sys.argv[1] == ""host"":
+        config = readconfig()
+        print config.get('ec2', 'HOST')
+    elif sys.argv[1] == ""key"":
+        config = readconfig()
+        print config.get('ec2', 'KEY_PATH')
+    else:
+        print(""Usage:\n    "" + 
+              ""python %s launch_base\n     "" +
+              ""python %s launch_geonode\n    "" +
+              ""python %s terminate"" % (sys.argv[0], sys.argv[0], sys.argv[0]))"
+9,GeoNode/geonode,e9658b4ef958b97b916091fea01e161f2c8d59f3,scripts/cloud/ec2.py,complex,boto,boto3,"if launch:
+        conn = boto.connect_ec2()
+        image = conn.get_image(MY_AMI)
+        security_groups = conn.get_all_security_groups()
+
+        try:
+            [geonode_group] = [x for x in security_groups if x.name == SECURITY_GROUP]
+        except ValueError:
+            # this probably means the security group is not defined
+            # create the rules programatically to add access to ports 21, 22, 80, 2300-2400, 8000, 8001, 8021 and 8080
+            geonode_group = conn.create_security_group(SECURITY_GROUP, 'Cool GeoNode rules')
+            geonode_group.authorize('tcp', 21, 21, '0.0.0.0/0') # Batch Upload FTP
+            geonode_group.authorize('tcp', 22, 22, '0.0.0.0/0') # SSH
+            geonode_group.authorize('tcp', 80, 80, '0.0.0.0/0') # Apache
+            geonode_group.authorize('tcp', 2300, 2400, '0.0.0.0/0') # Passive FTP 
+            geonode_group.authorize('tcp', 8000, 8001, '0.0.0.0/0') # Dev Django and Jetty
+            geonode_group.authorize('tcp', 8021, 8021, '0.0.0.0/0' ) # Batch Upload FTP
+            geonode_group.authorize('tcp', 8080, 8080, '0.0.0.0/0' ) # Tomcat
+
+        try:
+            [geonode_key] = [x for x in conn.get_all_key_pairs() if x.name == 'geonode']
+        except ValueError:
+            # this probably means the key is not defined
+            # get the first one in the belt for now:
+            print ""GeoNode file not found in the server""
+            geonode_key = conn.get_all_key_pairs()[0]
+
+        reservation = image.run(security_groups=[geonode_group,], key_name=geonode_key.name, instance_type=INSTANCE_TYPE)
+        instance = reservation.instances[0]
+
+        print ""Firing up instance""
+
+        # Give it 10 minutes to appear online
+        for i in range(120):
+            time.sleep(5)
+            instance.update()
+            print instance.state
+            if instance.state == ""running"":
+                break
+
+        if instance.state == ""running"":
+            dns = instance.dns_name
+            print ""Instance up and running at %s"" % dns
+
+        config.set('ec2', 'HOST', dns)
+        config.set('ec2', 'INSTANCE', instance.id)
+        writeconfig(config)
+        
+        print ""ssh -i %s ubuntu@%s"" % (KEY_PATH, dns)
+        print ""Terminate the instance via the web interface %s"" % instance","if not launch:
+        return
+
+    ec2 = boto3.client('ec2')
+    vpc_id = ec2.describe_vpcs().get('Vpcs', [{}])[0].get('VpcId', '')
+
+    try:
+        geonode_group = ec2.describe_security_groups(
+            GroupNames=[group_name])['SecurityGroups'][0]
+    except botocore.exceptions.ClientError:
+        # Create the security group
+        geonode_group = ec2.create_security_group(
+            GroupName=group_name, Description='GeoNode rules.', VpcId=vpc_id)
+        port_ranges = [
+            (21, 21),  # Batch upload FTP
+            (22, 22),  # SSH
+            (80, 80),  # Apache
+            (2300, 2400),  # Passive FTP
+            (8000, 8001),  # Dev Django and Jetty
+            (8021, 8021),  # Batch upload FTP
+            (8080, 8080),  # Tomcat
+        ]
+
+        for from_port, to_port in port_ranges:
+            ec2.authorize_security_group_ingress(
+                GroupId=geonode_group['GroupId'],
+                IpProtocol='tcp',
+                FromPort=from_port,
+                ToPort=to_port,
+                CidrIp='0.0.0.0/0')
+
+    try:
+        key_pairs = ec2.describe_key_pairs(KeyNames=[key_name])['KeyPairs']
+    except botocore.exceptions.ClientError:
+        # Key is not likely not defined
+        print(""GeoNode file not found in server."")
+        key_pairs = ec2.describe_key_pairs()['KeyPairs']
+
+    key = key_pairs[0] if len(
+        key_pairs) > 0 else ec2.create_key_pair(KeyName=key_name)
+    reservation = ec2.run_instances(
+        ImageId=ami,
+        InstanceType=instance_type,
+        KeyName=key['KeyName'],
+        MaxCount=1,
+        MinCount=1,
+        SecurityGroupIds=[
+            geonode_group['GroupId']])
+    instance_id = [instance['InstanceId']
+                   for instance in reservation['Instances']
+                   if instance['ImageId'] == ami][0]
+
+    print(""Firing up instance..."")
+    instance = wait_for_state(ec2, instance_id, 'running')
+    dns = instance['PublicDnsName']
+    print(""Instance running at %s"" % dns)
+
+    config.set('ec2', 'HOST', dns)
+    config.set('ec2', 'INSTANCE', instance_id)
+    writeconfig(config)
+
+    print(""ssh -i %s ubuntu@%s"" % (key_path, dns))
+    print(""Terminate the instance via the web interface."")
+
+    time.sleep(20)"
+10,GeoNode/geonode,e9658b4ef958b97b916091fea01e161f2c8d59f3,scripts/misc/upload.py,simple,boto,boto3,"import os, sys
+import boto
+from boto.s3.key import Key","import os.path
+import sys
+import boto3
+import botocore"
+11,GeoNode/geonode,e9658b4ef958b97b916091fea01e161f2c8d59f3,scripts/misc/upload.py,complex,boto,boto3,"bucket_name = sys.argv[1] 
+file_name = sys.argv[2] 
+
+conn = boto.connect_s3(os.environ['AWS_ACCESS_KEY_ID'], os.environ['AWS_SECRET_ACCESS_KEY'])
+bucket = conn.get_bucket(bucket_name)
+
+k = Key(bucket)
+k.key = file_name.split('/')[-1]
+k.set_contents_from_filename(file_name)
+k.set_acl('public-read')","def upload_file_s3(filename, bucket, obj_name=None):    """"""Upload a file to an S3 bucket    :param filename: File to upload    :param bucket: Bucket to upload to    :param object_name: S3 object name. If not specified, filename is used    :return None if upload was successful, otherwise the associated error code    """"""    if obj_name is None:        obj_name = filename    s3_client = boto3.client('s3')    try:        s3_client.upload_file(filename, bucket, obj_name)    except botocore.exceptions.ClientError as e:        error_code = e.response['Error']['Code']        return error_code    return Noneif __name__ == '__main__':    try:        _, bucket_name, filepath = sys.argv    except ValueError:        print(""Usage:\n    python %s bucket_name filepath"" % sys.argv[0])    filename = os.path.basename(filepath)    error = upload_file_s3(filepath, bucket_name)    if error is not None:        print(filename + "" failed uploading to "" +              bucket_name + "" with error "" + error)    else:        print(filename + "" uploaded to "" + bucket_name)"
+12,GoogleCloudPlatform/PerfKitBenchmarker,dd1c5edc171ecff03f438689e3829a3240c94b87,perfkitbenchmarker/scripts/object_storage_api_test_scripts/s3.py,complex,boto,boto3,"import boto_service
+
+FLAGS = flags.FLAGS
+
+class S3Service(boto_service.BotoService):
+  def __init__(self):
+    if FLAGS.host is not None:
+      logging.info('Will use user-specified host endpoint: %s', FLAGS.host)
+    super(S3Service, self).__init__('s3', host_to_connect=FLAGS.host)
+
+  def WriteObjectFromBuffer(self, bucket, object, stream, size):
+    stream.seek(0)
+
+    start_time = time.time()
+    object_uri = self._StorageURI(bucket, object)
+    key = object_uri.new_key()
+    if FLAGS.object_storage_class is not None:
+      key._set_storage_class(FLAGS.object_storage_class)
+    key.set_contents_from_file(stream, size=size)
+    latency = time.time() - start_time
+    return start_time, latency","import boto3
+
+import object_storage_interface
+
+FLAGS = flags.FLAGS
+
+
+class S3Service(object_storage_interface.ObjectStorageServiceBase):
+  """"""An interface to AWS S3, using the boto library.""""""
+
+  def __init__(self):
+    self.client = boto3.client('s3', region_name=FLAGS.region)
+
+  def ListObjects(self, bucket, prefix):
+    bucket_name = FLAGS.access_point_hostname or bucket
+    return self.client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+
+  def DeleteObjects(self, bucket, objects_to_delete, objects_deleted=None):
+    bucket_name = FLAGS.access_point_hostname or bucket
+    for object_name in objects_to_delete:
+      response = self.client.delete_object(Bucket=bucket_name, Key=object_name)
+      if response['ResponseMetadata']['DeleteMarker']:
+        if objects_deleted is not None:
+          objects_deleted.append(object_name)
+      else:
+        logging.exception(
+            'Encountered error while deleting object %s. '
+            'Response metadata: %s', object_name, response)
+
+  def WriteObjectFromBuffer(self, bucket, object_name, stream, size):
+    start_time = time.time()
+    bucket_name = FLAGS.access_point_hostname or bucket
+    stream.seek(0)
+    self.client.upload_fileobj(stream, bucket_name, object_name)
+    latency = time.time() - start_time
+    return start_time, latency
+
+  def ReadObject(self, bucket, object_name):
+    start_time = time.time()
+    bucket_name = FLAGS.access_point_hostname or bucket
+    self.client.get_object(Bucket=bucket_name, Key=object_name)
+
+
+
+
+
+    latency = time.time() - start_time"
+13,HDI-Project/ATM,86dda10cf51562e2d0d691a29aafa813eb46eecf,atm/worker.py,simple,boto,boto3,"from boto.s3.connection import Key as S3Key
+from boto.s3.connection import S3Connection",import boto3
+14,HDI-Project/ATM,86dda10cf51562e2d0d691a29aafa813eb46eecf,atm/worker.py,complex,boto,boto3,"conn = S3Connection(self.aws_config.access_key, self.aws_config.secret_key)
+        bucket = conn.get_bucket(self.aws_config.s3_bucket)
+","aws_access_key = None
+        aws_secret_key = None
+
+        if self.aws_config:
+            aws_access_key = self.aws_config.access_key
+            aws_secret_key = self.aws_config.secret_key
+
+        client = boto3.client(
+            's3',
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key,
+        )"
+15,HDI-Project/ATM,86dda10cf51562e2d0d691a29aafa813eb46eecf,atm/worker.py,complex,boto,boto3," kmodel = S3Key(bucket)
+        kmodel.key = aws_model_path
+        kmodel.set_contents_from_filename(local_model_path)
+        logger.info('Uploading model at %s to S3 bucket %s',
+                    self.aws_config.s3_bucket, local_model_path)
+
+        kmodel = S3Key(bucket)
+        kmodel.key = aws_metric_path
+        kmodel.set_contents_from_filename(local_metric_path)
+        logger.info('Uploading metrics at %s to S3 bucket %s',","        client.upload_file(aws_model_path, self.aws_config.bucket, aws_model_path)
+        LOGGER.info('Uploading model at %s to S3 bucket %s',
+
+
+                    self.aws_config.s3_bucket, local_model_path)
+
+        client.upload_file(aws_metric_path, self.aws_config.bucket, aws_metric_path)
+        LOGGER.info('Uploading metrics at %s to S3 bucket %s',"
+16,Scout24/aws-monocyte,680fb2e8001c0c15fb268dd6d5505ce70e77c9a9,src/integrationtest/python/handler/s3_tests_base.py,complex,boto,boto3,"def setUp(self):
+        self.s3_handler = s3_handler.Bucket(lambda region_name: region_name not in [
+            'cn-north-1', 'us-gov-west-1'])
+        self.prefix = 'test-' + hex(random.randint(0, 2**48))[2:] + '-'
+        self.our_buckets = []
+
+        def my_filter(old_function):
+            @wraps(old_function)
+            def new_function(*args):
+                conn, bucket, checked_buckets = args
+                if not bucket.name.startswith(self.prefix):
+                    # print(""skipping bucket {0}"".format(bucket.name))
+                    return
+                else:
+                    print(""processing {0}"".format(bucket.name))
+                checked_buckets = []
+                return old_function(conn, bucket, checked_buckets)
+
+            return new_function
+
+        self.s3_handler.check_if_unwanted_resource = my_filter(
+            self.s3_handler.check_if_unwanted_resource
+        )","def setUp(self):
+        self.s3_handler = s3_handler.Bucket(lambda region_name: region_name not in [
+            'cn-north-1', 'us-gov-west-1'])
+        self.prefix = 'test-' + hex(random.randint(0, 2**48))[2:] + '-'
+        self.our_buckets = []
+
+        def my_filter(old_function):
+            @wraps(old_function)
+            def new_function():
+                return [resource for resource in old_function()
+                        if resource.resource_id in self.our_buckets]
+
+
+
+
+
+
+
+            return new_function
+
+        self.s3_handler.fetch_unwanted_resources = my_filter(
+            self.s3_handler.fetch_unwanted_resources
+        )"
+17,Scout24/aws-monocyte,680fb2e8001c0c15fb268dd6d5505ce70e77c9a9,src/integrationtest/python/handler/s3_tests_base.py,complex,boto,boto3,"def tearDown(self):
+        for resource in self.our_buckets:
+            print(""to be deleted {0}"".format(resource.wrapped.name))
+            self.s3_handler.dry_run = False
+            self.s3_handler.delete(resource)","def tearDown(self):
+        for bucket_name in self.our_buckets:
+
+            self.s3_handler.dry_run = False
+            self.s3_handler.delete(bucket_name)
+
+    def connect_to_region(self, region_name):
+        return boto3.client('s3', region_name=region_name)"
+18,Scout24/aws-monocyte,680fb2e8001c0c15fb268dd6d5505ce70e77c9a9,src/integrationtest/python/handler/s3_tests_base.py,complex,boto,boto3," def _create_bucket(self, bucket_name, region_name, create_key=False):
+        conn = self.s3_handler.connect_to_region(region_name)
+
+
+        if region_name == 'us-east-1':
+            bucket = conn.create_bucket(self.prefix + bucket_name)
+        else:
+            bucket = conn.create_bucket(self.prefix + bucket_name,
+                                        location=region_name)
+        resource = Resource(resource=bucket,
+                            resource_type='s3.Bucket',
+                            resource_id='42',
+                            creation_date='2015-11-23',
+                            region=self.s3_handler.map_location(
+                                region_name))
+        self.our_buckets.append(resource)
+        if create_key:
+            key = bucket.new_key(key_name='mytestkey')
+            key.set_contents_from_string('test')
+        return bucket","    def _create_bucket(self, bucket_name, region_name, create_key=False):
+        bucket_name = self.prefix + bucket_name
+        client = self.connect_to_region(region_name)
+
+        if region_name == 'us-east-1':
+            client.create_bucket(Bucket=bucket_name)
+        else:
+            client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={'LocationConstraint': region_name})
+        self.our_buckets.append(bucket_name)
+
+
+
+
+
+
+
+        if create_key:
+            client.put_object(Bucket=bucket_name, Key='foobar')
+"
+19,Scout24/aws-monocyte,680fb2e8001c0c15fb268dd6d5505ce70e77c9a9,src/main/python/monocyte/handler/s3.py,simple,boto,boto3,"import ssl
+import boto
+from boto import s3
+from boto.exception import S3ResponseError
+import boto.s3.connection",import boto3
+20,Scout24/aws-monocyte,680fb2e8001c0c15fb268dd6d5505ce70e77c9a9,src/main/python/monocyte/handler/s3.py,complex,boto,boto3,"def fetch_regions(self):
+        return s3.regions()","def fetch_regions(self):
+        session = boto3.session.Session()
+        region_names = session.get_available_regions('s3')
+
+        # FIXME: Update parent class so we can just return the names
+        regions = []
+        from mock import Mock
+        for region_name in region_names:
+            region = Mock()
+            region.name = region_name
+            regions.append(region)
+        return regions"
+21,JulienBalestra/enjoliver,600c9d4ea360436be56a6d3e970420fb5d45ffb0,app/objs3.py,simple,boto,boto3,"from boto.s3.connection import S3Connection
+from boto.s3.key import Key",import boto3
+22,JulienBalestra/enjoliver,600c9d4ea360436be56a6d3e970420fb5d45ffb0,app/objs3.py,simple,boto,boto3,"self.conn = S3Connection(
+            aws_access_key_id=aws_id,
+            aws_secret_access_key=aws_secret)
+        self.bucket = self.conn.get_bucket(bucket_name)","self.s3 = boto3.resource('s3')
+        self.bucket = self.s3.Bucket(bucket_name)"
+23,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,cumulus/aws/ec2/__init__.py,complex,boto,boto3,"def get_easy_ec2(profile):
+    aws_access_key_id = profile['accessKeyId']
+    aws_secret_access_key = profile['secretAccessKey']
+    aws_region_name = profile['regionName']
+    aws_region_host = profile['regionHost']
+    ec2 = EasyEC2(aws_access_key_id, aws_secret_access_key,
+                  aws_region_name=aws_region_name,
+                  aws_region_host=aws_region_host)
+
+    return ec2","import boto3
+
+class ClientErrorCode:
+    AuthFailure  = 'AuthFailure'
+    InvalidParameterValue = 'InvalidParameterValue'
+
+def get_ec2_client(profile):
+    aws_access_key_id = profile['accessKeyId']
+    aws_secret_access_key = profile['secretAccessKey']
+    region_name = profile.get('regionName')
+
+    client = boto3.client(
+        'ec2', aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+        region_name=region_name)
+
+    return client"
+24,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/aws_test.py,simple,boto,boto3,from boto.exception import EC2ResponseError,"from botocore.exceptions import ClientError
+"
+25,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/aws_test.py,simple,boto,boto3,"def test_create_public_ips(self, generate_key_pair, EasyEC2):
+
+        instance = EasyEC2.return_value","def test_create_public_ips(self, generate_key_pair, get_ec2_client):
+
+        ec2_client = get_ec2_client.return_value"
+26,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/aws_test.py,simple,boto,boto3, instance.get_region.return_value = EasyDict({'endpoint': 'cornwall.ec2.amazon.com'}),"ec2_client.describe_regions.return_value = {
+            'Regions': [{
+                'RegionName': 'cornwall',
+                'Endpoint': 'cornwall.ec2.amazon.com'
+            }]
+        }"
+27,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/aws_test.py,complex,boto,boto3,"def test_update(self, EasyEC2, delay):
+        region_host = 'cornwall.ec2.amazon.com'
+        instance = EasyEC2.return_value
+        instance.get_region.return_value = EasyDict({'endpoint': region_host})","def test_update(self, get_ec2_client, delay):
+        region_host = 'cornwall.ec2.amazon.com'
+        ec2_client = get_ec2_client.return_value
+        ec2_client.describe_regions.return_value = {
+            'Regions': [{
+                'RegionName': 'cornwall',
+                'Endpoint': region_host
+            }]
+        }"
+28,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/aws_test.py,complex,boto,boto3," def test_delete(self, EasyEC2, generate_key_pair, delete_key_pair,
+                    get_easy_ec2, volume_get_easy_ec2):
+        region_host = 'cornwall.ec2.amazon.com'
+        instance = EasyEC2.return_value
+        instance.get_region.return_value = EasyDict({'endpoint': region_host})","def test_delete(self, get_ec2_client, generate_key_pair, delete_key_pair,
+                    aws_get_ec2_client, volume_get_ec2_client):
+        region_host = 'cornwall.ec2.amazon.com'
+        ec2_client = get_ec2_client.return_value
+        ec2_client.describe_regions.return_value = {
+            'Regions': [{
+                'RegionName': 'cornwall',
+                'Endpoint': region_host
+            }]
+        }"
+29,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/aws_test.py,complex,boto,boto3," def test_get(self, EasyEC2, generate_key_pair):
+        region_host = 'cornwall.ec2.amazon.com'
+        instance = EasyEC2.return_value
+        instance.get_region.return_value = EasyDict({'endpoint': region_host})","def test_get(self, get_ec2_client, generate_key_pair):
+        region_host = 'cornwall.ec2.amazon.com'
+        get_ec2_client = get_ec2_client.return_value
+        get_ec2_client.describe_regions.return_value = {
+            'Regions': [{
+                'RegionName': 'cornwall',
+                'Endpoint': region_host
+            }]
+        }"
+30,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/aws_test.py,complex,boto,boto3,"def test_running_instances(self, EasyEC2, generate_key_pair, get_easy_ec2):
+        region_host = 'cornwall.ec2.amazon.com'
+        instance = EasyEC2.return_value
+        instance.get_region.return_value = EasyDict({'endpoint': region_host})","def test_running_instances(self, get_ec2_client, generate_key_pair, aws_get_ec2_client):
+        region_host = 'cornwall.ec2.amazon.com'
+        ec2_client = get_ec2_client.return_value
+        ec2_client.describe_regions.return_value = {
+            'Regions': [{
+                'RegionName': 'cornwall',
+                'Endpoint': region_host
+            }]
+        }"
+31,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/aws_test.py,complex,boto,boto3,"def test_max_instances(self, EasyEC2, generate_key_pair, get_easy_ec2):
+        region_host = 'cornwall.ec2.amazon.com'
+        instance = EasyEC2.return_value
+        instance.get_region.return_value = EasyDict({'endpoint': region_host})","def test_max_instances(self, get_ec2_client, generate_key_pair, aws_get_ec2_client):
+        region_host = 'cornwall.ec2.amazon.com'
+        ec2_client = get_ec2_client.return_value
+        ec2_client.describe_regions.return_value = {
+            'Regions': [{
+                'RegionName': 'cornwall',
+                'Endpoint': region_host
+                }]
+        }"
+32,Kitware/cumulus,45070da903b75f226fe61cd86563c12b6581fe34,girder/cumulus/plugin_tests/cluster_test.py,complex,boto,boto3,"def test_create_using_aws_profile(self, EasyEC2, generate_key_pair):
+        # First create a profile
+        instance = EasyEC2.return_value
+        instance.get_region.return_value = EasyDict({'endpoint': 'cornwall.ec2.amazon.com'})","def test_create_using_aws_profile(self, get_ec2_client, generate_key_pair):
+        # First create a profile
+        region_host = 'cornwall.ec2.amazon.com'
+        ec2_client = get_ec2_client.return_value
+        ec2_client.describe_regions.return_value = {
+            'Regions': [{
+                'RegionName': 'cornwall',
+                'Endpoint': region_host
+                }]
+        }"
+33,Koed00/django-q,0b9df26218b950cd768e3434d76026c97cc15e01,django_q/brokers/aws_sqs.py,simple,boto,boto3,"import boto.sqs
+from boto.sqs.message import RawMessage","from boto3 import Session
+"
+34,MicroPyramid/django-email-gateway,ff1b7c817a46c8220e83cd159cef406abf1d4660,django_email_gateway/sending_mail.py,simple,boto,boto3,"import boto.ses
+
+import requests
+import sendgrid
+from django.core.mail import EmailMultiAlternatives
+from django.template import loader
+from django.conf import settings","import base64
+
+import requests
+
+from django.core.mail import EmailMultiAlternatives
+from django.template import loader
+from django.conf import settings
+import boto3
+from botocore.exceptions import ClientError"
+35,MicroPyramid/django-email-gateway,ff1b7c817a46c8220e83cd159cef406abf1d4660,django_email_gateway/sending_mail.py,complex,boto,boto3,"if mail_sender == 'AMAZON':
+        conn = boto.ses.connect_to_region(
+            settings.AWS_HOST_NAME,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+        )
+        conn.send_email(from_email, subject, html_content, [to_email], format='html')","if mail_sender == 'AMAZON':
+        client = boto3.client('ses',
+                              aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                              aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+                              )
+        recipients = [to_email]
+        if isinstance(to_email, list):
+            recipients = to_email
+        try:
+            response = client.send_email(
+                Destination={
+                    'ToAddresses': recipients,
+                    'CcAddresses': ccs,
+                    'BccAddresses': bccs
+                },
+                Message={
+                    'Body': {
+                        'Html': {
+                            'Charset': ""UTF-8"",
+                            'Data': htmly,
+                        }
+                    },
+                    'Subject': {
+                        'Charset': ""UTF-8"",
+                        'Data': subject,
+                    },
+                },
+                Source=from_email,
+            )
+            return {'message': 'Mail sent', 'data': response['ResponseMetadata']['RequestId']}
+        except ClientError as e:
+            raise e.response['Error']['Message']"
+36,MuckRock/muckrock,f480d38b0a730db715e50780b2c786f753fce304,muckrock/core/tasks.py,complex,boto,boto3,"def run(self):
+        """"""Task entry point""""""
+        with smart_open(
+            self.key, self.mode, s3_min_part_size=settings.AWS_S3_MIN_PART_SIZE
+        ) as out_file:
+            self.generate_file(out_file)
+        self.key.set_acl(""public-read"")
+
+
+
+        self.send_notification()","def run(self):
+        """"""Task entry point""""""
+        with smart_open(
+            self.key, self.mode, s3_min_part_size=settings.AWS_S3_MIN_PART_SIZE
+        ) as out_file:
+            self.generate_file(out_file)
+        
+        s3 = boto3.resource('s3')
+        obj = s3.ObjectAcl(self.bucket, self.file_key)
+        obj.put(ACL='public-read')
+        self.send_notification()"
+37,MuckRock/muckrock,f480d38b0a730db715e50780b2c786f753fce304,muckrock/core/utils.py,simple,boto,boto3,import boto,import boto3
+38,MuckRock/muckrock,f480d38b0a730db715e50780b2c786f753fce304,muckrock/core/utils.py,simple,boto,boto3,"def get_s3_storage_bucket():
+    """"""Return the S3 storage bucket""""""
+    conn = boto.connect_s3()
+    return conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)","def get_s3_storage_bucket():
+    """"""Return the S3 storage bucket""""""
+    s3 = boto3.resource(""s3"")
+    return s3.Bucket(settings.AWS_STORAGE_BUCKET_NAME)"
+39,MuckRock/muckrock,f480d38b0a730db715e50780b2c786f753fce304,muckrock/core/utils.py,simple,boto,boto3,"def clear_cloudfront_cache(file_names):
+    """"""Clear file from the cloudfront cache""""""
+    if not file_names:
+        # invalidation fails if file names is empty
+        return
+    cloudfront = boto.connect_cloudfront()","def clear_cloudfront_cache(file_names):
+    """"""Clear file from the cloudfront cache""""""
+    if not file_names:
+        # invalidation fails if file names is empty
+        return
+    cloudfront = boto3.client(""cloudfront"")"
+40,MuckRock/muckrock,f480d38b0a730db715e50780b2c786f753fce304,muckrock/foia/tasks.py,complex,boto,boto3,"    def process(log):
+        """"""Process the files""""""
+        log.append(""Start Time: %s"" % timezone.now())
+        conn = boto.connect_s3()
+        bucket = conn.get_bucket(settings.AWS_AUTOIMPORT_BUCKET_NAME)
+        storage_bucket = conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)
+        for key in bucket.list(prefix=""scans/"", delimiter=""/""):
+            if key.name == ""scans/"":
+                continue
+            # strip off 'scans/'
+            file_name = key.name[6:]
+
+            try:
+                foia_pks, file_datetime = parse_name(file_name)
+            except ValueError as exc:
+                s3_copy(bucket, key, ""review/%s"" % file_name)
+                s3_delete(bucket, key)
+                log.append(str(exc))
+                continue","def process(log):
+        """"""Process the files""""""
+        log.append(""Start Time: %s"" % timezone.now())
+        s3 = boto3.resource(""s3"")
+        bucket = s3.Bucket(settings.AWS_AUTOIMPORT_BUCKET_NAME)
+        storage_bucket = s3.Bucket(settings.AWS_STORAGE_BUCKET_NAME)
+        for obj in bucket.objects.filter(prefix=""scans/""):
+            if obj.key == ""scans/"":
+                continue
+            # strip off 'scans/'
+            file_name = obj.key[6:]
+
+            try:
+                foia_pks, file_datetime = parse_name(file_name)
+            except ValueError as exc:
+                s3_copy(bucket, obj.key, ""review/%s"" % file_name)
+                s3_delete(bucket, obj.key)
+                log.append(str(exc))
+                continue"
+41,MuckRock/muckrock,f480d38b0a730db715e50780b2c786f753fce304,muckrock/foia/tasks.py,simple,boto,boto3,"    conn = boto.connect_s3()
+    bucket = conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)"," s3 = boto3.resource(""s3"")
+    bucket = s3.Bucket(settings.AWS_STORAGE_BUCKET_NAME)"
+42,MuckRock/muckrock,f480d38b0a730db715e50780b2c786f753fce304,muckrock/task/tasks.py,simple,boto,boto3,"    conn = boto.connect_s3()
+    bucket = conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)
+    key = Key(bucket)
+    key.key = pdf_name
+    key.set_contents_from_file(bulk_pdf)
+    key.set_canned_acl(""public-read"")","    s3 = boto3.client(""s3"")
+    s3.upload_file(
+        bulk_pdf, settings.AWS_STORAGE_BUCKET_NAME, pdf_name,
+        ExtraArgs={'ACL': 'public-read'}
+    )"
+43,Netflix/security_monkey,b5eb10f43a1483be4a1063a7a7a002131d00e57e,security_monkey/common/utils.py,complex,boto,boto3,"def send_email(subject=None, recipients=[], html=""""):
+    """"""
+    Given a message, will send that message over SES or SMTP, depending upon how the app is configured.
+    """"""
+    plain_txt_email = ""Please view in a mail client that supports HTML.""
+    if app.config.get('EMAILS_USE_SMTP'):
+        try:
+            with app.app_context():
+                msg = Message(subject, recipients=recipients)
+                msg.body = plain_txt_email
+                msg.html = html
+                mail.send(msg)
+            app.logger.debug(""Emailed {} - {} "".format(recipients, subject))
+        except Exception, e:
+            m = ""Failed to send failure message with subject: {}\n{} {}"".format(subject, Exception, e)
+            app.logger.warn(m)
+            app.logger.warn(traceback.format_exc())
+
+    else:
+        try:
+            ses_region = app.config.get('SES_REGION', AWS_DEFAULT_REGION)
+            ses = boto.ses.connect_to_region(ses_region)
+        except Exception, e:
+            m = ""Failed to connect to ses using boto. Check your boto credentials. {} {}"".format(Exception, e)
+            app.logger.warn(m)
+            app.logger.warn(traceback.format_exc())
+            return
+
+        for email in recipients:
+            try:
+                ses.send_email(app.config.get('MAIL_DEFAULT_SENDER'), subject, html, email, format=""html"")
+                app.logger.debug(""Emailed {} - {} "".format(email, subject))
+            except Exception, e:
+                m = ""Failed to send failure message with subject: {}\n{} {}"".format(subject, Exception, e)
+                app.logger.warn(m)
+                app.logger.warn(traceback.format_exc())","def send_email(subject=None, recipients=None, html=""""):
+    """"""
+    Given a message, will send that message over SES or SMTP, depending upon how the app is configured.
+    """"""
+    recipients = recipients if recipients else []
+    plain_txt_email = ""Please view in a mail client that supports HTML.""
+    if app.config.get('EMAILS_USE_SMTP'):
+        try:
+            with app.app_context():
+                msg = Message(subject, recipients=recipients)
+                msg.body = plain_txt_email
+                msg.html = html
+                mail.send(msg)
+            app.logger.debug(""Emailed {} - {} "".format(recipients, subject))
+        except Exception, e:
+            m = ""Failed to send failure message with subject: {}\n{} {}"".format(subject, Exception, e)
+            app.logger.warn(m)
+            app.logger.warn(traceback.format_exc())
+
+    else:
+        if recipients:
+            try:
+                ses = boto3.client(""ses"", region_name=app.config.get('SES_REGION', AWS_DEFAULT_REGION))
+                ses.send_email(Source=app.config['MAIL_DEFAULT_SENDER'],
+                               Destination={""ToAddresses"": recipients},
+                               Message={
+                                   ""Subject"": {""Data"": subject},
+                                   ""Body"": {
+                                       ""Html"": {
+                                           ""Data"": html
+                                       }
+                                   }
+                               })
+
+            except Exception, e:
+                m = ""Failed to send failure message with subject: {}\n{} {}"".format(subject, Exception, e)
+                app.logger.warn(m)
+                app.logger.warn(traceback.format_exc())"
+44,Nextdoor/kingpin,d38157e086c5c96bfce992d05ebdea8029263021,kingpin/actors/aws/cloudformation.py,simple,boto,boto3,"self.ec2_conn = boto.ec2.connect_to_region(
+            region,
+            aws_access_key_id=key,
+            aws_secret_access_key=secret)
+        self.elb_conn = boto.ec2.elb.connect_to_region(
+            region,
+            aws_access_key_id=key,
+            aws_secret_access_key=secret)
+        self.cf_conn = boto.cloudformation.connect_to_region(
+            region,
+
+            aws_access_key_id=key,
+            aws_secret_access_key=secret)","self.ec2_conn = boto.ec2.connect_to_region(
+            region,
+            aws_access_key_id=key,
+            aws_secret_access_key=secret)
+        self.elb_conn = boto.ec2.elb.connect_to_region(
+            region,
+            aws_access_key_id=key,
+            aws_secret_access_key=secret)
+        self.cf3_conn = boto3.client(
+            'cloudformation',
+            region_name=region,
+            aws_access_key_id=key,
+            aws_secret_access_key=secret)"
+45,Nextdoor/kingpin,d38157e086c5c96bfce992d05ebdea8029263021,kingpin/actors/aws/cloudformation.py,simple,boto,boto3,"        try:
+            yield self.thread(
+                self.cf_conn.validate_template,
+                template_body=self._template_body,
+                template_url=self._template_url)
+        except BotoServerError as e:
+            msg = '%s: %s' % (e.error_code, e.message)
+
+            if e.status == 400:
+                raise InvalidTemplate(msg)"," try:
+            yield self.thread(self.cf3_conn.validate_template, **cfg)
+        except ClientError as e:
+            raise InvalidTemplate(e.message)"
+46,Nextdoor/kingpin,d38157e086c5c96bfce992d05ebdea8029263021,kingpin/actors/aws/cloudformation.py,simple,boto,boto3,"        try:
+            stack_id = yield self.thread(
+                self.cf_conn.create_stack,
+                self.option('name'),
+                template_body=self._template_body,
+                template_url=self._template_url,
+                parameters=self.option('parameters').items(),
+                disable_rollback=self.option('disable_rollback'),
+                timeout_in_minutes=self.option('timeout_in_minutes'),
+                capabilities=self.option('capabilities'))
+        except BotoServerError as e:
+            msg = '%s: %s' % (e.error_code, e.message)
+
+            if e.status == 400:
+                raise CloudFormationError(msg)
+
+            raise
+
+        self.log.info('Stack %s created: %s' % (self.option('name'), stack_id))
+        raise gen.Return(stack_id)","try:
+            stack = yield self.thread(
+                self.cf3_conn.create_stack,
+                StackName=self.option('name'),
+                Parameters=self._parameters,
+                DisableRollback=self.option('disable_rollback'),
+                TimeoutInMinutes=self.option('timeout_in_minutes'),
+                Capabilities=self.option('capabilities'),
+                **cfg)
+        except ClientError as e:
+            raise CloudFormationError(e.message)
+
+        self.log.info('Stack created: %s' % stack['StackId'])
+        raise gen.Return(stack['StackId'])"
+47,Nextdoor/kingpin,d38157e086c5c96bfce992d05ebdea8029263021,kingpin/actors/aws/cloudformation.py,simple,boto,boto3,"try:
+            ret = yield self.thread(
+                self.cf_conn.delete_stack, self.option('name'))
+        except BotoServerError as e:
+            msg = '%s: %s' % (e.error_code, e.message)
+
+            if e.status == 400:
+                raise CloudFormationError(msg)
+
+            raise
+        self.log.info('Stack %s delete requested: %s' %
+                      (self.option('name'), ret))
+        raise gen.Return(ret)","try:
+            ret = yield self.thread(
+                self.cf3_conn.delete_stack, StackName=self.option('name'))
+        except ClientError as e:
+            raise CloudFormationError(e.message)
+
+
+
+
+        req_id = ret['ResponseMetadata']['RequestId']
+        self.log.info('Stack delete requested: %s' % req_id)
+        raise gen.Return(req_id)"
+48,NixOS/nixops,a604876ceb8ef3ed28419aa8a5aaf1f7b24e3c56,nixops/resources/vpc.py,simple,boto,boto3,"def connect(self):
+        if self._conn: return
+        assert self.region
+        (access_key_id, secret_access_key) = nixops.ec2_utils.fetch_aws_secret_key(self.access_key_id)
+        self._conn = boto.vpc.connect_to_region(
+            region_name=self.region, aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key)"," def connect(self):
+        if self._client: return
+        assert self.region
+        (access_key_id, secret_access_key) = nixops.ec2_utils.fetch_aws_secret_key(self.access_key_id)
+        self._client = boto3.client('ec2', region_name=self.region, aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key)"
+49,OpenBounds/Processing,7e8a89c899f8ee63ae6780fe41179a7ea5243e85,upload_mbtiles.py,simple,boto,boto3,"from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+from boto.exception import S3ResponseError
+import boto","import boto3
+"
+50,OpenBounds/Processing,7e8a89c899f8ee63ae6780fe41179a7ea5243e85,upload_mbtiles.py,complex,boto,boto3,"def upload_tile(bucket, key_template, headers, tile_stuff, progress=True, retries=0):
+    try:
+        zoom, x, y, tile = tile_stuff
+        k = Key(bucket)
+        k.key = key_template.format(z=zoom, x=x, y=y)
+        for key, value in headers.items():
+            k.set_metadata(key, value)
+        k.set_contents_from_string(str(tile))","def upload_tile(s3, bucket, key_template, headers, tile_stuff, progress=True, retries=0):
+    try:
+        zoom, x, y, tile = tile_stuff
+        s3.put_object(Body=str(tile), 
+            Bucket=bucket,
+            Key=key_template.format(z=zoom, x=x, y=y), 
+            ContentType=headers.get(""Content-Type"", None),
+            ContentEncoding=headers.get(""Content-Encoding"", None),
+            CacheControl=headers.get(""Cache-Control"", None)
+        )"
+51,OpenBounds/Processing,7e8a89c899f8ee63ae6780fe41179a7ea5243e85,upload_mbtiles.py,simple,boto,boto3,"base_url = urlparse(s3_url)
+    conn = S3Connection(calling_format=boto.s3.connection.OrdinaryCallingFormat())
+    bucket = conn.get_bucket(base_url.netloc)","s3 = boto3.client('s3')
+    bucket = base_url.netloc"
+52,PUNCH-Cyber/stoq-plugins-public,398ed6f2f24a1449f4f9ff81a5fa21536df74263,connector/s3/s3/s3.py,simple,boto,boto3,"key = boto.s3.key.Key(self.bucket, filename)
+"," key = boto3.s3.key.Key(self.bucket, filename)"
+53,PUNCH-Cyber/stoq-plugins-public,398ed6f2f24a1449f4f9ff81a5fa21536df74263,connector/s3/s3/s3.py,simple,boto,boto3,"conn = boto.connect_s3(self.access_key, self.secret_key)","conn = boto3.connect_s3(self.access_key, self.secret_key)"
+54,piskvorky/smart_open,170e29532c359f9135c16422582ef28f5d286c6a,smart_open/tests/test_s3.py,complex,boto,boto3,"def create_bucket_and_key(bucket_name='mybucket', key_name='mykey', contents=None):
+    # fake connection, bucket and key
+    _LOGGER.debug('%r', locals())
+    conn = boto.connect_s3()
+    conn.create_bucket(bucket_name)
+    mybucket = conn.get_bucket(bucket_name)
+    mykey = boto.s3.key.Key()
+    mykey.name = key_name
+    mykey.bucket = mybucket","def create_bucket_and_key(bucket_name='mybucket', key_name='mykey', contents=None):
+    # fake connection, bucket and key
+    _LOGGER.debug('%r', locals())
+    s3 = boto3.resource('s3')
+    mybucket = s3.create_bucket(Bucket=bucket_name)
+    mykey = s3.Object(bucket_name, key_name)"
+55,SUSE/Enceladus,e2d8933835954af2e15e8c30e6e8b58511fa4cb4,ec2utils/ec2utilsbase/lib/ec2utils/ec2utils.py,simple,boto,boto3,"import boto
+import boto.ec2",import boto3
+56,SUSE/Enceladus,e2d8933835954af2e15e8c30e6e8b58511fa4cb4,ec2utils/ec2utilsbase/lib/ec2utils/ec2utilsutils.py,simple,boto,boto3,"if self.region:
+            self.ec2 = boto.ec2.connect_to_region(
+                self.region,
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key)","if self.region:
+            self.ec2 = boto3.client(
+
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
+                region_name=self.region,
+                service_name='ec2')"
+57,SUSE/Enceladus,e2d8933835954af2e15e8c30e6e8b58511fa4cb4,ec2utils/ec2utilsbase/lib/ec2utils/ec2utilsutils.py,complex,boto,boto3,"def get_regions(command_args):
+    """"""Return a list of connected regions if no regions are specified
+       on the command line""""""
+    regions = None
+    if command_args.regions:
+        regions = command_args.regions.split(',')
+    else:
+        regions = []
+        regs = boto.ec2.regions()
+
+
+
+
+        for reg in regs:
+            if reg.name in ['us-gov-west-1', 'cn-north-1']:
+
+                if command_args.verbose:
+                    print 'Not processing disconnected region: %s' % reg.name
+                continue
+            regions.append(reg.name)
+    return regions","def get_regions(command_args, access_key, secret_key):
+    """"""Return a list of connected regions if no regions are specified
+       on the command line""""""
+    regions = None
+    if command_args.regions:
+        regions = command_args.regions.split(',')
+    else:
+        regions = []
+        regs = boto3.client(
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key,
+                    region_name='us-east-1',
+                    service_name='ec2').describe_regions()['Regions']
+        for reg in regs:
+            region_name = reg['RegionName']
+            if region_name in ['us-gov-west-1', 'cn-north-1']:
+                if command_args.verbose:
+                    print 'Not processing disconnected region: %s' % reg.name
+                continue
+            regions.append(region_name)
+    return regions"
+58,StreetVoice/django-elastic-transcoder/,d563d1abfb1c7dfdd2f78ddb6702b9ad5d67d2bf,dj_elastictranscoder/transcoder.py,simple,boto,boto3,"from boto import elastictranscode
+","from boto3.session import Session
+"
+59,StreetVoice/django-elastic-transcoder/,d563d1abfb1c7dfdd2f78ddb6702b9ad5d67d2bf,dj_elastictranscoder/transcoder.py,complex,boto,boto3," def encode(self, input_name, outputs):
+        encoder = elastictranscoder.connect_to_region(
+            self.aws_region, 
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key)
+
+        self.message = encoder.create_job(self.pipeline_id, input_name, outputs=outputs)","boto_session = Session(
+
+
+
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key,
+            region_name=self.aws_region,
+        )
+        self.client = boto_session.client('elastictranscoder')
+
+    def encode(self, input_name, outputs, **kwargs):
+        self.message = self.client.create_job(
+            PipelineId=self.pipeline_id,
+            Input=input_name,
+            Outputs=outputs,
+            **kwargs
+        )"
+60,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,amira/s3.py,simple,boto,boto3,"import boto
+from boto.s3.key import Key  
+def __init__(self):
+        self._s3_connection = boto.connect_s3()","import boto3
+    def __init__(self):
+        self._s3_connection = boto3.client('s3')"
+61,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,amira/s3.py,complex,boto,boto3,"def get_contents_as_string(self, bucket_name, key_name):
+        """"""Retrieves the S3 key (object) contents.
+
+        :param bucket_name: The S3 bucket name.
+        :type bucket_name: string
+
+        :param key_name: The S3 key (object) name.
+        :type key_name: string
+
+        :returns: The key (object) contents as a string.
+        :rtype: string
+        """"""
+        bucket = self._s3_connection.get_bucket(bucket_name, validate=False)
+        key = bucket.get_key(key_name)
+        contents = key.get_contents_as_string()
+        return contents","def get_contents_as_string(self, bucket_name, key_name):
+        """"""Retrieves the S3 key (object) contents.
+
+        :param bucket_name: The S3 bucket name.
+        :type bucket_name: string
+
+        :param key_name: The S3 key (object) name.
+        :type key_name: string
+        :returns: The key (object) contents as a bytes (str in py2).
+        :rtype: bytes
+
+        """"""
+        response = self._s3_connection.get_object(Bucket=bucket_name, Key=key_name)
+        return response['Body'].read()"
+62,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,amira/s3.py,complex,boto,boto3,"def __init__(self, bucket_name):
+        self._bucket_name = bucket_name
+
+        logging.info(
+            'Connecting to S3 to obtain access to {0} bucket.'.format(
+                bucket_name,
+            ),
+        )
+        s3_connection = boto.connect_s3()
+        self._bucket = s3_connection.get_bucket(bucket_name, validate=False)
+        logging.info(
+            'S3 bucket {0} retrieved successfully.'.format(
+                bucket_name,
+            ),
+        )","    def __init__(self, bucket_name):
+        self._bucket_name = bucket_name
+        self._s3_connection = boto3.client('s3')
+
+
+
+
+
+
+
+
+
+
+"
+63,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,amira/s3.py,complex,boto,boto3," def upload_results(self, results):
+        """"""Uploads the analysis results to an S3 bucket.
+
+        :param results: The list containing the meta info (name,
+                        content and content-type) of the files which
+                        needs to be uploaded.
+        :type results: list of ``FileMetaInfo`` tuples
+        """"""
+        for file_meta_info in results:
+            logging.info(
+                'Uploading the analysis results in the file ""{0}"" to the S3 '
+                'bucket ""{1}""'.format(file_meta_info.name, self._bucket_name),
+            )
+            self._create_object_from_file(file_meta_info)
+
+    def _create_object_from_file(self, file_meta_info):
+        """"""Creates a new key (object) in the S3 bucket with the
+        contents of a given file.
+        """"""
+        key = Key(self._bucket)
+        key.key = file_meta_info.name
+        key.set_contents_from_file(
+            file_meta_info.content,
+            headers={'Content-Type': file_meta_info.content_type},
+        )","def upload_results(self, results):
+        """"""Uploads the analysis results to an S3 bucket.
+
+        :param results: The list containing the meta info (name,
+                        content and content-type) of the files which
+                        needs to be uploaded.
+        :type results: list of ``FileMetaInfo`` tuples
+        """"""
+        for file_meta_info in results:
+            logging.info(
+                'Uploading the analysis results in the file ""{0}"" to the S3 '
+                'bucket ""{1}""'.format(file_meta_info.name, self._bucket_name),
+            )
+            self._s3_connection.put_object(
+                Bucket=self._bucket_name,
+                Key=file_meta_info.name,
+                ContentType=file_meta_info.content_type,
+                Body=file_meta_info.content,
+            )"
+64,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,amira/sqs.py,simple,boto,boto3,"import boto.sqs
+import simplejson
+from boto.sqs.message import RawMessage","import boto
+"
+65,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,amira/sqs.py,complex,boto,boto3,"def __init__(self, region_name, queue_name):
+        self._setup_sqs_queue(region_name, queue_name)
+
+    def _setup_sqs_queue(self, region_name, queue_name):
+        """"""Connects to the SQS queue in a given AWS region.
+
+        :param region_name: The AWS region name.
+        :type region_name: string
+        :param queue_name: The SQS queue name.
+        :type queue_name: string
+        """"""
+        sqs_connection = boto.sqs.connect_to_region(region_name)
+        self.sqs_queue = sqs_connection.get_queue(queue_name)
+
+        if not self.sqs_queue:
+            raise SqsQueueNotFoundException(queue_name)
+
+        logging.info(
+            'Successfully connected to {0} SQS queue'.format(
+                queue_name,
+            ),
+        )
+
+        self.sqs_queue.set_message_class(RawMessage)","def __init__(self, region_name, queue_name):
+        """""" Connects to the SQS queue in a given AWS region.
+        :param region_name: The AWS region name.
+        :type region_name: string
+        :param queue_name: The SQS queue name.
+        :type queue_name: string
+        """"""
+        sqs_connection = boto3.resource('sqs', region_name=region_name)
+        self.sqs_queue = sqs_connection.get_queue_by_name(QueueName=queue_name)
+
+        logging.info(
+            'Successfully connected to {} SQS queue'.format(queue_name),
+        )"
+66,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,tests/s3_test.py,complex,boto,boto3,"def s3_handler(self):
+        boto.connect_s3 = MagicMock()
+        return S3Handler()
+
+
+
+    def test_get_contents_as_string(self, s3_handler):
+        s3_connection_mock = boto.connect_s3.return_value
+        bucket_mock = s3_connection_mock.get_bucket.return_value
+        key_mock = bucket_mock.get_key.return_value
+        key_mock.get_contents_as_string.return_value = 'test key contents'","def s3_handler(self):
+        with patch('amira.s3.boto3') as mock_boto3:
+            handler = S3Handler()
+            mock_boto3.client.assert_called_once_with('s3')
+            yield handler
+
+    def test_get_contents_as_string(self, s3_handler):
+        mock_contents = 'test key contents'
+        s3_connection_mock = s3_handler._s3_connection
+        s3_connection_mock.get_object.return_value = {
+            'Body': ByteBuffer(mock_contents.encode()),
+        }"
+67,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,tests/s3_test.py,simple,boto,boto3,"def s3_results_uploader(self):
+        boto.connect_s3 = MagicMock()
+        return S3ResultsUploader('lorem-ipsum')
+
+
+
+    def test_upload_results(self, s3_results_uploader):
+        s3_connection_mock = boto.connect_s3.return_value
+
+        fileobj_mock1 = MagicMock()
+        fileobj_mock2 = MagicMock()","def test_upload_results(self, s3_results_uploader):
+        s3_connection_mock = s3_results_uploader._s3_connection
+
+        fileobj_mock1 = MagicMock()
+        fileobj_mock2 = MagicMock()"
+68,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,tests/s3_test.py,complex,boto,boto3,"def mock_sqs_queue():
+    boto.sqs.connect_to_region = MagicMock()
+    sqs_connection_mock = boto.sqs.connect_to_region.return_value
+    return sqs_connection_mock.get_queue.return_value","def sqs_handler():
+    with patch('amira.sqs.boto3') as mock_boto3:
+        handler = SqsHandler('us-west-1', 'godzilla')
+        mock_boto3.resource.assert_called_once_with('sqs', region_name='us-west-1')
+        mock_boto3.resource.return_value.get_queue_by_name.assert_called_once_with(
+            QueueName='godzilla',
+        )
+        yield handler"
+69,Yelp/amira,d8e456375c7c5b787a078446aa9851d5236fb357,tests/s3_test.py,complex,boto,boto3,"def test_queue_not_found(self):
+        boto.sqs.connect_to_region = MagicMock()
+        sqs_connection_mock = boto.sqs.connect_to_region.return_value
+        sqs_connection_mock.get_queue.return_value = None
+
+        with pytest.raises(SqsQueueNotFoundException) as e:
+            SqsHandler('us-west-1', 'godzilla')
+
+        assert 'SQS queue godzilla not found.' == str(e.value)
+        boto.sqs.connect_to_region.assert_called_once_with('us-west-1')
+        sqs_connection_mock.get_queue.assert_called_once_with('godzilla')","def test_get_created_objects(self, sqs_handler):
+
+
+
+
+
+
+
+
+
+
+
+
+        s3_event_notification_message_mocks = mock_s3_event_notifications(
+            sqs_handler.sqs_queue, 's3_event_notifications.json',
+        )"
+70,Yelp/elastalert,fd8102a8660f14240bb88ef833afcb97e3291f09,elastalert/auth.py,complex,boto,boto3,"if username and password:
+            return username + ':' + password
+
+        if not aws_region:
+            return None
+
+        if boto_profile:
+            # Executing ElastAlert from machine with aws credentials
+            config = configparser.ConfigParser()
+            config.read(os.path.expanduser('~') + '/.aws/credentials')
+            aws_access_key_id = str(config[boto_profile]['aws_access_key_id'])
+            aws_secret_access_key = str(config[boto_profile]['aws_secret_access_key'])
+            aws_token = None
+        else:
+            # Executing ElastAlert from machine deployed with specific role
+            provider = InstanceMetadataProvider(
+                iam_role_fetcher=InstanceMetadataFetcher(timeout=1000, num_attempts=2))
+            aws_credentials = provider.load()
+            aws_access_key_id = str(aws_credentials.access_key)
+            aws_secret_access_key = str(aws_credentials.secret_key)
+            aws_token = str(aws_credentials.token)
+
+        return AWSRequestsAuth(aws_access_key=aws_access_key_id,
+                               aws_secret_access_key=aws_secret_access_key,
+                               aws_token=aws_token,
+                               aws_host=host,
+                               aws_region=aws_region,
+                               aws_service='es')","if username and password:
+            return username + ':' + password
+
+        session = boto3.session.Session(profile_name=profile_name, region_name=aws_region)
+        credentials = session.get_credentials().get_frozen_credentials()
+        return AWSRequestsAuth(
+            aws_access_key=credentials.access_key,
+            aws_secret_access_key=credentials.secret_key,
+            aws_token=credentials.token,
+            aws_host=host,
+            aws_region=session.region_name,
+            aws_service='es')"
+71,Yelp/elastalert,fd8102a8660f14240bb88ef833afcb97e3291f09,setup.py,simple,boto,boto3,"install_requires=[
+        'argparse',
+        'elasticsearch',
+        'jira==0.32',  # jira.exceptions is missing from later versions
+        'jsonschema',
+        'mock',
+        'python-dateutil',
+        'PyStaticConfiguration',
+        'pyyaml',
+        'simplejson',
+        'boto',
+        'botocore',
+        'blist',
+        'croniter',
+        'configparser',
+        'aws-requests-auth',
+        'texttable',
+        'exotel',
+        'twilio',
+        'stomp.py'
+    ]","    install_requires=[
+        'argparse',
+        'elasticsearch',
+        'jira==0.32',  # jira.exceptions is missing from later versions
+        'jsonschema',
+        'mock',
+        'python-dateutil',
+        'PyStaticConfiguration',
+        'pyyaml',
+        'simplejson',
+        'boto3',
+
+        'blist',
+        'croniter',
+        'configparser',
+        'aws-requests-auth',
+        'texttable',
+        'exotel',
+        'twilio<6.0.0',
+        'stomp.py'"
+72,andsens/bootstrap-vz,89eedae5fcc43657aab828f47d50332d284ff3ad,bootstrapvz/providers/ec2/tasks/connection.py,complex,boto,boto3,"class Connect(Task):
+    description = 'Connecting to EC2'
+    phase = phases.preparation
+    predecessors = [GetCredentials, host.GetInstanceMetadata, host.SetRegion]
+
+    @classmethod
+    def run(cls, info):
+        from boto.ec2 import connect_to_region
+        connect_args = {
+            'aws_access_key_id': info.credentials['access-key'],
+            'aws_secret_access_key': info.credentials['secret-key']
+        }
+
+        if 'security-token' in info.credentials:
+            connect_args['security_token'] = info.credentials['security-token']
+
+        info._ec2['connection'] = connect_to_region(info._ec2['region'], **connect_args)","class Connect(Task):
+    description = 'Connecting to EC2'
+    phase = phases.preparation
+    predecessors = [GetCredentials, host.GetInstanceMetadata, host.SetRegion]
+
+    @classmethod
+    def run(cls, info):
+        import boto3
+        connect_args = {
+            'aws_access_key_id': info.credentials['access-key'],
+            'aws_secret_access_key': info.credentials['secret-key']
+        }
+
+        if 'security-token' in info.credentials:
+            connect_args['security_token'] = info.credentials['security-token']
+
+        info._ec2['connection'] = boto3.Session(info._ec2['region'],
+                                                info.credentials['access-key'],
+                                                info.credentials['secret-key'])
+        info._ec2['connection'] = boto3.client('ec2', region_name=info._ec2['region'])"
+73,ansible/ansible,763399830de341bb25f973eea7d5dfd8db3cdcc1,lib/ansible/modules/cloud/amazon/cloudformation.py,simple,boto,boto3,"try:
+    import boto
+    import boto.cloudformation.connection
+    HAS_BOTO = True
+except ImportError:
+    HAS_BOTO = False","try:
+    import boto3
+    import botocore
+    HAS_BOTO3 = True
+except ImportError:
+    HAS_BOTO3 = False"
+74,ansible/ansible,763399830de341bb25f973eea7d5dfd8db3cdcc1,lib/ansible/modules/cloud/amazon/cloudformation.py,simple,boto,boto3,"def boto_version_required(version_tuple):
+    parts = boto.Version.split('.')
+    boto_version = []
+    try:
+        for part in parts:
+            boto_version.append(int(part))
+    except:
+        boto_version.append(-1)
+    return tuple(boto_version) >= tuple(version_tuple)","def boto_version_required(version_tuple):
+    parts = boto3.__version__.split('.')
+    boto_version = []
+    try:
+        for part in parts:
+            boto_version.append(int(part))
+    except:
+        boto_version.append(-1)
+    return tuple(boto_version) >= tuple(version_tuple)"
+75,ansible/ansible,763399830de341bb25f973eea7d5dfd8db3cdcc1,lib/ansible/modules/cloud/amazon/cloudformation.py,simple,boto,boto3,"def invoke_with_throttling_retries(function_ref, *argv):
+    retries=0
+    while True:
+        try:
+            retval=function_ref(*argv)
+            return retval
+        except boto.exception.BotoServerError as e:
+            if e.code != IGNORE_CODE or retries==MAX_RETRIES:
+                raise e
+
+        time.sleep(5 * (2**retries))
+        retries += 1","def invoke_with_throttling_retries(function_ref, *argv, **kwargs):
+    retries=0
+    while True:
+        try:
+            retval=function_ref(*argv, **kwargs)
+            return retval
+        except Exception as e:
+            # boto way of looking for retries
+            #if e.code != IGNORE_CODE or retries==MAX_RETRIES:
+            raise e
+        time.sleep(5 * (2**retries))
+        retries += 1"
+76,artsy/hokusai,2e554a9b7ae8342c5ecad7c8a439ee652707d229,hokusai/commands/install.py,simple,boto,boto3,"conn = boto.s3.connect_to_region(bucket_region)
+    bucket = conn.get_bucket(conn.lookup(bucket_name))
+    k = Key(bucket)
+    k.key = key_name
+    k.get_contents_to_filename(os.path.join(install_kubeconfig_to, 'config'))","    bucket = boto3.resource('s3').Bucket(bucket_name)
+    bucket.download_file(key_name, os.path.join(install_kubeconfig_to, 'config'))
+
+"
+77,aws-samples/aws-python-sample,b4326b74d78fe7537cfd6dfa6ad42f70ff2639eb,s3_sample.py,simple,boto,boto3,s3 = boto.connect_s3(),s3client = boto3.client('s3')
+78,aws-samples/aws-python-sample,b4326b74d78fe7537cfd6dfa6ad42f70ff2639eb,s3_sample.py,simple,boto,boto3,"bucket_name = ""python-sdk-sample-%s"" % uuid.uuid4()
+print(""Creating new bucket with name: "" + bucket_name)
+bucket = s3.create_bucket(bucket_name)","bucket_name = 'python-sdk-sample-{}'.format(uuid.uuid4())
+print('Creating new bucket with name: {}'.format(bucket_name))
+s3client.create_bucket(Bucket=bucket_name)"
+79,aws-samples/machine-learning-samples,1a13b4b084e3bfdf0b6ff34b63afe413823f262c,targeted-marketing-python/build_model.py,simple,boto,boto3,ml = boto.connect_machinelearning(),ml = boto3.client('machinelearning')
+80,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/cfnconfig.py,simple,boto,boto3,import boto.cloudformation,"import boto3
+from botocore.exceptions import ClientError"
+81,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/cfnconfig.py,complex,boto,boto3,"def getStackTemplate(region, aws_access_key_id, aws_secret_access_key, stack):
+
+    cfn_conn = boto.cloudformation.connect_to_region(region,aws_access_key_id=aws_access_key_id,
+                                                 aws_secret_access_key=aws_secret_access_key)
+    __stack_name = ('cfncluster-' + stack)
+    __stack = cfn_conn.describe_stacks(stack_name_or_id=__stack_name)[0]
+    __cli_template = [p.value for p in __stack.parameters if p.key == 'CLITemplate'][0]
+
+
+
+
+
+","def getStackTemplate(region, aws_access_key_id, aws_secret_access_key, stack):
+    cfn = boto3.client('cloudformation', region_name=region,
+                       aws_access_key_id=aws_access_key_id,
+                       aws_secret_access_key=aws_secret_access_key)
+    __stack_name = ('cfncluster-' + stack)
+
+    try:
+        __stack = cfn.describe_stacks(StackName=__stack_name).get('Stacks')[0]
+    except ClientError as e:
+        print(e.response.get('Error').get('Message'))
+        sys.stdout.flush()
+        sys.exit(1)
+    __cli_template = [p.get('ParameterValue') for p in __stack.get('Parameters') if p.get('ParameterKey') == 'CLITemplate'][0]"
+82,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/config_sanity.py,complex,boto,boto3,"if resource_type == 'EC2KeyPair':
+        try:
+            ec2_conn = boto.ec2.connect_to_region(region,aws_access_key_id=aws_access_key_id,
+                                                 aws_secret_access_key=aws_secret_access_key)
+            test = ec2_conn.get_all_key_pairs(keynames=resource_value)
+        except boto.exception.BotoServerError as e:
+            print('Config sanity error: %s' % e.message)","    if resource_type == 'EC2KeyPair':
+        try:
+            ec2 = boto3.client('ec2', region_name=region,
+                                        aws_access_key_id=aws_access_key_id,
+                                        aws_secret_access_key=aws_secret_access_key)
+            test = ec2.describe_key_pairs(KeyNames=[resource_value])
+        except ClientError as e:
+            print('Config sanity error: %s' % e.response.get('Error').get('Message'))"
+83,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/config_sanity.py,complex,boto,boto3,"try:
+            vpc_conn = boto.vpc.connect_to_region(region,aws_access_key_id=aws_access_key_id,
+                                                 aws_secret_access_key=aws_secret_access_key)
+            test = vpc_conn.get_all_vpcs(vpc_ids=resource_value)
+        except boto.exception.BotoServerError as e:
+            print('Config sanity error: %s' % e.message)
+
+
+            sys.exit(1)
+        # Check for DNS support in the VPC
+        if not vpc_conn.describe_vpc_attribute(test[0].id, attribute='enableDnsSupport').enable_dns_support:
+            print(""DNS Support is not enabled in %s"" % test[0].id)
+
+            sys.exit(1)
+        if not vpc_conn.describe_vpc_attribute(test[0].id, attribute='enableDnsHostnames').enable_dns_hostnames:
+            print(""DNS Hostnames not enabled in %s"" % test[0].id)","try:
+
+            ec2 = boto3.client('ec2', region_name=region,
+                                        aws_access_key_id=aws_access_key_id,
+                                        aws_secret_access_key=aws_secret_access_key)
+            test = ec2.describe_vpcs(VpcIds=[resource_value])
+        except ClientError as e:
+            print('Config sanity error: %s' % e.response.get('Error').get('Message'))
+            sys.exit(1)
+        # Check for DNS support in the VPC
+        if not ec2.describe_vpc_attribute(VpcId=resource_value, Attribute='enableDnsSupport')\
+                .get('EnableDnsSupport').get('Value'):
+            print(""DNS Support is not enabled in %s"" % resource_value)
+            sys.exit(1)
+        if not ec2.describe_vpc_attribute(VpcId=resource_value, Attribute='enableDnsHostnames')\
+                .get('EnableDnsHostnames').get('Value'):
+            print(""DNS Hostnames not enabled in %s"" % resource_value)"
+84,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/config_sanity.py,complex,boto,boto3,"try:
+            vpc_conn = boto.vpc.connect_to_region(region,aws_access_key_id=aws_access_key_id,
+                                                 aws_secret_access_key=aws_secret_access_key)
+            test = vpc_conn.get_all_subnets(subnet_ids=resource_value)
+        except boto.exception.BotoServerError as e:
+            print('Config sanity error: %s' % e.message)","try:
+            ec2 = boto3.client('ec2', region_name=region,
+                                        aws_access_key_id=aws_access_key_id,
+                                        aws_secret_access_key=aws_secret_access_key)
+            test = ec2.describe_subnets(SubnetIds=[resource_value])
+        except ClientError as e:
+            print('Config sanity error: %s' % e.response.get('Error').get('Message'))"
+85,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/config_sanity.py,complex,boto,boto3,"try:
+                ec2_conn = boto.ec2.connect_to_region(region,aws_access_key_id=aws_access_key_id,
+                                                     aws_secret_access_key=aws_secret_access_key)
+                test = ec2_conn.get_all_placement_groups(groupnames=resource_value)
+            except boto.exception.BotoServerError as e:
+                print('Config sanity error: %s' % e.message)","try:
+                ec2 = boto3.client('ec2', region_name=region,
+                                   aws_access_key_id=aws_access_key_id,
+                                   aws_secret_access_key=aws_secret_access_key)
+                test = ec2.describe_placement_groups(GroupNames=[resource_value])
+            except ClientError as e:
+                print('Config sanity error: %s' % e.response.get('Error').get('Message'))"
+86,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/config_sanity.py,complex,boto,boto3,"try:
+            ec2_conn = boto.ec2.connect_to_region(region,aws_access_key_id=aws_access_key_id,
+                                                 aws_secret_access_key=aws_secret_access_key)
+            test = ec2_conn.get_all_volumes(volume_ids=resource_value)
+            if test[0].attach_data.status == 'attached':
+                print('Volume %s is already attached to another instance' % resource_value)","try:
+            ec2 = boto3.client('ec2', region_name=region,
+                               aws_access_key_id=aws_access_key_id,
+                               aws_secret_access_key=aws_secret_access_key)
+            test = ec2.describe_volumes(VolumeIds=[resource_value]).get('Volumes')[0]
+            if test.get('State') != 'available':
+                print('Volume %s is in state \'%s\' not \'available\'' % (resource_value, test.get('State')))
+                sys.exit(1)
+        except ClientError as e:
+            if e.response.get('Error').get('Message').endswith('parameter volumes is invalid. Expected: \'vol-...\'.'):
+                print('Config sanity error: volume %s does not exist.' % resource_value)"
+87,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/easyconfig.py,simple,boto,boto3,"def get_regions():
+    regions = boto.ec2.regions()
+
+    names = []
+    for region in regions:
+        names.append(region.name)
+    return names","def get_regions():
+    ec2 = boto3.client('ec2')
+    regions = ec2.describe_regions().get('Regions')
+    names = []
+    for region in regions:
+        names.append(region.get('RegionName'))
+    return names"
+88,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,cli/cfncluster/easyconfig.py,simple,boto,boto3,"conn = boto.ec2.connect_to_region(region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+    return conn","ec2 = boto3.client('ec2', region_name=region,
+                       aws_access_key_id=aws_access_key_id,
+                       aws_secret_access_key=aws_secret_access_key)
+    return ec2"
+89,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,util/generate-ami-list.py,simple,boto,boto3,"import boto.ec2
+from boto.exception import EC2ResponseError","import boto3
+from botocore.exceptions import ClientError"
+90,aws/aws-parallelcluster,8e5971938524b7331dfcce129fbf62134d17cc0b,util/generate-ami-list.py,simple,boto,boto3," for region_name in regions:
+        try:
+            conn = boto.ec2.connect_to_region(region_name)
+            images = conn.get_all_images(owners=owners, filters={""name"": ""cfncluster-"" + version + ""*"" + date})","for region_name in regions:
+        try:
+            ec2 = boto3.client('ec2', region_name=region_name)
+            images = ec2.describe_images(Owners=owners, Filters=[{'Name': 'name', ""Values"": [""cfncluster-%s*%s"" % (version, date)]}])"
+91,biothings/biothings.api,43ee00d0e5d58cc10eb5e0c180425f3d741ff441,biothings/hub/dataexport/ids.py,complex,boto,boto3,"s3 = connect_s3(aws_key, aws_secret)
+    bucket = s3.get_bucket(s3_bucket)
+    s3key = bucket.get_key(s3path)
+    s3key.set_acl(""public-read"")
+    # update permissions and redirect metadata
+    k = bucket.get_key(redirect_from)
+    assert k, ""Can't find s3 key '%s' to set redirection"" % redirect_from
+    k.set_redirect(""/%s"" % s3path)
+    k.set_acl(""public-read"")","s3_resource = boto3.resource('s3', aws_access_key_id=aws_key,
+                                 aws_secret_access_key=aws_secret)
+    actual_object = s3_resource.Object(bucket_name=s3_bucket, key=s3path)
+    actual_object.Acl().put(ACL='public-read')
+    # update permissions and redirect metadata
+    redir_object = s3_resource.Object(bucket_name=s3_bucket, key=redirect_from)
+    redir_object.load()  # check if object exists, will raise if not
+    redir_object.put(WebsiteRedirectLocation='/%s' % s3path)
+    redir_object.Acl().put(ACL='public-read')"
+92,biothings/biothings.api,43ee00d0e5d58cc10eb5e0c180425f3d741ff441,biothings/utils/aws.py,simple,boto,boto3,"s3 = connect_s3(aws_key, aws_secret)
+    bucket = s3.get_bucket(s3_bucket)","s3 = boto3.resource('s3', aws_access_key_id=aws_key,
+                        aws_secret_access_key=aws_secret)
+    target_object = s3.Object(s3_bucket, s3key)"
+93,biothings/biothings.api,43ee00d0e5d58cc10eb5e0c180425f3d741ff441,biothings/utils/aws.py,complex,boto,boto3,"def get_s3_folder(s3folder, basedir=None, aws_key=None, aws_secret=None, s3_bucket=None):
+    aws_key = aws_key or getattr(config, ""AWS_SECRET"")
+    aws_secret = aws_secret or getattr(config, ""AWS_SECRET"")
+    s3_bucket = s3_bucket or getattr(config, ""S3_BUCKET"")
+    s3 = connect_s3(aws_key, aws_secret)
+    bucket = s3.get_bucket(s3_bucket)","def get_s3_folder(s3folder, basedir=None, aws_key=None, aws_secret=None, s3_bucket=None):
+    aws_key = aws_key or getattr(config, ""AWS_SECRET"")
+    aws_secret = aws_secret or getattr(config, ""AWS_SECRET"")
+    s3_bucket = s3_bucket or getattr(config, ""S3_BUCKET"")
+    s3 = boto3.resource('s3', aws_access_key_id=aws_key,
+                        aws_secret_access_key=aws_secret)
+    bucket = s3.Bucket(s3_bucket)"
+94,biothings/biothings.api,43ee00d0e5d58cc10eb5e0c180425f3d741ff441,biothings/utils/aws.py,complex,boto,boto3,"def send_s3_folder(folder, s3basedir=None, acl=None, overwrite=False,
+                   aws_key=None, aws_secret=None, s3_bucket=None):
+    aws_key = aws_key or getattr(config, ""AWS_SECRET"")
+    aws_secret = aws_secret or getattr(config, ""AWS_SECRET"")
+    s3_bucket = s3_bucket or getattr(config, ""S3_BUCKET"")
+    s3 = connect_s3(aws_key, aws_secret)
+    s3.get_bucket(s3_bucket)    # check if s3_bucket exists","def send_s3_folder(folder, s3basedir=None, acl=None, overwrite=False,
+                   aws_key=None, aws_secret=None, s3_bucket=None):
+    aws_key = aws_key or getattr(config, ""AWS_SECRET"")
+    aws_secret = aws_secret or getattr(config, ""AWS_SECRET"")
+    s3_bucket = s3_bucket or getattr(config, ""S3_BUCKET"")
+    s3 = boto3.client(""s3"", aws_access_key_id=aws_key,
+                      aws_secret_access_key=aws_secret)
+    s3.head_bucket(Bucket=s3_bucket)  # will raise when not 200"
+95,biothings/biothings.api,43ee00d0e5d58cc10eb5e0c180425f3d741ff441,biothings/utils/aws.py,complex,boto,boto3,"def get_s3_url(s3key, aws_key=None, aws_secret=None, s3_bucket=None):
+    try:
+        k = get_s3_file(s3key, return_what=""key"",
+                        aws_key=aws_key, aws_secret=aws_secret, s3_bucket=s3_bucket)
+    except FileNotFoundError:
+        return None
+    # generate_url will include some acdesskey, signature, etc... we want to remove this
+    # as the bucket is public anyway and want ""clean"" url
+    url = k.generate_url(expires_in=0)  # never (and whatever, we
+    return urlparse(url)._replace(query="""").geturl()","def get_s3_url(s3key, aws_key=None, aws_secret=None, s3_bucket=None):
+    if key_exists(s3_bucket, s3key, aws_key, aws_secret):
+        return f""https://{s3_bucket}.s3.amazonaws.com/{quote(s3key)}""
+    return None
+
+
+def get_s3_static_website_url(s3key, aws_key=None, aws_secret=None, s3_bucket=None):
+    aws_key, aws_secret, s3_bucket = _populate_s3_info(
+        aws_key, aws_secret, s3_bucket
+    )
+    s3 = boto3.client('s3', aws_access_key_id=aws_key,
+                      aws_secret_access_key=aws_secret)
+    location_resp = s3.get_bucket_location(Bucket=s3_bucket)
+    region = location_resp.get('LocationConstraint', 'us-east-1')
+    return f""http://{s3_bucket}.s3-website.{region}.amazonaws.com/{quote(s3key)}"""
+96,bitly/assetman,dbfd19ceadbaeffe13d2f775ba600d5f246c43ef,assetman/S3UploadThread.py,complex,boto,boto3," def __init__(self, queue, errors, manifest, settings):
+        threading.Thread.__init__(self)
+        cx = S3Connection(settings.get('aws_access_key'), settings.get('aws_secret_key'))
+        self.bucket = cx.get_bucket(settings.get('s3_assets_bucket'))
+        self.queue = queue
+        self.errors = errors
+        self.manifest = manifest","def __init__(self, queue, errors, manifest, settings):
+        threading.Thread.__init__(self)
+        self.client = boto3.client('s3',
+            aws_access_key_id=settings.get('aws_access_key'),
+            aws_secret_access_key=settings.get('aws_secret_key'))
+        self.bucket = boto3.resource('s3',
+            aws_access_key_id=settings.get('aws_access_key'),
+            aws_secret_access_key=settings.get('aws_secret_key')).Bucket(settings.get('s3_assets_bucket'))
+        self.queue = queue
+        self.errors = errors
+        self.manifest = manifest"
+97,braahyan/PAWS,665fdd6837393bda0d5ff7eb0e312ee16fd3d2c6,src/lambda_client.py,complex,boto,boto3,"def upload(function_name, function_zip, role, handler):
+    con = boto.connect_awslambda()
+    return con.upload_function(function_name, function_zip, ""python2.7"",
+                               role, handler, ""event"")","def upload(function_name, function_zip, role, handler):
+    zip_buffer = function_zip.read()
+    try:
+        resp = client.create_function(FunctionName=function_name,
+                                      Runtime=""python2.7"",
+                                      Role=role,
+                                      Handler=handler,
+                                      Code={""ZipFile"": zip_buffer})
+    except Exception:
+        resp = client.update_function_code(FunctionName=function_name,
+                                           ZipFile=zip_buffer)
+    return resp"
+98,celery/kombu,129a9e4ed05bf9a99d12fff9e17c9ffb37b14c4d,kombu/async/aws/ext.py,simple,boto,boto3,"try:
+    import boto
+except ImportError:  # pragma: no cover
+    boto = get_regions = ResultSet = RegionInfo = XmlHandler = None","try:
+    import boto3
+    from botocore import exceptions
+    from botocore.awsrequest import AWSRequest
+    from botocore.response import get_response
+except ImportError:
+    boto3 = None"
+99,celery/kombu,129a9e4ed05bf9a99d12fff9e17c9ffb37b14c4d,kombu/async/aws/ext.py,simple,boto,boto3," class BotoError(Exception):
+        pass
+    exception = _void()
+    exception.SQSError = BotoError
+    exception.SQSDecodeError = BotoError
+else:
+    from boto import exception
+    from boto.connection import AWSAuthConnection, AWSQueryConnection
+    from boto.handler import XmlHandler
+    from boto.resultset import ResultSet
+    from boto.regioninfo import RegionInfo, get_regions","class BotoCoreError(Exception):
+        pass
+    exceptions = _void()
+    exceptions.BotoCoreError = BotoCoreError
+    AWSRequest = _void()
+    get_response = _void()"
+100,celery/kombu,129a9e4ed05bf9a99d12fff9e17c9ffb37b14c4d,kombu/async/aws/sqs/connection.py,complex,boto,boto3,"def __init__(self, aws_access_key_id=None, aws_secret_access_key=None,
+                 is_secure=True, port=None, proxy=None, proxy_port=None,
+                 proxy_user=None, proxy_pass=None, debug=0,
+                 https_connection_factory=None, region=None, *args, **kwargs):
+        if boto is None:
+            raise ImportError('boto is not installed')
+        self.region = region or RegionInfo(
+            self, self.DefaultRegionName, self.DefaultRegionEndpoint,
+            connection_cls=type(self),
+        )
+        AsyncAWSQueryConnection.__init__(
+            self,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            is_secure=is_secure, port=port,
+            proxy=proxy, proxy_port=proxy_port,
+            proxy_user=proxy_user, proxy_pass=proxy_pass,
+            host=self.region.endpoint, debug=debug,
+            https_connection_factory=https_connection_factory, **kwargs
+        )","def __init__(self, sqs_connection, debug=0, region=None, **kwargs):
+        if boto3 is None:
+            raise ImportError('boto3 is not installed')
+        AsyncAWSQueryConnection.__init__(
+            self,
+            sqs_connection,
+            region_name=region, debug=debug,
+            **kwargs
+        )"
+101,celery/kombu,129a9e4ed05bf9a99d12fff9e17c9ffb37b14c4d,kombu/async/aws/sqs/ext.py,simple,boto,boto3,"try:
+    import boto
+except ImportError:  # pragma: no cover
+    boto = Attributes = BatchResults = None  # noqa
+
+    class _void(object):
+        pass
+    regions = SQSConnection = Queue = _void
+
+    RawMessage = Message = MHMessage = \
+        EncodedMHMessage = JSONMessage = _void
+else:
+    from boto.sqs.attributes import Attributes
+    from boto.sqs.batchresults import BatchResults
+    from boto.sqs.message import (
+        EncodedMHMessage, Message, MHMessage, RawMessage,
+    )
+    from boto.sqs import regions
+    from boto.sqs.jsonmessage import JSONMessage
+    from boto.sqs.connection import SQSConnection
+    from boto.sqs.queue import Queue
+
+__all__ = [
+    'Attributes', 'BatchResults', 'EncodedMHMessage', 'MHMessage',
+    'Message', 'RawMessage', 'JSONMessage', 'SQSConnection',
+    'Queue', 'regions',
+]","try:
+    import boto3
+except ImportError:
+    boto3 = None"
+102,celery/kombu,129a9e4ed05bf9a99d12fff9e17c9ffb37b14c4d,kombu/transport/SQS.py,simple,boto,boto3,"from kombu.async.aws.ext import boto, exception
+","from kombu.async.aws.ext import boto3, exceptions"
+103,celery/kombu,129a9e4ed05bf9a99d12fff9e17c9ffb37b14c4d,kombu/transport/SQS.py,simple,boto,boto3,"def __init__(self, *args, **kwargs):
+        if boto is None:
+            raise ImportError('boto is not installed')"," def __init__(self, *args, **kwargs):
+        if boto3 is None:
+            raise ImportError('boto3 is not installed')
+        super(Channel, self).__init__(*args, **kwargs)"
+104,celery/kombu,129a9e4ed05bf9a99d12fff9e17c9ffb37b14c4d,kombu/transport/SQS.py,complex,boto,boto3,"def sqs(self):
+        if self._sqs is None:
+            self._sqs = self._aws_connect_to(SQSConnection, regions())","def sqs(self):
+        if self._sqs is None:
+            session = boto3.session.Session(
+                region_name=self.region,
+                aws_access_key_id=self.conninfo.userid,
+                aws_secret_access_key=self.conninfo.password,
+            )
+            is_secure = self.is_secure if self.is_secure is not None else True
+            self._sqs = session.client('sqs', use_ssl=is_secure)"
+,,,t/unit/async/aws/sqs/test_connection.py,complex,boto,boto3,"def setup(self):
+        self.x = AsyncSQSConnection('ak', 'sk', http_client=Mock())
+        self.x.get_object = Mock(name='X.get_object')
+        self.x.get_status = Mock(name='X.get_status')
+        self.x.get_list = Mock(nanme='X.get_list')
+        self.callback = PromiseMock(name='callback')","def setup(self):
+        session = boto3.session.Session(
+            aws_access_key_id='AAA',
+            aws_secret_access_key='AAAA',
+            region_name='us-west-2',
+        )
+        sqs_client = session.client('sqs')
+        self.x = AsyncSQSConnection(sqs_client, 'ak', 'sk', http_client=Mock())
+        self.x.get_object = Mock(name='X.get_object')
+        self.x.get_status = Mock(name='X.get_status')
+        self.x.get_list = Mock(name='X.get_list')
+        self.callback = PromiseMock(name='callback')"
+,celery/kombu,129a9e4ed05bf9a99d12fff9e17c9ffb37b14c4d,t/unit/transport/test_SQS.py,simple,boto,boto3,@skip.unless_module('boto'),@skip.unless_module('boto')
+,censusreporter/census-api,ecb588d0c03b4bc9da0f0f2e24293ceda6f1354c,census_extractomatic/api.py,simple,boto,boto3,app.s3 = S3Connection(),app.s3 = boto3.client('s3')
+,censusreporter/census-api,ecb588d0c03b4bc9da0f0f2e24293ceda6f1354c,census_extractomatic/api.py,complex,boto,boto3,"b = current_app.s3.get_bucket('embed.censusreporter.org', validate=False)
+        k = Key(b)
+        k.key = cache_key
+        try:
+            cached = k.get_contents_as_string()
+        except S3ResponseError:
+            cached = None","try:
+            k = current_app.s3.get_object(
+                Bucket='embed.censusreporter.org',
+                Key=cache_key,
+            )
+            cached = k['Body'].read()
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == ""404"":
+                # Key doesn't exist, so return null
+                return None
+            else:
+                # Something else happened, so re-raise
+                raise"
+,censusreporter/census-api,ecb588d0c03b4bc9da0f0f2e24293ceda6f1354c,census_extractomatic/api.py,simple,boto,boto3,"if try_s3 and current_app.s3 is not None:
+        b = current_app.s3.get_bucket('embed.censusreporter.org', validate=False)
+        k = Key(b, cache_key)
+        k.metadata['Content-Type'] = content_type
+        k.set_contents_from_string(value, policy='public-read')","if try_s3 and current_app.s3 is not None:
+        current_app.s3.put_object(
+            Bucket='embed.censusreporter.org',
+            Key=cache_key,
+            ContentType=content_type,
+            #ACL='public-read', # Disabling in an attempt to reduce S3 bandwidth cost footprint
+            Body=value,
+        )"
+,century-arcade/xd,dfb9384355ebfad21de28719eabb740f511a748b,scripts/49-cat-logs.py,simple,boto,boto3,from boto.s3.connection import S3Connection,import boto3
+,century-arcade/xd,dfb9384355ebfad21de28719eabb740f511a748b,scripts/49-cat-logs.py,complex,boto,boto3,"def main():
+    args = get_args('aggregates all .log files')
+    outf = open_output()
+
+    print(os.environ['AWS_ACCESS_KEY'],os.environ['AWS_SECRET_KEY'])
+    conn = S3Connection(aws_access_key_id=os.environ['AWS_ACCESS_KEY'], aws_secret_access_key=os.environ['AWS_SECRET_KEY'])
+    print(conn)
+    s3path = ""s3://"" + os.environ['BUCKET'] + ""/logs/""
+    bucket = conn.get_bucket(s3path)
+    print(bucket, s3path)
+    for key in sorted(bucket.list(), key=lambda x: x.last_modified):
+        # last_modified
+        print(""Name: %s LastModified:%s"" % (key.name.encode('utf-8'), key.last_modified)","def main():
+    args = get_args('aggregates all .log files')
+    outf = open_output()
+
+    s3 = boto3.resource('s3')
+    s3path = ""logs/""
+    # bucket = conn.get_bucket(s3path)
+    bucket = s3.Bucket(os.environ['BUCKET'])
+
+    for obj in sorted(bucket.objects.all(), key=lambda x: x.last_modified):
+
+        # last_modified
+        if s3path in obj.key:
+            print(""Name: %s LastModified:%s"" % (obj.key.encode('utf-8'), obj.last_modified))"
+,cfn-sphere/cfn-sphere,33805211814c247704888ee63e00e58dee65c526,src/main/python/cfn_sphere/aws/kms.py,simple,boto,boto3,"from boto import kms
+from boto.exception import BotoServerError
+from boto.kms.exceptions import InvalidCiphertextException
+from cfn_sphere.exceptions import CfnSphereBotoError, InvalidEncryptedValueException
+from cfn_sphere.util import with_boto_retry","import boto3
+from boto3.exceptions import Boto3Error
+from botocore.exceptions import ClientError
+
+from cfn_sphere.exceptions import CfnSphereBotoError"
+,cfn-sphere/cfn-sphere,33805211814c247704888ee63e00e58dee65c526,src/main/python/cfn_sphere/aws/kms.py,complex,boto,boto3,"class KMS(object):
+    def __init__(self, region=""eu-west-1""):
+        self.conn = kms.connect_to_region(region)
+
+    @with_boto_retry()
+    def decrypt(self, encrypted_value):
+        try:
+            response = self.conn.decrypt(base64.b64decode(encrypted_value.encode()))
+        except TypeError as e:
+            raise InvalidEncryptedValueException(""Could not decode encrypted value: {0}"".format(e), e)
+        except binascii.Error as e:
+            raise InvalidEncryptedValueException(""Could not decode encrypted value: {0}"".format(e))
+        except InvalidCiphertextException as e:
+            raise InvalidEncryptedValueException(""Could not decrypted value: {0}"".format(e))
+        except BotoServerError as e:
+            raise CfnSphereBotoError(e)
+
+        return response['Plaintext'].decode('utf-8')","class KMS(object):
+    def __init__(self, region=""eu-west-1""):
+        self.client = boto3.client('kms', region_name=region)
+
+
+    def decrypt(self, encrypted_value):
+        try:
+            ciphertext_blob = base64.b64decode(encrypted_value.encode())
+            response = self.client.decrypt(CiphertextBlob=ciphertext_blob)
+            return response['Plaintext'].decode('utf-8')
+        except Boto3Error as e:
+            raise CfnSphereBotoError(e)"
+,cfn-sphere/cfn-sphere,33805211814c247704888ee63e00e58dee65c526,src/main/python/cfn_sphere/aws/kms.py,complex,boto,boto3,"@with_boto_retry()
+    def encrypt(self, key_id, cleartext_string):
+        response = self.conn.encrypt(key_id, bytes(cleartext_string, 'utf-8'))
+        return base64.b64encode(response['CiphertextBlob']).decode('utf-8')","def encrypt(self, key_id, cleartext_string):
+        try:
+            response = self.client.encrypt(KeyId=key_id, Plaintext=bytes(cleartext_string, 'utf-8'))
+            return base64.b64encode(response['CiphertextBlob']).decode('utf-8')
+        except (Boto3Error, ClientError) as e:
+            raise CfnSphereBotoError(e)"
+,cfpb/cfgov-refresh,0a6c9bf3207c01b91dfedf05762e7e5bda04354c,cfgov/v1/tests/test_meta_image.py,simple,boto,boto3,"s3 = boto.connect_s3()
+        s3.create_bucket('test_s3_bucket')","s3 = boto3.client('s3')
+        s3.create_bucket(Bucket='test_s3_bucket')"
+,cfpb/cfgov-refresh,0a6c9bf3207c01b91dfedf05762e7e5bda04354c,cfgov/v1/tests/test_meta_image.py,simple,boto,boto3,"class S3UtilsTestCase(TestCase):
+    def setUp(self):
+        mock_s3 = moto.mock_s3_deprecated()
+        mock_s3.start()
+        self.addCleanup(mock_s3.stop)
+
+        self.s3 = boto.connect_s3()
+        self.s3.create_bucket('test_s3_bucket')","class S3UtilsTestCase(TestCase):
+    def setUp(self):
+        mock_s3 = moto.mock_s3()
+        mock_s3.start()
+        self.addCleanup(mock_s3.stop)
+
+        self.s3 = boto3.client('s3')
+        self.s3.create_bucket(Bucket='test_s3_bucket')"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/actions/base.py,simple,boto,boto3,import boto,"import botocore.exceptions
+import boto3"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/actions/base.py,simple,boto,boto3,"def s3_conn(self):
+        """"""The boto s3 connection object used for communication with S3.""""""
+        if not hasattr(self, ""_s3_conn""):
+            self._s3_conn = boto.connect_s3()
+
+        return self._s3_conn","def s3_conn(self):
+        """"""The boto s3 connection object used for communication with S3.""""""
+        if not hasattr(self, ""_s3_conn""):
+            session = boto3.Session(profile_name=self.provider.profile, region_name=self.provider.region)
+            self._s3_conn = session.client('s3')
+        return self._s3_conn"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/actions/base.py,complex,boto,boto3,"@property
+    def cfn_bucket(self):
+        """"""The cloudformation bucket where templates will be stored.""""""
+        if not getattr(self, ""_cfn_bucket"", None):
+            try:
+                self._cfn_bucket = self.s3_conn.get_bucket(self.bucket_name)
+            except boto.exception.S3ResponseError, e:
+                if e.error_code == ""NoSuchBucket"":
+                    logger.debug(""Creating bucket %s."", self.bucket_name)
+                    self._cfn_bucket = self.s3_conn.create_bucket(
+                        self.bucket_name)
+                elif e.error_code == ""AccessDenied"":
+                    logger.exception(""Access denied for bucket %s."",
+                                     self.bucket_name)
+                    raise
+                else:
+                    logger.exception(""Error creating bucket %s."",
+                                     self.bucket_name)
+                    raise
+        return self._cfn_bucket","def ensure_cfn_bucket(self):
+
+        """"""The cloudformation bucket where templates will be stored.""""""
+        try:
+            self.s3_conn.head_bucket(Bucket=self.bucket_name)
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Message'] == ""Not Found"":
+                logger.debug(""Creating bucket %s."", self.bucket_name)
+                self.s3_conn.create_bucket(Bucket=self.bucket_name)
+            elif e.response['Error']['Message'] == ""Forbidden"":
+                logger.exception(""Access denied for bucket %s."",
+                                 self.bucket_name)
+                raise
+            else:
+                logger.exception(""Error creating bucket %s. Error %s"",
+                                 self.bucket_name, e.response)
+                raise"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/actions/base.py,simple,boto,boto3," key = self.cfn_bucket.new_key(key_name)
+        key.set_contents_from_string(blueprint.rendered, encrypt_key=True)","        self.s3_conn.put_object(Bucket=self.bucket_name, Key=key_name,
+                                      Body=blueprint.rendered, ServerSideEncryption='AES256')"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/commands/stacker/base.py,simple,boto,boto3,"import boto
+from boto import cloudformation","import boto3
+import botocore.exceptions"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/providers/aws.py,simple,boto,boto3,"exc_list=(boto.exception.BotoServerError, ),","exc_list=(botocore.exceptions.ClientError, ),"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/providers/aws.py,simple,boto,boto3,"def cloudformation(self):
+        if not hasattr(self, ""_cloudformation""):
+            self._cloudformation = cloudformation.connect_to_region(
+                self.region)
+        return self._cloudformation","def cloudformation(self):
+        if not hasattr(self, ""_cloudformation""):
+            session = boto3.Session(profile_name=self.profile, region_name=self.region)
+            self._cloudformation = session.client('cloudformation')
+        return self._cloudformation"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/providers/aws.py,simple,boto,boto3,"args=[stack_name])[0]
+        except boto.exception.BotoServerError as e:","kwargs=dict(StackName=stack_name))['Stacks'][0]
+        except botocore.exceptions.ClientError as e:"
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/providers/aws.py,simple,boto,boto3,"except boto.exception.BotoServerError as e:
+
+",except botocore.exceptions.ClientError as e:
+,cloudtools/stacker,f7a250072d1d8af6352f49044ec5570ac47378f2,stacker/providers/aws.py,complex,boto,boto3,"def get_stack_info(self, stack_name):
+        """""" Get the template and parameters of the stack currently in AWS
+
+        Returns [ template, parameters ]
+        """"""
+        try:
+            stacks = retry_on_throttling(
+                self.cloudformation.describe_stacks,
+                kwargs=dict(stack_name_or_id=stack_name))
+        except boto.exception.BotoServerError as e:
+
+            if ""does not exist"" not in e.message:
+                raise
+            raise exceptions.StackDoesNotExist(stack_name)","def get_stack_info(self, stack_name):
+        """""" Get the template and parameters of the stack currently in AWS
+
+        Returns [ template, parameters ]
+        """"""
+        try:
+            stacks = retry_on_throttling(
+                self.cloudformation.describe_stacks,
+                kwargs=dict(StackName=stack_name))
+        except botocore.exceptions.ClientError as e:
+            if ""does not exist"" not in e.message:
+                raise
+            raise exceptions.StackDoesNotExist(stack_name)
+
+        try:
+            template = retry_on_throttling(
+                self.cloudformation.get_template,
+                kwargs=dict(StackName=stack_name))['TemplateBody']
+        except botocore.exceptions.ClientError as e:
+            if ""does not exist"" not in e.message:
+                raise
+            raise exceptions.StackDoesNotExist(stack_name)"
+,commoncrawl/cc-pyspark,6f7e2fc74fd2626ff5dc1df263e650e81d0fc7ce,sparkcc.py,complex,boto,boto3,"def process_warcs(self, id_, iterator):
+        s3conn = None
+        ccbucket = None
+        s3pattern = re.compile('^s3://([^/]+)/(.+)')
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+
+        for uri in iterator:
+            if uri.startswith('s3://'):
+                self.get_logger().info('Reading from S3 {}'.format(uri))
+                if s3conn is None:
+                    s3conn = boto.connect_s3(anon=True,
+                                             host='s3.amazonaws.com')
+                    ccbucket = s3conn.get_bucket('commoncrawl')
+                s3match = s3pattern.match(uri)
+                if s3match is None:
+                    self.get_logger().error(""Invalid S3 URI: "" + uri)
+
+                bucketname = s3match.group(1)
+                path = s3match.group(2)
+                if bucketname == 'commoncrawl':
+                    bucket = ccbucket
+                else:
+                    bucket = s3conn.get_bucket(bucketname)
+                s3key = boto.s3.key.Key(bucket, path)
+                stream = s3key
+            elif uri.startswith('hdfs://'):
+                self.get_logger().error(""HDFS input not implemented: "" + uri)
+                continue","def process_warcs(self, id_, iterator):
+        s3pattern = re.compile('^s3://([^/]+)/(.+)')
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+
+        # S3 client (not thread-safe, initialize outside parallelized loop)
+        no_sign_request = botocore.client.Config(
+            signature_version=botocore.UNSIGNED)
+        s3client = boto3.client('s3', config=no_sign_request)
+
+        for uri in iterator:
+            if uri.startswith('s3://'):
+                self.get_logger().info('Reading from S3 {}'.format(uri))
+
+                s3match = s3pattern.match(uri)
+                if s3match is None:
+                    self.get_logger().error(""Invalid S3 URI: "" + uri)
+                    continue
+                bucketname = s3match.group(1)
+                path = s3match.group(2)
+                warctemp = TemporaryFile(mode='w+b')
+                s3client.download_fileobj(bucketname, path, warctemp)
+                warctemp.seek(0)
+                stream = warctemp
+
+            elif uri.startswith('hdfs://'):
+                self.get_logger().error(""HDFS input not implemented: "" + uri)
+                continue"
+,conda/conda,cab16216b49e7778548f4aaa4aebb35c9caccb1c,conda/gateways/adapters/s3.py,complex,boto,boto3,"try:
+            import boto
+        except ImportError:
+            stderrlog.info('\nError: boto is required for S3 channels. '
+                           'Please install it with `conda install boto`\n'
+                           'Make sure to run `source deactivate` if you '
+                           'are in a conda environment.\n')
+            resp.status_code = 404
+            return resp
+
+        conn = boto.connect_s3()
+
+        bucket_name, key_string = url_to_s3_info(request.url)
+
+        # Get the bucket without validation that it exists and that we have
+        # permissions to list its contents.
+        bucket = conn.get_bucket(bucket_name, validate=False)
+
+        try:
+            key = bucket.get_key(key_string)
+        except boto.exception.S3ResponseError as exc:
+            # This exception will occur if the bucket does not exist or if the
+            # user does not have permission to list its contents.
+            resp.status_code = 404
+            resp.raw = exc
+            return resp
+
+        if key and key.exists:
+            modified = key.last_modified
+            content_type = key.content_type or ""text/plain""
+            resp.headers = CaseInsensitiveDict({
+                ""Content-Type"": content_type,
+                ""Content-Length"": key.size,
+                ""Last-Modified"": modified,
+            })
+
+            _, self._temp_file = mkstemp()
+            key.get_contents_to_filename(self._temp_file)
+            f = open(self._temp_file, 'rb')
+            resp.raw = f
+            resp.close = resp.raw.close
+        else:
+            resp.status_code = 404
+
+        return resp","try:
+            import boto3
+            from botocore.exceptions import BotoCoreError, ClientError
+            bucket_name, key_string = url_to_s3_info(request.url)
+
+            # Get the key without validation that it exists and that we have
+            # permissions to list its contents.
+            key = boto3.resource('s3').Object(bucket_name, key_string[1:])
+
+            try:
+                response = key.get()
+            except (BotoCoreError, ClientError) as exc:
+                # This exception will occur if the bucket does not exist or if the
+                # user does not have permission to list its contents.
+                resp.status_code = 404
+                message = {
+                    ""error"": ""error downloading file from s3"",
+                    ""path"": request.url,
+                    ""exception"": repr(exc),
+                }
+                fh = SpooledTemporaryFile()
+                fh.write(ensure_binary(json.dumps(message)))
+                fh.seek(0)
+                resp.raw = fh
+                resp.close = resp.raw.close
+                return resp
+
+            key_headers = response['ResponseMetadata']['HTTPHeaders']
+
+
+            resp.headers = CaseInsensitiveDict({
+                ""Content-Type"": key_headers.get('content-type', ""text/plain""),
+                ""Content-Length"": key_headers['content-length'],
+                ""Last-Modified"": key_headers['last-modified'],
+            })
+
+            f = SpooledTemporaryFile()
+            key.download_fileobj(f)
+            f.seek(0)
+            resp.raw = f
+            resp.close = resp.raw.close
+
+
+
+            return resp"
+,demozoo/demozoo,092455474698e2087e03f447650efa4ca0fd8c0c,mirror/actions.py,simple,boto,boto3,"from boto.s3.connection import S3Connection
+from boto.s3.key import Key",import boto3
+,demozoo/demozoo,092455474698e2087e03f447650efa4ca0fd8c0c,mirror/actions.py,simple,boto,boto3,"def open_bucket():
+    conn = S3Connection(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+    return conn.get_bucket(mirror_bucket_name)","def open_bucket():
+    session = boto3.Session(
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
+    s3 = session.resource('s3')
+    return s3.Bucket(mirror_bucket_name)"
+,demozoo/demozoo,092455474698e2087e03f447650efa4ca0fd8c0c,mirror/tests.py,complex,boto,boto3,"@patch('mirror.actions.Key')
+    @patch('mirror.actions.S3Connection')
+    def test_upload_zipfile(self, S3Connection, Key):
+        link = self.pondlife.links.create(
+            link_class='BaseUrl', parameter='http://example.com/rubber.zip',
+            is_download_link=True
+        )
+        mock_key_instance = Key.return_value
+
+        download_blob = fetch_link(link)
+        mock_key_instance.set_contents_from_string.assert_called_once()
+        S3Connection.assert_called_once()","@patch('boto3.Session')
+    def test_upload_zipfile(self, Session):
+
+        link = self.pondlife.links.create(
+            link_class='BaseUrl', parameter='http://example.com/rubber.zip',
+            is_download_link=True
+        )
+        session = Session.return_value
+        s3 = session.resource.return_value
+        bucket = s3.Bucket.return_value
+
+        download_blob = fetch_link(link)
+        bucket.put_object.assert_called_once()
+        Session.assert_called_once()"
+,django-ses/django-ses,09b2065ea36ce77a9fc3661bf276b2b78317dd00,django_ses/__init__.py,simple,boto,boto3,"from boto.regioninfo import RegionInfo
+from boto.ses import SESConnection","import boto3
+from botocore.vendored.requests.packages.urllib3.exceptions import ResponseError"
+,django-ses/django-ses,09b2065ea36ce77a9fc3661bf276b2b78317dd00,django_ses/management/commands/get_ses_statistics.py,complex,boto,boto3,"def handle(self, *args, **options):
+
+        connection = SESConnection(
+
+            aws_access_key_id=settings.ACCESS_KEY,
+            aws_secret_access_key=settings.SECRET_KEY,
+            proxy=settings.AWS_SES_PROXY,
+            proxy_port=settings.AWS_SES_PROXY_PORT,
+            proxy_user=settings.AWS_SES_PROXY_USER,
+            proxy_pass=settings.AWS_SES_PROXY_PASS,
+        )
+        stats = connection.get_send_statistics()
+        data_points = stats_to_list(stats, localize=False)","def handle(self, *args, **options):
+
+        connection = boto3.client(
+            'ses',
+            aws_access_key_id=settings.ACCESS_KEY,
+            aws_secret_access_key=settings.SECRET_KEY,
+            region_name=settings.AWS_SES_REGION_NAME,
+            endpoint_url=settings.AWS_SES_REGION_ENDPOINT_URL,
+
+
+        )
+        stats = connection.get_send_statistics()
+        data_points = stats_to_list(stats, localize=False)"
+,django-ses/django-ses,09b2065ea36ce77a9fc3661bf276b2b78317dd00,django_ses/management/commands/ses_email_address.py,complex,boto,boto3," def handle(self, *args, **options):
+
+        verbosity = options.get('verbosity', 0)
+        add_email = options.get('add', False)
+        delete_email = options.get('delete', False)
+        list_emails = options.get('list', False)
+
+        access_key_id = settings.ACCESS_KEY
+        access_key = settings.SECRET_KEY
+        region = RegionInfo(
+            name=settings.AWS_SES_REGION_NAME,
+            endpoint=settings.AWS_SES_REGION_ENDPOINT)
+        proxy = settings.AWS_SES_PROXY
+        proxy_port = settings.AWS_SES_PROXY_PORT
+        proxy_user = settings.AWS_SES_PROXY_USER
+        proxy_pass = settings.AWS_SES_PROXY_PASS
+
+
+        connection = SESConnection(
+                aws_access_key_id=access_key_id,
+                aws_secret_access_key=access_key,
+                region=region,
+                proxy=proxy,
+                proxy_port=proxy_port,
+                proxy_user=proxy_user,
+                proxy_pass=proxy_pass,
+        )","def handle(self, *args, **options):
+
+        verbosity = options.get('verbosity', 0)
+        email_to_add = options.get('add', '')
+        email_to_delete = options.get('delete', '')
+        list_emails = options.get('list', False)
+
+        access_key_id = settings.ACCESS_KEY
+        access_key = settings.SECRET_KEY
+
+        connection = boto3.client(
+            'ses',
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=access_key,
+            region_name=settings.AWS_SES_REGION_NAME,
+            endpoint_url=settings.AWS_SES_REGION_ENDPOINT_URL,
+
+
+        )"
+,django-ses/django-ses,09b2065ea36ce77a9fc3661bf276b2b78317dd00,django_ses/views.py,simple,boto,boto3," region = RegionInfo(
+        name=settings.AWS_SES_REGION_NAME,
+        endpoint=settings.AWS_SES_REGION_ENDPOINT)
+
+    ses_conn = SESConnection(
+        aws_access_key_id=settings.ACCESS_KEY,
+        aws_secret_access_key=settings.SECRET_KEY,
+        region=region,
+        proxy=settings.AWS_SES_PROXY,
+        proxy_port=settings.AWS_SES_PROXY_PORT,
+    )","ses_conn = boto3.client(
+        'ses',
+        aws_access_key_id=settings.ACCESS_KEY,
+        aws_secret_access_key=settings.SECRET_KEY,
+        region_name=settings.AWS_SES_REGION_NAME,
+        endpoint_url=settings.AWS_SES_REGION_ENDPOINT_URL,
+
+    )"
+,e-dard/flask-s3,34cc79dcaee001a8232126067d474a240c997e36,flask_s3.py,simple,boto,boto3,"from boto.s3.connection import S3Connection
+from boto.s3 import connect_to_region
+from boto.exception import S3CreateError, S3ResponseError
+from boto.s3.key import Key","import boto3
+import boto3.exceptions
+from botocore.exceptions import ClientError"
+,e-dard/flask-s3,34cc79dcaee001a8232126067d474a240c997e36,flask_s3.py,complex,boto,boto3,"k = Key(bucket=bucket, name=key_name)
+            # Set custom headers
+            for header, value in app.config['S3_HEADERS'].iteritems():
+                k.set_metadata(header, value)
+            k.set_contents_from_filename(file_path)
+            k.make_public()","with open(file_path) as fp:
+                s3.put_object(Bucket=bucket,
+                              Key=key_name,
+                              Body=fp.read(),
+                              ACL=""public-read"",
+                              Metadata=app.config['S3_HEADERS'])"
+,e-dard/flask-s3,34cc79dcaee001a8232126067d474a240c997e36,flask_s3.py,simple,boto,boto3,"if not location:
+        conn = S3Connection(user, password)  # (default region)
+    else:
+        conn = connect_to_region(location,
+                                 aws_access_key_id=user,
+                                 aws_secret_access_key=password)","s3 = boto3.client(""s3"",
+                      region_name=location or None,
+                      aws_access_key_id=user,
+                      aws_secret_access_key=password)"
+,e-dard/flask-s3,34cc79dcaee001a8232126067d474a240c997e36,flask_s3.py,simple,boto,boto3,"try:
+            bucket = conn.create_bucket(bucket_name)
+        except S3CreateError as e:
+            if e.error_code == u'BucketAlreadyOwnedByYou':
+                bucket = conn.get_bucket(bucket_name)
+            else:
+                raise e"," s3.head_bucket(Bucket=bucket_name)
+    except ClientError as e:
+        if int(e.response['Error']['Code']) == 404:
+            # Create the bucket
+            bucket = s3.create_bucket(Bucket=bucket_name)
+        else:
+            raise"
+,e-dard/flask-s3,34cc79dcaee001a8232126067d474a240c997e36,flask_s3.py,complex,boto,boto3,"try:
+            k = Key(bucket=bucket, name="".file-hashes"")
+            k.set_contents_from_string(json.dumps(dict(new_hashes)))
+        except S3ResponseError as e:
+
+
+            logger.warn(""Unable to upload file hashes: %s"" % e)
+    else:
+        _upload_files(app, all_files, bucket)","try:
+            s3.put_object(Bucket=bucket_name,
+                          Key='.file-hashes',
+                          Body=json.dumps(dict(new_hashes)),
+                          ACL='private')
+        except boto3.exceptions.S3UploadFailedError as e:
+            logger.warn(""Unable to upload file hashes: %s"" % e)
+    else:
+        _upload_files(s3, app, all_files, bucket_name)"
+,edx/configuration,e7f51684cc5ad1b67ff39ddd8541accba2bad6a8,playbooks/edx-east/lifecycle_inventory.py,simple,boto,boto3,"def get_instance_dict(self):
+        ec2 = boto.ec2.connect_to_region(region,profile_name=self.profile)
+        reservations = ec2.get_all_instances()
+
+        dict = {}
+
+        for instance in [i for r in reservations for i in r.instances]:
+            dict[instance.id] = instance
+
+        return dict","    def get_instance_dict(self):
+        ec2 = boto3.client('ec2', region_name=self.region)
+        reservations = ec2.describe_instances()['Reservations']
+
+        dict = {}
+
+        for instance in [i for r in reservations for i in r['Instances']]:
+            dict[instance['InstanceId']] = instance
+
+        return dict"
+,edx/configuration,e7f51684cc5ad1b67ff39ddd8541accba2bad6a8,playbooks/edx-east/lifecycle_inventory.py,simple,boto,boto3,"def run(self):
+        asg = boto.ec2.autoscale.connect_to_region(region,profile_name=self.profile)
+        groups = asg.get_all_groups()","def run(self):
+        asg = boto3.client('autoscaling', region_name=self.region)
+    
+        groups = asg.describe_auto_scaling_groups()['AutoScalingGroups']"
+,edx/configuration,e7f51684cc5ad1b67ff39ddd8541accba2bad6a8,util/vpc-tools/asg_lifcycle_watcher.py,simple,boto,boto3,"import boto
+import boto.ec2
+import boto.sqs","import boto3
+"
+,edx/configuration,e7f51684cc5ad1b67ff39ddd8541accba2bad6a8,util/vpc-tools/asg_lifcycle_watcher.py,simple,boto,boto3,"self.dry_run = dry_run
+        self.ec2_con = boto.ec2.connect_to_region(self.region)
+        self.sqs_con = boto.sqs.connect_to_region(self.region)","        self.dry_run = args.dry_run
+        self.ec2_con = boto3.client('ec2',region_name=self.region)
+        self.sqs_con = boto3.client('sqs',region_name=self.region)"
+,edx/edx-ora2,9726e2aaef7314f45a2fd3cc70b18208c1ae21e6,openassessment/fileupload/backends/s3.py,simple,boto,boto3," return boto.connect_s3(
+
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key
+
+    )","return boto3.client(
+        ""s3"",
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+        endpoint_url=endpoint_url,
+    )"
+,edx/edx-ora2,9726e2aaef7314f45a2fd3cc70b18208c1ae21e6,openassessment/management/tests/test_upload_oa_data.py,simple,boto,boto3,"def test_upload(self):
+        # Create an S3 bucket using the fake S3 implementation
+        conn = boto.connect_s3()
+        conn.create_bucket(self.BUCKET_NAME)","def test_upload(self):
+        # Create an S3 bucket using the fake S3 implementation
+        conn = boto3.client(""s3"")
+        conn.create_bucket(Bucket=self.BUCKET_NAME)"
+,edx/edx-ora2,9726e2aaef7314f45a2fd3cc70b18208c1ae21e6,openassessment/xblock/test/test_leaderboard.py,simple,boto,boto3,"import boto
+from boto.s3.key import Key
+from moto import mock_s3_deprecated","import boto3
+from moto import mock_s3"
+,edx/edx-ora2,9726e2aaef7314f45a2fd3cc70b18208c1ae21e6,openassessment/xblock/test/test_leaderboard.py,simple,boto,boto3,"def test_non_text_submission(self, xblock):
+        # Create a mock bucket
+        conn = boto.connect_s3()
+        conn.create_bucket('mybucket')
+        # Create a non-text submission (the submission dict doesn't contain 'text')
+        api.get_download_url('s3key')
+        self._create_submissions_and_scores(xblock, [('s3key', 1)], submission_key='file_key')"," def test_non_text_submission(self, xblock):
+        # Create a mock bucket
+        conn = boto3.client(""s3"")
+        conn.create_bucket(Bucket=""mybucket"")
+        # Create a non-text submission (the submission dict doesn't contain 'text')
+        api.get_download_url('s3key')
+        self._create_submissions_and_scores(xblock, [('s3key', 1)], submission_key='file_key')"
+,edx/edx-ora2,9726e2aaef7314f45a2fd3cc70b18208c1ae21e6,openassessment/xblock/test/test_leaderboard.py,complex,boto,boto3,"def test_image_and_text_submission_multiple_files(self, xblock):
+        """"""
+        Tests that leaderboard works as expected when multiple files are uploaded
+        """"""
+        file_keys = ['foo', 'bar']
+        file_descriptions = ['{}-description'.format(file_key) for file_key in file_keys]
+        files_names = ['{}-file_name'.format(file_key) for file_key in file_keys]
+        conn = boto.connect_s3()
+        bucket = conn.create_bucket('mybucket')
+        for file_key in file_keys:
+            key = Key(bucket, 'submissions_attachments/{}'.format(file_key))
+            key.set_contents_from_string(""How d'ya do?"")
+
+
+
+            files_url_and_description = [
+                {
+                    'download_url': api.get_download_url(file_key),
+                    'description': file_descriptions[idx],
+                    'name': files_names[idx],
+                    'show_delete_button': False
+                }
+                for idx, file_key in enumerate(file_keys)
+            ]","def test_image_and_text_submission_multiple_files(self, xblock):
+        """"""
+        Tests that leaderboard works as expected when multiple files are uploaded
+        """"""
+        file_keys = ['foo', 'bar']
+        file_descriptions = ['{}-description'.format(file_key) for file_key in file_keys]
+        files_names = ['{}-file_name'.format(file_key) for file_key in file_keys]
+        conn = boto3.client(""s3"")
+        conn.create_bucket(Bucket=""mybucket"")
+        for file_key in file_keys:
+            conn.put_object(
+                Bucket=""mybucket"",
+                Key=""submissions_attachments/{}"".format(file_key),
+                Body=b""How d'ya do?"",
+            )
+            files_url_and_description = [
+                {
+                    'download_url': api.get_download_url(file_key),
+                    'description': file_descriptions[idx],
+                    'name': files_names[idx],
+                    'show_delete_button': False
+                }
+                for idx, file_key in enumerate(file_keys)
+            ]"
+,edx/edx-ora2,9726e2aaef7314f45a2fd3cc70b18208c1ae21e6,openassessment/xblock/test/test_leaderboard.py,simple,boto,boto3,"ef test_image_and_text_submission(self, xblock):
+        """"""
+        Tests that text and image submission works as expected
+        """"""
+        # Create a file and get the download URL
+        conn = boto.connect_s3()
+        bucket = conn.create_bucket('mybucket')
+        key = Key(bucket, 'submissions_attachments/foo')
+        key.set_contents_from_string(""How d'ya do?"")","def test_image_and_text_submission(self, xblock):
+        """"""
+        Tests that text and image submission works as expected
+        """"""
+        # Create a file and get the download URL
+        conn = boto3.client(""s3"")
+        conn.create_bucket(Bucket='mybucket')
+        conn.put_object(
+            Bucket=""mybucket"",
+            Key=""submissions_attachments/foo"",
+            Body=b""How d'ya do?"",
+        )"
+,edx/edx-ora2,9726e2aaef7314f45a2fd3cc70b18208c1ae21e6,openassessment/xblock/test/test_leaderboard.py,simple,boto,boto3,"def test_download_url(self, xblock):
+        """""" Test generate correct download URL with existing file. should create a file and get the download URL """"""
+        conn = boto.connect_s3()
+        bucket = conn.create_bucket('mybucket')
+        key = Key(bucket)
+        key.key = ""submissions_attachments/test_student/test_course/"" + xblock.scope_ids.usage_id
+        key.set_contents_from_string(""How d'ya do?"")","def test_download_url(self, xblock):
+        """""" Test generate correct download URL with existing file. should create a file and get the download URL """"""
+        conn = boto3.client(""s3"")
+        conn.create_bucket(Bucket=""mybucket"")
+        key = ""submissions_attachments/test_student/test_course/"" + xblock.scope_ids.usage_id
+        conn.put_object(
+            Bucket=""mybucket"",
+            Key=key,
+            Body=b""How d'ya do?""
+        )"
+,edx/edx-ora2,9726e2aaef7314f45a2fd3cc70b18208c1ae21e6,openassessment/xblock/test/test_leaderboard.py,complex,boto,boto3,"def _create_uploaded_files(self, num_files, usage_key):
+        conn = boto.connect_s3()
+        bucket = conn.create_bucket('mybucket')
+        for i in range(num_files):
+            self._create_uploaded_file(bucket, i, usage_key)","    def _create_uploaded_files(self, num_files, usage_key):
+        conn = boto3.client(""s3"")
+        conn.create_bucket(Bucket=""mybucket"")
+        for file_num in range(num_files):
+            key = self._get_student_item_key(file_num, usage_key)
+            conn.put_object(
+                Bucket=""mybucket"",
+                Key=key,
+                Body=b""How d'ya do?"",
+            )"
+,foxpass/foxpass-ipsec-vpn,78d3ff3647297623b0b149128c5535251c2bf7f0,scripts/config.py,complex,boto,boto3,"def gather_user_data_s3(s3_url):
+    import boto
+    from boto.s3.connection import S3Connection
+
+    parts = urlparse(s3_url)
+
+    if parts.scheme != 's3':
+        raise Exception(""Must use s3 url scheme"")
+
+    bucket_name = parts.netloc
+    path = parts.path
+
+    conn = boto.connect_s3()
+    bucket = conn.get_bucket(bucket_name)
+    if not bucket:
+        raise Exception(""Can't find bucket '%s'"" % bucket_name)
+
+    key = bucket.get_key(path)
+    if not key:
+        raise Exception(""Can't find file '%s'"" % path)
+
+    data = key.get_contents_as_string()
+    return json.loads(data)","def gather_user_data_s3(s3_url):
+    import boto3
+
+
+    parts = urlparse(s3_url)
+
+    if parts.scheme != 's3':
+        raise Exception(""Must use s3 url scheme"")
+
+    bucket_name = parts.netloc
+    path = parts.path.lstrip('/')
+
+    s3 = boto3.resource('s3')
+    obj = s3.Object(bucket_name, path)
+    data = obj.get()['Body'].read().decode('utf-8')
+
+
+
+
+
+
+
+    return json.loads(data)"
+,girder/girder,c51a8404fdd281aa95917103d3f68ab72bbff1a6,girder/utility/s3_assetstore_adapter.py,simple,boto,boto3,return boto.connect_s3(**connectParams),"return boto3.client('s3', **connectParams)"
+,girder/girder,c51a8404fdd281aa95917103d3f68ab72bbff1a6,girder/utility/s3_assetstore_adapter.py,simple,boto,boto3,"conn = botoConnectS3(info.get('botoConnect', {}))","conn = botoResource(info.get('botoConnect', {}))"
+,gtaylor/django-dynamodb-sessions,503d1ca0d989233ffa27526301c004e97f6f40da,dynamodb_sessions/backends/dynamodb.py,simple,boto,boto3,"from boto.dynamodb import connect_to_region
+from boto.dynamodb.exceptions import DynamoDBKeyNotFoundError","from botocore.exceptions import ClientError
+from boto3.dynamodb.conditions import Attr as DynamoConditionAttr
+from boto3.session import Session as Boto3Session"
+,hsingh/ansible-elastic-beanstalk,0e8d3138fb238292cc0c2e6f7158a90ec105c2ec,library/elasticbeanstalk_env.py,simple,boto,boto3,"try:
+    import boto.beanstalk
+    HAS_BOTO = True
+except ImportError:
+    HAS_BOTO = False","try:
+    import boto3
+    HAS_BOTO3 = True
+except ImportError:
+    HAS_BOTO3 = False"
+,hsingh/ansible-elastic-beanstalk,0e8d3138fb238292cc0c2e6f7158a90ec105c2ec,library/elasticbeanstalk_env.py,simple,boto,boto3,"if not HAS_BOTO:
+        module.fail_json(msg='boto required for this module')"," if not HAS_BOTO3:
+        module.fail_json(msg='boto3 required for this module')"
+,hsingh/ansible-elastic-beanstalk,0e8d3138fb238292cc0c2e6f7158a90ec105c2ec,library/elasticbeanstalk_env.py,complex,boto,boto3,"region, ec2_url, aws_connect_kwargs = get_aws_connection_info(module)
+
+    try:
+        ebs = boto.beanstalk.connect_to_region(region)
+
+    except boto.exception.NoAuthHandlerFound, e:
+        module.fail_json(msg='No Authentication Handler found: %s ' % str(e))
+    except Exception, e:
+        module.fail_json(msg='Failed to connect to Beanstalk: %s' % str(e))","region, ec2_url, aws_connect_kwargs = get_aws_connection_info(module, boto3=True)
+
+    try:
+        ebs = boto3_conn(module, conn_type='client', resource='elasticbeanstalk', region=region, endpoint=ec2_url, **aws_connect_kwargs)
+
+
+
+    except Exception, e:
+        module.fail_json(msg='Failed to connect to Beanstalk: %s' % str(e))"
+,humilis/humilis,157a015b0d55a8daa4c5d949072553f2cee6908e,humilis/cloudformation.py,simple,boto,boto3,"self.connection = boto.cloudformation.connect_to_region(
+            self.region,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key)","self.client = boto3.client('cloudformation')
+        self.resource = boto3.resource('cloudformation')"
+,ikreymer/pywb,54b265aaa811e008a62aae37be6ce36cec9b0a42,pywb/utils/loaders.py,complex,boto,boto3,"if parts.username and parts.password:
+            aws_access_key_id = unquote_plus(parts.username)
+            aws_secret_access_key = unquote_plus(parts.password)
+            bucket_name = parts.netloc.split('@', 1)[-1]
+        else:
+            bucket_name = parts.netloc
+        if not self.s3conn:
+            try:
+                self.s3conn = connect_s3(aws_access_key_id, aws_secret_access_key)
+            except Exception:  #pragma: no cover
+                self.s3conn = connect_s3(anon=True)
+
+        bucket = self.s3conn.get_bucket(bucket_name)
+
+        key = bucket.get_key(parts.path)
+
+        if offset == 0 and length == -1:
+            headers = {}
+        else:
+            headers = {'Range': BlockLoader._make_range_header(offset, length)}
+
+        # Read range
+        key.open_read(headers=headers)
+        return key","if parts.username and parts.password:
+            aws_access_key_id = unquote_plus(parts.username)
+            aws_secret_access_key = unquote_plus(parts.password)
+            bucket_name = parts.netloc.split('@', 1)[-1]
+        else:
+            bucket_name = parts.netloc
+
+        key = parts.path[1:]
+
+        if offset == 0 and length == -1:
+            range_ = ''
+        else:
+            range_ = BlockLoader._make_range_header(offset, length)
+
+        def s3_load(anon=False):
+            if not self.client:
+                if anon:
+                    config = Config(signature_version=UNSIGNED)
+                else:
+                    config = None
+
+                client = boto3.client('s3', aws_access_key_id=aws_access_key_id,
+                                            aws_secret_access_key=aws_secret_access_key,
+                                            config=config)
+            else:
+                client = self.client
+
+            res = client.get_object(Bucket=bucket_name,
+                                    Key=key,
+                                    Range=range_)
+
+            if not self.client:
+                self.client = client
+
+            return res
+
+        try:
+            obj = s3_load(anon=False)
+
+        except Exception:
+            if not self.client:
+                obj = s3_load(anon=True)
+            else:
+                raise
+
+        return obj['Body']"
+,iwd32900/minus80,3fcfeb9ac052af03eb617cf71370c0d815b48f46,minus80.py,simple,boto,boto3," s3conn = boto.connect_s3(config['aws_access_key'], config['aws_secret_key'])
+        s3bucket = s3conn.create_bucket(config['aws_s3_bucket']) # just returns Bucket if exists","session = boto3.Session(**config['credentials'])
+        s3conn = session.resource('s3')
+        s3bucket = s3conn.Bucket(config['aws_s3_bucket']) # Bucket must already exist"
+,Bennguyenru/HexaHub,5c484b0d82e7dd7939c1dcf48c83e9ccc1e2fa1f,build_tools/s3.py,simple,boto,boto3,"  from boto.s3.connection import S3Connection
+    from boto.s3.connection import OrdinaryCallingFormat
+    from boto.s3.key import Key",import boto3.session
+,Bennguyenru/HexaHub,5c484b0d82e7dd7939c1dcf48c83e9ccc1e2fa1f,build_tools/s3.py,simple,boto,boto3,"conn = S3Connection(key, secret, host='s3-eu-west-1.amazonaws.com', calling_format=OrdinaryCallingFormat())
+    bucket = conn.get_bucket(bucket_name)
+    s3buckets[bucket_name] = bucket
+    return bucket","session = boto3.session.Session(aws_access_key_id=key, aws_secret_access_key=secret, region_name=""eu-west-1"")
+    s3_client = session.resource('s3')    
+    bucket = s3_client.Bucket(bucket_name)"
+,Seagate/cortx-management-portal,c364f0e27a100c3aa19fb5e4381fb2a6a92b8974,src/eos/plugins/s3.py,complex,boto,boto3,"def _create_boto_connection_object(self, **kwargs):
+        return S3Connection(**kwargs, calling_format=OrdinaryCallingFormat())","    def _create_boto_connection_object(self, **kwargs):
+        """"""Creates S3 server connection""""""
+
+        is_secure = kwargs.get('is_secure', False)
+        proto = 'https' if is_secure else 'http'
+        url = f""{proto}://{kwargs.get('host', 'localhost')}:{kwargs.get('port', '80')}""
+        s3 = boto3.resource(service_name='s3', endpoint_url=url,
+                            aws_access_key_id=kwargs['aws_access_key_id'],
+                            aws_secret_access_key=kwargs['aws_secret_access_key'])
+        return s3"
+,zalando-zmon/zmon-aws-agent,2e2fb2ee2c51528ce95e09ce78e2ba2fa078c5e2,zmon-agent.py,complex,boto,boto3,"def get_account_alias(region):
+    try:
+        c = boto.iam.connect_to_region(region)
+        resp = c.get_account_alias()
+        return resp['list_account_aliases_response']['list_account_aliases_result']['account_aliases'][0]
+    except:
+        return None","def get_account_alias(region):
+    try:
+        iam_client = boto3.client('iam')
+        resp = iam_client.list_account_aliases()
+        return resp['AccountAliases'][0]
+    except:
+        return None"
+,zalando-zmon/zmon-aws-agent,2e2fb2ee2c51528ce95e09ce78e2ba2fa078c5e2,zmon-agent.py,simple,boto,boto3,"try:
+        aws = boto.rds2.connect_to_region(region)
+        instances = aws.describe_db_instances()
+        for i in instances[""DescribeDBInstancesResponse""][""DescribeDBInstancesResult""][""DBInstances""]:","try:
+        rds_client = boto3.client('rds')
+        instances = rds_client.describe_db_instances()
+
+        for i in instances[""DBInstances""]:"
+,zalando-zmon/zmon-aws-agent,2e2fb2ee2c51528ce95e09ce78e2ba2fa078c5e2,zmon-agent.py,complex,boto,boto3,"def get_auto_scaling_groups(region, acc):
+    groups = []
+
+    ec2 = boto.ec2.connect_to_region(region)
+    autoscale = boto.ec2.autoscale.connect_to_region(region)
+    for g in autoscale.get_all_groups():
+        sg = {'type':'asg', 'infrastructure_account':acc, 'region': region, 'created_by':'agent'}
+        sg['id'] = 'asg-{}[{}:{}]'.format(g.name, acc, region)
+        sg['name'] = g.name
+        sg['availability_zones'] = g.availability_zones
+        sg['desired_capacity'] = g.desired_capacity
+        sg['max_size'] = g.max_size
+        sg['min_size'] = g.min_size
+
+        stack_name_tag = [t for t in g.tags if t.key=='StackName']
+        if stack_name_tag:
+            sg['stack_name_tag'] = stack_name_tag[0].value
+
+        instance_ids = [i.instance_id for i in g.instances]
+        instances = ec2.get_only_instances(instance_ids)
+        sg['instances'] = [{'aws_id': i.id, 'ip': i.private_ip_address} for i in instances]","def get_auto_scaling_groups(region, acc):
+    groups = []
+    as_client = boto3.client('autoscaling')
+    ec2_client = boto3.client('ec2')
+    asgs = as_client.describe_auto_scaling_groups()['AutoScalingGroups']
+    for g in asgs:
+        sg = {'type': 'asg', 'infrastructure_account': acc, 'region': region, 'created_by': 'agent'}
+        sg['id'] = 'asg-{}[{}:{}]'.format(g['AutoScalingGroupName'], acc, region)
+        sg['name'] = g['AutoScalingGroupName']
+        sg['availability_zones'] = g['AvailabilityZones']
+        sg['desired_capacity'] = g['DesiredCapacity']
+        sg['max_size'] = g['MaxSize']
+        sg['min_size'] = g['MinSize']
+
+        stack_name_tag = [t for t in g['Tags'] if t['Key'] == 'StackName']
+        if stack_name_tag:
+            sg['stack_name_tag'] = stack_name_tag[0]['Value']
+
+        instance_ids = [i['InstanceId'] for i in g['Instances']]
+        reservations = ec2_client.describe_instances(InstanceIds=instance_ids)['Reservations']
+        sg['instances'] = []
+        for r in reservations:
+            for i in r['Instances']:
+                sg['instances'].append({
+                    'aws_id': i['InstanceId'],
+                    'ip': i['PrivateIpAddress'],
+                })
+        groups.append(sg)
+
+    return groups"
+,zalando-zmon/zmon-aws-agent,2e2fb2ee2c51528ce95e09ce78e2ba2fa078c5e2,zmon-agent.py,simple,boto,boto3,"import boto.iam
+import boto.ec2
+import boto.ec2.autoscale
+import boto.ec2.elb
+import boto.ec2.instance
+import boto.cloudformation
+import boto.utils
+import boto.rds2",import boto3
+,thinhpham/aws-tools,24e9cd06f56f4b825a9e22b1974e573b34edb8b9,zmon-agent.py,complex,boto,boto3,"import botoprint 'Security group information:\n'ec2 = boto.connect_ec2()sgs = ec2.get_all_security_groups()for sg in sgs:    instances = sg.instances()    print 'id: %s, name: %s, count: %s' % (sg.id, sg.name, len(instances))    for inst in instances:        tag_name = 'UNKNOWN'        if inst.tags is not None and 'Name' in inst.tags:            tag_name = inst.tags['Name']        print '\tid: %s, name: %s' % (inst.id, tag_name)","import boto3
+
+print 'Security group information:\n'
+
+ec2 = boto3.resource('ec2')
+sgs = ec2.security_groups.all()
+
+for sg in sgs:
+    tag_name = sg.group_name
+    if sg.tags is not None:
+        for tag in sg.tags:
+            if tag['Key'] == 'Name' and tag['Value'] != '':
+                tag_name = tag['Value']
+
+    print 'id: %s, name: %s, vpc_id: %s' % (sg.id, tag_name, sg.vpc_id)"
+,jcjohnson/simple-amt,d70b27571244ddb406054c544f4c155b6dba6536,simpleamt.py,simple,boto,boto3," else:
+    host='mechanicalturk.amazonaws.com'
+  return MTurkConnection(host=host, **kwargs)","  else:
+    host='https://mturk-requester.us-east-1.amazonaws.com'
+  return boto3.client('mturk', endpoint_url=host, **kwargs)"
+,jonhadfield/ansible-lookups,28cb06c966a4e560ded7a6c2cb5a6d04f2e00273,aws_secgroup_ids_from_names.py,complex,boto,boto3,"def run(self, terms, variables=None, **kwargs):
+        sg_list = []
+
+
+        region = terms[0][0]
+        group_names = terms[0][1]
+        if isinstance(group_names, basestring):
+            group_names = [group_names]
+        conn = boto.ec2.connect_to_region(region)
+        #TODO: Use OR filter rather than making multiple calls
+
+        for group_name in group_names:
+            filters = {'group_name': group_name}
+            sg = conn.get_all_security_groups(filters=filters)
+            if sg and sg[0]:
+                sg_list.append(sg[0].id)
+        return sg_list"," def run(self, terms, variables=None, **kwargs):
+        if isinstance(terms, basestring):
+            terms = [terms]
+        group_ids = []
+        region = terms[0][0]
+        group_names = terms[0][1]
+        session = boto3.session.Session(region_name=region)
+        try:
+            ec2_client = session.client('ec2')
+        except botocore.exceptions.NoRegionError:
+            raise AnsibleError(""AWS region not specified."")
+        for group_name in group_names:
+            secgroup_filter = [{'Name': 'group-name', 'Values': [group_name]}]
+            result = ec2_client.describe_security_groups(Filters=secgroup_filter)
+            groups = result.get('SecurityGroups')
+            if groups:
+                group_ids.append(groups[0].get('GroupId').encode('utf-8'))
+        return group_ids"
+,jonls/s3-deploy-website,736bc38c093f06f2ab89404fe093399d443bbdab,s3_deploy/deploy.py,simple,boto,boto3,"import boto
+from boto.s3.connection import S3Connection, OrdinaryCallingFormat
+from boto.s3.key import Key",import boto3
+,jonls/s3-deploy-website,736bc38c093f06f2ab89404fe093399d443bbdab,s3_deploy/deploy.py,simple,boto,boto3,"    conn = S3Connection(calling_format=OrdinaryCallingFormat())
+    bucket = conn.get_bucket(bucket_name, validate=False)","    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)"
+,jonls/s3-deploy-website,736bc38c093f06f2ab89404fe093399d443bbdab,s3_deploy/deploy.py,simple,boto,boto3,"install_requires=[
+        'boto', 'PyYAML', 'six'
+    ])","    install_requires=[
+        'boto3', 'PyYAML', 'six'
+    ])"
+,lionheart/git-bigstore,953b06ecbf130a8660b5fb20229e8b5373cc860b,bigstore/backends/s3.py,complex,boto,boto3,"try:
+    import boto
+
+except ImportError:
+    pass
+
+class S3Backend(object):
+    def __init__(self, key, secret, bucket_name):
+        self.access_key = key
+        self.secret = secret
+        self.bucket = bucket_name
+        self.conn = boto.connect_s3(key, secret)
+        self.bucket = boto.s3.bucket.Bucket(self.conn, bucket_name)","try:
+    import boto3
+    import botocore
+except ImportError:
+    pass
+
+class S3Backend(object):
+    def __init__(self, bucket_name, key, secret):
+
+
+        self.bucket = bucket_name
+        self.session = boto3.Session(aws_access_key_id=key, aws_secret_access_key=secret)
+        self.s3_client = self.session.client('s3')"
+,lionheart/git-bigstore,953b06ecbf130a8660b5fb20229e8b5373cc860b,bigstore/backends/s3.py,complex,boto,boto3,"def key(self, hash):
+        return boto.s3.key.Key(self.bucket, ""{}/{}"".format(hash[:2], hash[2:]))
+
+    def push(self, file, hash, cb=None):
+        self.key(hash).set_contents_from_file(file, cb=cb)
+
+    def pull(self, file, hash, cb=None):
+        self.key(hash).get_contents_to_file(file, cb=cb)
+
+    def exists(self, hash):
+        return self.key(hash).exists()"," def get_remote_file_name(self, hash):
+        return ""{}/{}"".format(hash[:2], hash[2:])
+
+    def push(self, file, hash, cb=None):
+        self.s3_client.upload_file(file.name, self.bucket, self.get_remote_file_name(hash), Callback=cb)
+
+    def pull(self, file, hash, cb=None):
+        self.s3_client.download_file(self.bucket, self.get_remote_file_name(hash), file.name, Callback=cb)
+
+    def exists(self, hash):
+        exists = False
+
+        try:
+            self.s3_client.head_object(Bucket=self.bucket, Key=self.get_remote_file_name(hash))
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == ""404"":
+                exists = False
+            else:
+                raise e
+        else:
+            exists = True
+
+        return exists"
+,mapproxy/mapproxy,ff9540468662f87ae2619ff472f5bc2ce1522673,mapproxy/cache/s3.py,simple,boto,boto3,"try:
+    import boto
+
+except ImportError:
+    boto = None","try:
+    import boto3
+    import botocore
+except ImportError:
+    boto3 = None"
+,mapproxy/mapproxy,ff9540468662f87ae2619ff472f5bc2ce1522673,mapproxy/cache/s3.py,simple,boto,boto3,"def connect(profile_name=None):
+    if boto is None:
+        raise ImportError(""S3 Cache requires 'boto' package."")","def connect(profile_name=None):
+    if boto3 is None:
+        raise ImportError(""S3 Cache requires 'boto3' package."")"
+,mapproxy/mapproxy,ff9540468662f87ae2619ff472f5bc2ce1522673,mapproxy/cache/s3.py,simple,boto,boto3,"    try:
+        return boto.connect_s3(profile_name=profile_name, host='s3.eu-central-1.amazonaws.com')
+    except boto.provider.ProfileNotFoundError as e:
+        raise S3ConnectionError('Profile no found %s' % e)"," try:
+        return boto3.client(""s3"")"
+,mapproxy/mapproxy,ff9540468662f87ae2619ff472f5bc2ce1522673,mapproxy/cache/s3.py,simple,boto,boto3," try:
+            self.bucket = conn.get_bucket(bucket_name)
+        except boto.exception.S3ResponseError as e:
+            if e.error_code == 'NoSuchBucket':
+                raise S3ConnectionError('No such bucket: %s' % bucket_name)"," try:
+            self.bucket = self.conn.head_bucket(Bucket=bucket_name)
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                raise S3ConnectionError('No such bucket: %s' % bucket_name)"
+,mapproxy/mapproxy,ff9540468662f87ae2619ff472f5bc2ce1522673,mapproxy/cache/s3.py,simple,boto,boto3,"if tile.is_missing():
+
+            location = self.tile_location(tile)
+
+            k = boto.s3.key.Key(self.bucket)
+            k.key = location
+            if k.exists():
+                log.debug('S3: cache HIT, location: %s' % location)
+                return True
+            else:
+                log.debug('S3: cache MISS, location: %s' % location)
+                return False
+        else:
+            return True"," if tile.is_missing():
+
+            location = self.tile_location(tile)
+
+            try:
+                self.conn.head_object(Bucket=self.bucket_name, Key=location)
+            except botocore.exceptions.ClientError as e:
+                if e.response['Error']['Code'] == '404':
+                    return False
+                raise
+
+        return True"
+,mapproxy/mapproxy,ff9540468662f87ae2619ff472f5bc2ce1522673,mapproxy/cache/s3.py,complex,boto,boto3," def load_tile(self, tile, with_metadata=False):
+        """"""
+        Fills the `Tile.source` of the `tile` if it is cached.
+        If it is not cached or if the ``.coord`` is ``None``, nothing happens.
+        """"""
+        if not tile.is_missing():
+            return True
+
+        location = self.tile_location(tile)
+        log.debug('S3:load_tile, location: %s' % location)
+
+        tile_data = StringIO.StringIO()
+        k = boto.s3.key.Key(self.bucket)
+        k.key = location
+        try:
+            k.get_contents_to_file(tile_data)
+            tile.source = ImageSource(tile_data)
+            k.close()
+            return True
+        except boto.exception.S3ResponseError:
+            # NoSuchKey
+            pass
+        k.close()
+        return False","def load_tile(self, tile, with_metadata=False):
+        """"""
+        Fills the `Tile.source` of the `tile` if it is cached.
+        If it is not cached or if the ``.coord`` is ``None``, nothing happens.
+        """"""
+        if not tile.is_missing():
+            return True
+
+        location = self.tile_location(tile)
+        log.debug('S3:load_tile, location: %s' % location)
+
+        tile_data = BytesIO()
+
+
+        try:
+            self.conn.download_fileobj(self.bucket_name, location, tile_data)
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                return False
+            raise
+        tile.source = ImageSource(tile_data)
+
+
+
+
+        return True"
+,mapproxy/mapproxy,ff9540468662f87ae2619ff472f5bc2ce1522673,mapproxy/cache/s3.py,simple,boto,boto3," def remove_tile(self, tile):
+
+
+        location = self.tile_location(tile)
+        log.debug('remove_tile, location: %s' % location)
+
+        k = boto.s3.key.Key(self.bucket)
+        k.key = location
+        if k.exists():
+            k.delete()
+        k.close()","    def remove_tile(self, tile):
+        location = self.tile_location(tile)
+        log.debug('remove_tile, location: %s' % location)
+
+        self.conn.delete_object(Bucket=self.bucket_name, Key=location)"
+,mapproxy/mapproxy,ff9540468662f87ae2619ff472f5bc2ce1522673,mapproxy/test/unit/test_cache_s3.py,complex,boto,boto3,"def setup(self):
+        if not mock_s3 or not boto:
+            raise SkipTest(""boto and moto required for S3 tests"")
+
+        TileCacheTestBase.setup(self)
+
+        self.mock = mock_s3()
+        self.mock.start()
+
+        bucket_name = ""test""
+        dir_name = 'mapproxy'
+
+        boto.connect_s3().create_bucket(bucket_name)
+
+        self.cache = S3Cache(dir_name,
+            file_ext='png',","  def setup(self):
+        if not mock_s3 or not boto3:
+            raise SkipTest(""boto3 and moto required for S3 tests"")
+
+        TileCacheTestBase.setup(self)
+
+        self.mock = mock_s3()
+        self.mock.start()
+
+        bucket_name = ""test""
+        dir_name = 'mapproxy'
+
+        boto3.client(""s3"").create_bucket(Bucket=bucket_name)
+
+        self.cache = S3Cache(dir_name,
+            file_ext='png',"
+,mozilla-services/autopush,0278472214149bc1b96281cbe019b2b693053d08,autopush/tests/__init__.py,complex,boto,boto3,"def setUp():
+    logging.getLogger('boto').setLevel(logging.CRITICAL)
+    boto_path = os.path.join(root_dir, ""automock"", ""boto.cfg"")
+    boto.config.load_from_path(boto_path)
+    global ddb_process
+    cmd = "" "".join([
+        ""java"", ""-Djava.library.path=%s"" % ddb_lib_dir,
+        ""-jar"", ddb_jar, ""-sharedDb"", ""-inMemory""
+    ])
+
+    ddb_process = subprocess.Popen(cmd, shell=True, env=os.environ)
+
+    # Setup the necessary message tables
+    message_table = os.environ.get(""MESSAGE_TABLE"", ""message_int_test"")
+
+    create_rotating_message_table(prefix=message_table, delta=-1)
+    create_rotating_message_table(prefix=message_table)","def setUp():
+    logging.getLogger('boto').setLevel(logging.CRITICAL)
+
+
+    global ddb_process
+    cmd = "" "".join([
+        ""java"", ""-Djava.library.path=%s"" % ddb_lib_dir,
+        ""-jar"", ddb_jar, ""-sharedDb"", ""-inMemory""
+    ])
+    conf = botocore.config.Config(
+        region_name=os.getenv('AWS_REGION_NAME', 'us-east-1')
+    )
+    ddb_process = subprocess.Popen(cmd, shell=True, env=os.environ)
+    autopush.db.g_dynamodb = boto3.resource(
+        'dynamodb',
+        config=conf,
+        endpoint_url=os.getenv(""AWS_LOCAL_DYNAMODB"", ""http://127.0.0.1:8000""),
+        aws_access_key_id=""BogusKey"",
+        aws_secret_access_key=""BogusKey"",
+    )
+
+    autopush.db.g_client = autopush.db.g_dynamodb.meta.client
+
+    # Setup the necessary message tables
+    message_table = os.environ.get(""MESSAGE_TABLE"", ""message_int_test"")
+
+    create_rotating_message_table(prefix=message_table, delta=-1)
+    create_rotating_message_table(prefix=message_table)"
+,mozilla-services/autopush,0278472214149bc1b96281cbe019b2b693053d08,autopush/webpush_server.py,simple,boto,boto3," except JSONResponseError:
+            return RegisterErrorResponse(error_msg=""overloaded"", status=503)","        except ClientError as ex:
+            if (ex.response['Error']['Code'] ==
+                    ""ProvisionedThroughputExceededException""):
+                return RegisterErrorResponse(error_msg=""overloaded"",
+                                             status=503)"
+,mozilla-services/autopush,0278472214149bc1b96281cbe019b2b693053d08,autopush/websocket.py,simple,boto,boto3, failure.trap(JSONResponseError),        failure.trap(ClientError)
+,mozilla-services/socorro,96f6b9319354977a0bea16247c8bee660ea2628c,socorro/unittest/conftest.py,simple,boto,boto3,"import boto
+from boto.exception import StorageResponseError","import boto3
+from botocore.client import ClientError, Config"
+,mvanholsteijn/aws-visualizer,a50e890c2b4c94d008346281fca157afb2c8d93f,graph_region.py,simple,boto,boto3,"def connect(self):
+		self.EC2 = boto.ec2.connect_to_region(self.region)
+		self.VPC = boto.vpc.connect_to_region(self.region)
+		self.ELB = boto.ec2.elb.connect_to_region(self.region)
+		self.load()","def connect(self):
+
+		self.EC2 = boto3.client('ec2')
+		self.ELB = boto3.client('elb')
+		self.load()"
+,ngageoint/scale,a05312376cf85e30fb1ee2424a5d08350b6f8f4e,scale/storage/brokers/s3_broker.py,simple,boto,boto3,"import boto
+from boto.exception import S3ResponseError
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key","from boto3.session import Session
+from botocore.client import Config
+from botocore.exceptions import ClientError"
+,ngageoint/scale,a05312376cf85e30fb1ee2424a5d08350b6f8f4e,scale/storage/brokers/s3_broker.py,simple,boto,boto3,"  with BrokerConnection(credentials) as conn:
+            try:
+                conn.get_bucket(config['bucket_name'], True)
+            except S3ResponseError:"," with S3Client(credentials) as client:
+            try:
+                client.get_bucket(config['bucket_name'])
+            except ClientError:"
+,novemberfiveco/s3pypi,018015527eb8084aa26165a3345d96e5eb3d054e,s3pypi/storage.py,simple,boto,boto3,"def __init__(self, bucket, secret=None, region=None):
+        s3 = boto.s3.connect_to_region(region) if region else boto.connect_s3()
+        self.bucket = s3.get_bucket(bucket)
+        self.secret = secret
+
+        self.url = 'http://' + self.bucket.get_website_endpoint()
+        if secret:
+            self.url += '/' + secret","    def __init__(self, bucket, secret=None, region=None):
+        self.s3 = boto3.resource('s3', region_name=region)
+        self.bucket = bucket
+        self.secret = secret"
+,novemberfiveco/s3pypi,018015527eb8084aa26165a3345d96e5eb3d054e,setup.py,simple,boto,boto3,"install_requires=['boto', 'Jinja2', 'wheel'],","install_requires=['boto3', 'Jinja2', 'wheel'],"
+,openSUSE/salt,c4f5888c856e31c958b45135796dc5a77c18cc20,salt/modules/boto_sqs.py,complex,boto,boto3,"try:
+    # pylint: disable=unused-import
+    import boto
+    import boto.sqs
+    # pylint: enable=unused-import
+    logging.getLogger('boto').setLevel(logging.CRITICAL)
+    HAS_BOTO = True
+except ImportError:
+    HAS_BOTO = False
+
+from salt.ext.six import string_types
+
+
+def __virtual__():
+    '''
+    Only load if boto libraries exist.
+    '''
+    if not HAS_BOTO:
+        return (False, 'The boto_sqs module could not be loaded: boto libraries not found')
+    __utils__['boto.assign_funcs'](__name__, 'sqs', pack=__salt__)
+    return True","    import boto3
+    import botocore
+    # pylint: enable=unused-import
+    logging.getLogger('boto3').setLevel(logging.CRITICAL)
+    HAS_BOTO3 = Truetry:
+    # pylint: disable=unused-import
+    import boto3
+    import botocore
+    # pylint: enable=unused-import
+    logging.getLogger('boto3').setLevel(logging.CRITICAL)
+    HAS_BOTO3 = True
+except ImportError:
+    HAS_BOTO3 = False
+
+
+
+
+def __virtual__():
+    '''
+    Only load if boto3 libraries exist.
+    '''
+    if not HAS_BOTO3:
+        return (False, 'The boto_sqs module could not be loaded: boto3 libraries not found')
+    __utils__['boto3.assign_funcs'](__name__, 'sqs', pack=__salt__)
+    return True"
+,percolate/ec2-security-groups-dumper,fd95bcb15290182548ad73354638bf9ec1dd7b0b,ec2_security_groups_dumper/main.py,complex,boto,boto3,"  if self.region:
+            conn = boto.ec2.connect_to_region(region_name=self.region,
+                                              profile_name=self.profile)
+        else:
+            conn = boto.connect_ec2(profile_name=self.profile)
+        security_groups = conn.get_all_security_groups(filters=self.filters)
+        for group in security_groups:
+
+
+            group_dict = dict()
+            group_dict['id'] = group.id
+            group_dict['name'] = group.name
+            if group.description:
+                group_dict['description'] = group.description
+
+            if group.rules or group.rules_egress:
+                group_dict['rules'] = list()
+
+            for rule in group.rules:
+                rule_dict = self._build_rule(rule)
+                rule_dict['direction'] = ""INGRESS""
+
+                group_dict['rules'].append(rule_dict)
+
+            for rule in group.rules_egress:
+                rule_dict = self._build_rule(rule)
+                rule_dict['direction'] = ""EGRESS""","        if self.region:
+            ec2 = boto3.client('ec2', region_name=self.region)
+
+        else:
+            ec2 = boto3.client('ec2')
+
+        security_groups = ec2.describe_security_groups(Filters=self.filters)
+
+        for group in security_groups['SecurityGroups']:
+            group_dict = dict()
+            group_dict['id'] = group['GroupId']
+            group_dict['name'] = group['GroupName']
+            group_dict['description'] = group.get('Description', None)
+
+
+            if group.get('IpPermissions', None) or group.get('IpPermissionsEgress', None):
+                group_dict['rules'] = list()
+
+            for rule in group.get('IpPermissions', None):
+                rule_dict = self._build_rule(rule)
+                rule_dict['direction'] = ""INGRESS""
+
+                group_dict['rules'].append(rule_dict)
+
+            for rule in group.get('IpPermissionsEgress', None):
+                rule_dict = self._build_rule(rule)
+                rule_dict['direction'] = ""EGRESS"""
+,percolate/ec2-security-groups-dumper,fd95bcb15290182548ad73354638bf9ec1dd7b0b,setup.py,simple,boto,boto3,"setup(
+    name='ec2-security-groups-dumper',
+    version='1.7.1',
+    description='AWS EC2 Security Groups dump tool',
+    url='https://github.com/percolate/ec2-security-groups-dumper',
+    author='Laurent Raufaste',
+    author_email='analogue@glop.org',
+    license='GPLv3',
+    keywords='aws ec2 firewall boto',
+    packages=['ec2_security_groups_dumper'],
+    install_requires=[
+        'boto',
+        'docopt'
+    ],
+    entry_points={","setup(
+    name='ec2-security-groups-dumper',
+    version='1.8.0',
+    description='AWS EC2 Security Groups dump tool',
+    url='https://github.com/percolate/ec2-security-groups-dumper',
+    author='Laurent Raufaste',
+    author_email='analogue@glop.org',
+    license='GPLv3',
+    keywords='aws ec2 firewall boto3',
+    packages=['ec2_security_groups_dumper'],
+    install_requires=[
+        'boto3',
+        'docopt'
+    ],
+    entry_points={"
+,plecto/motorway,81dc5f517d06bd0f40a5b28699a0c0e6794b264c,motorway/contrib/amazon_kinesis/intersections.py,simple,boto,boto3,"def __init__(self, **kwargs):
+        super(KinesisInsertIntersection, self).__init__(**kwargs)
+        self.conn = boto.kinesis.connect_to_region(**self.connection_parameters())
+        assert self.stream_name, ""Please define attribute stream_name on your KinesisInsertIntersection""","def __init__(self, **kwargs):
+        super(KinesisInsertIntersection, self).__init__(**kwargs)
+        self.conn = boto3.client(**self.connection_parameters())
+        assert self.stream_name, ""Please define attribute stream_name on your KinesisInsertIntersection"""
+,plecto/motorway,81dc5f517d06bd0f40a5b28699a0c0e6794b264c,motorway/contrib/amazon_kinesis/ramps.py,simple,boto,boto3,"from boto.dynamodb2.exceptions import ItemNotFound, ConditionalCheckFailedException, \
+    ProvisionedThroughputExceededException, LimitExceededException
+from boto.dynamodb2.fields import HashKey
+from boto.dynamodb2.items import Item
+from boto.dynamodb2.table import Table
+from boto.dynamodb2.types import STRING
+from boto.exception import JSONResponseError",import boto3
+,plecto/motorway,81dc5f517d06bd0f40a5b28699a0c0e6794b264c,motorway/contrib/amazon_kinesis/ramps.py,simple,boto,boto3," def __init__(self, shard_threads_enabled=True, **kwargs):
+        super(KinesisRamp, self).__init__(**kwargs)
+        self.conn = boto.kinesis.connect_to_region(**self.connection_parameters())
+        assert self.stream_name, ""Please define attribute stream_name on your KinesisRamp""
+
+        control_table_name = self.get_control_table_name()
+
+        self.worker_id = str(uuid.uuid4())
+        self.semaphore = Semaphore()
+        self.uncompleted_ids = {}","    def __init__(self, shard_threads_enabled=True, **kwargs):
+        super(KinesisRamp, self).__init__(**kwargs)
+        self.conn = boto3.client(**self.connection_parameters('kinesis'))
+        assert self.stream_name, ""Please define attribute stream_name on your KinesisRamp""
+
+        control_table_name = self.get_control_table_name()
+
+        self.worker_id = str(uuid.uuid4())
+        self.semaphore = Semaphore()
+        self.uncompleted_ids = {}
+        self.dynamodb_client = boto3.client(**self.connection_parameters('dynamodb'))  # we need to client to catch exceptions"

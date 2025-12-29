@@ -1,0 +1,3000 @@
+task_id,link,repo_name,commit_code,file_name,type,legacy_lib,target_lib,code_before,code_after
+1,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/core/src/test/java/org/apache/plc4x/java/PlcDriverManagerTest.java,simple,testng,junit,"import org.junit.Assert;
+import org.testng.annotations.Test;","import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;"
+2,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/core/src/test/java/org/apache/plc4x/java/PlcDriverManagerTest.java,complex,testng,junit,"    @Test(groups = { ""fast"" })
+    public void getExistingDriverTest() throws PlcException {
+
+        MockConnection mockConnection = (MockConnection) new PlcDriverManager().getConnection(""mock://some-cool-url"");
+        Assert.assertNull(mockConnection.getAuthentication());
+    }","    @Test
+    @Tag(""fast"")
+    void getExistingDriverTest() throws PlcException {
+        MockConnection mockConnection = (MockConnection) new PlcDriverManager().getConnection(""mock://some-cool-url"");
+        Assertions.assertNull(mockConnection.getAuthentication());
+    }"
+3,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/core/src/test/java/org/apache/plc4x/java/PlcDriverManagerTest.java,complex,testng,junit,"    @Test(groups = { ""fast"" })
+    public void getExistingDriverWithAuthenticationTest() throws PlcException {
+
+        PlcUsernamePasswordAuthentication authentication =
+            new PlcUsernamePasswordAuthentication(""user"", ""pass"");
+        MockConnection mockConnection = (MockConnection) new PlcDriverManager().getConnection(""mock://some-cool-url"", authentication);
+        Assert.assertNotNull(mockConnection.getAuthentication());
+        Assert.assertTrue(mockConnection.getAuthentication() instanceof PlcUsernamePasswordAuthentication);
+    }","    @Test
+    @Tag(""fast"")
+    void getExistingDriverWithAuthenticationTest() throws PlcException {
+        PlcUsernamePasswordAuthentication authentication =
+            new PlcUsernamePasswordAuthentication(""user"", ""pass"");
+        MockConnection mockConnection = (MockConnection) new PlcDriverManager().getConnection(""mock://some-cool-url"", authentication);
+        Assertions.assertNotNull(mockConnection.getAuthentication());
+        Assertions.assertTrue(mockConnection.getAuthentication() instanceof PlcUsernamePasswordAuthentication);
+    }"
+4,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/core/src/test/java/org/apache/plc4x/java/PlcDriverManagerTest.java,complex,testng,junit,"    @Test(groups = { ""fast"" }, expectedExceptions = {PlcConnectionException.class})
+    public void getNotExistingDriverTest() throws PlcException {
+        new PlcDriverManager().getConnection(""non-existing-protocol://some-cool-url"");
+
+
+    }","    @Test
+    @Tag(""fast"")
+    void getNotExistingDriverTest() throws PlcException {
+        Assertions.assertThrows(PlcConnectionException.class,
+            () -> new PlcDriverManager().getConnection(""non-existing-protocol://some-cool-url""));
+    }"
+5,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/core/src/test/java/org/apache/plc4x/java/PlcDriverManagerTest.java,complex,testng,junit,"    @Test(groups = { ""fast"" }, expectedExceptions = {PlcConnectionException.class})
+    public void getInvalidUriTest() throws PlcException {
+        new PlcDriverManager().getConnection(""The quick brown fox jumps over the lazy dog"");
+
+
+    }","    @Test
+    @Tag(""fast"")
+    void getInvalidUriTest() throws PlcException {
+        Assertions.assertThrows(PlcConnectionException.class,
+            () -> new PlcDriverManager().getConnection(""The quick brown fox jumps over the lazy dog""));
+    }"
+6,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/core/src/test/java/org/apache/plc4x/java/PlcDriverManagerTest.java,complex,testng,junit,"    @Test(groups = { ""fast"" }, expectedExceptions = {IllegalStateException.class})
+    public void getDuplicateDriver() throws PlcException, MalformedURLException {
+
+        // Save and replace the context classloader as we need to force the ServiceLoader to
+        // use a different service file.
+        ClassLoader originalClassloader = Thread.currentThread().getContextClassLoader();
+        URL[] urls = new URL[1];
+        urls[0] = new File(""src/test/resources/test"").toURI().toURL();
+        ClassLoader fakeClassLoader = new URLClassLoader(urls, originalClassloader);
+        new PlcDriverManager(fakeClassLoader).getConnection(""mock://some-cool-url"");
+
+
+    }","    @Test
+    @Tag(""fast"")
+    void getDuplicateDriver() throws PlcException, MalformedURLException {
+        // Save and replace the context classloader as we need to force the ServiceLoader to
+        // use a different service file.
+        ClassLoader originalClassloader = Thread.currentThread().getContextClassLoader();
+        URL[] urls = new URL[1];
+        urls[0] = new File(""src/test/resources/test"").toURI().toURL();
+        ClassLoader fakeClassLoader = new URLClassLoader(urls, originalClassloader);
+
+        Assertions.assertThrows(IllegalStateException.class,
+            () -> new PlcDriverManager(fakeClassLoader).getConnection(""mock://some-cool-url""));
+    }"
+7,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/protocols/s7/src/test/java/org/apache/plc4x/java/s7/S7PlcDriverTest.java,simple,testng,junit,"import org.testng.Assert;
+import org.testng.annotations.Test;","import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;"
+8,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/protocols/s7/src/test/java/org/apache/plc4x/java/s7/S7PlcDriverTest.java,complex,testng,junit,"    @Test(groups = {""fast""})
+    public void getConnectionTest() throws PlcException {
+
+        S7PlcConnection s7Connection = (S7PlcConnection)
+            new PlcDriverManager().getConnection(""s7://localhost/1/2"");
+        Assert.assertEquals(s7Connection.getHostName(), ""localhost"");
+        Assert.assertEquals(s7Connection.getRack(), 1);
+        Assert.assertEquals(s7Connection.getSlot(), 2);
+    }","    @Test
+    @Tag(""fast"")
+    void getConnectionTest() throws PlcException {
+        S7PlcConnection s7Connection = (S7PlcConnection)
+            new PlcDriverManager().getConnection(""s7://localhost/1/2"");
+        Assertions.assertEquals(s7Connection.getHostName(), ""localhost"");
+        Assertions.assertEquals(s7Connection.getRack(), 1);
+        Assertions.assertEquals(s7Connection.getSlot(), 2);
+    }"
+9,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/protocols/s7/src/test/java/org/apache/plc4x/java/s7/S7PlcDriverTest.java,complex,testng,junit,"    @Test(groups = {""fast""}, expectedExceptions = {PlcConnectionException.class})
+    public void getConnectionInvalidUrlTest() throws PlcException {
+        new PlcDriverManager().getConnection(""s7://localhost/hurz/2"");
+
+
+    }","    @Test
+    @Tag(""fast"")
+    void getConnectionInvalidUrlTest() throws PlcException {
+        Assertions.assertThrows(PlcConnectionException.class,
+            () -> new PlcDriverManager().getConnection(""s7://localhost/hurz/2""));
+    }"
+10,https://github.com/apache/incubator-plc4x/commit/4312eb178b6cb000ea8a3c78df70567182341331,incubator-plc4x,4312eb178b6cb000ea8a3c78df70567182341331,plc4j/protocols/s7/src/test/java/org/apache/plc4x/java/s7/S7PlcDriverTest.java,complex,testng,junit,"    @Test(groups = {""fast""}, expectedExceptions = {PlcConnectionException.class})
+    public void getConnectionWithAuthenticationTest() throws PlcException {
+        new PlcDriverManager().getConnection(""s7://localhost/1/2"",
+            new PlcUsernamePasswordAuthentication(""user"", ""pass""));
+
+
+    }","    @Test
+    @Tag(""fast"")
+    void getConnectionWithAuthenticationTest() throws PlcException {
+        Assertions.assertThrows(PlcConnectionException.class,
+            () -> new PlcDriverManager().getConnection(""s7://localhost/1/2"",
+                new PlcUsernamePasswordAuthentication(""user"", ""pass"")));
+    }"
+11,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/isolation/TestChooserMappingFactory.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.testng.Assert.*;","import org.junit.Test;
+
+import static org.junit.Assert.*;"
+12,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/isolation/TestChooserMappingFactory.java,simple,testng,junit,"  @Test(description = ""Validates that all isolation levels are handled in the mapping built by the factory"")","  /**
+   * Validates that all isolation levels are handled in the mapping built by the factory
+   */
+  @Test"
+13,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/isolation/TestFullIsolationChooser.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.testng.Assert.*;","import org.junit.Test;
+
+import static org.junit.Assert.*;"
+14,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/isolation/TestNoneIsolationChooser.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.testng.Assert.*;","import org.junit.Test;
+
+import static org.junit.Assert.*;"
+15,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/isolation/TestNoneIsolationListChooser.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.testng.Assert.*;","import org.junit.Test;
+
+import static org.junit.Assert.*;"
+16,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/isolation/TestTransitionalIsolationChooser.java,simple,testng,junit,"import org.testng.annotations.Test;
+import static org.testng.Assert.*;","import org.junit.Test;
+import static org.junit.Assert.*;"
+17,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/isolation/TestTransitionalIsolationListChooser.java,simple,testng,junit,"import org.testng.annotations.Test;
+import static org.testng.Assert.*;","import org.junit.Test;
+import static org.junit.Assert.*;"
+18,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/matcher/BootstrapClassPredicateTest.java,simple,testng,junit,"import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import static org.testng.Assert.*;","import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.*;"
+19,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/matcher/BootstrapClassPredicateTest.java,simple,testng,junit,"  @BeforeMethod
+  public void setup() {
+    this.bootstrapClassPredicate = new BootstrapClassPredicate();
+  }","  @Before
+  public void setup() {
+    this.bootstrapClassPredicate = new BootstrapClassPredicate();
+  }"
+20,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a9,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a9,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/matcher/GlobMatcherTest.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.testng.Assert.*;","import org.junit.Test;
+
+import static org.junit.Assert.*;"
+21,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a10,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a10,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/nucleus/FileOriginRestrictionFilterTest.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;","import org.junit.Test;
+
+import static org.junit.Assert.*;"
+22,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a10,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a10,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/nucleus/FileOriginRestrictionFilterTest.java,complex,testng,junit,"  @Test
+  public void testFileOrigin() throws Exception {
+    File tempDir = new File(System.getProperty(""java.io.tmpdir""));
+    File directoryInTempDir = new File(tempDir, ""test-"" + System.currentTimeMillis());
+    directoryInTempDir.mkdir();
+    directoryInTempDir.deleteOnExit();
+
+    // /tmp/test.jar
+    File fileInTempDir = new File(tempDir, ""test.jar"");
+
+    // /tmp/test-1234/test2.jar
+    File fileInSubdirOfTempDir = new File(directoryInTempDir, ""test2.jar"");
+
+    // /test3.jar
+    File fileNotInTempDir = new File(tempDir.getParent(), ""test3.jar"");
+
+    FileOriginRestrictionFilter nonRecursiveFilter = new FileOriginRestrictionFilter(tempDir, false, OriginMatchResults.ALLOW);
+    assertEquals(nonRecursiveFilter.isAllowed(fileInTempDir.toURI().toURL()), OriginMatchResults.ALLOW);
+    assertEquals(nonRecursiveFilter.isAllowed(fileInSubdirOfTempDir.toURI().toURL()), OriginMatchResults.NO_MATCH);
+    assertEquals(nonRecursiveFilter.isAllowed(fileNotInTempDir.toURI().toURL()), OriginMatchResults.NO_MATCH);
+
+    FileOriginRestrictionFilter recursiveFilter = new FileOriginRestrictionFilter(tempDir, true, OriginMatchResults.ALLOW);
+    assertEquals(recursiveFilter.isAllowed(fileInTempDir.toURI().toURL()), OriginMatchResults.ALLOW);
+    assertEquals(recursiveFilter.isAllowed(fileInSubdirOfTempDir.toURI().toURL()), OriginMatchResults.ALLOW);
+    assertEquals(recursiveFilter.isAllowed(fileNotInTempDir.toURI().toURL()), OriginMatchResults.NO_MATCH);
+  }","  @Test
+  public void testFileOrigin() throws Exception {
+    File tempDir = new File(System.getProperty(""java.io.tmpdir""));
+    File directoryInTempDir = new File(tempDir, ""test-"" + System.currentTimeMillis());
+    directoryInTempDir.mkdir();
+    directoryInTempDir.deleteOnExit();
+
+    // /tmp/test.jar
+    File fileInTempDir = new File(tempDir, ""test.jar"");
+
+    // /tmp/test-1234/test2.jar
+    File fileInSubdirOfTempDir = new File(directoryInTempDir, ""test2.jar"");
+
+    // /test3.jar
+    File fileNotInTempDir = new File(tempDir.getParent(), ""test3.jar"");
+
+    FileOriginRestrictionFilter nonRecursiveFilter = new FileOriginRestrictionFilter(tempDir, false, OriginMatchResults.ALLOW);
+    assertEquals(OriginMatchResults.ALLOW, nonRecursiveFilter.isAllowed(fileInTempDir.toURI().toURL()));
+    assertEquals(OriginMatchResults.NO_MATCH, nonRecursiveFilter.isAllowed(fileInSubdirOfTempDir.toURI().toURL()));
+    assertEquals(OriginMatchResults.NO_MATCH, nonRecursiveFilter.isAllowed(fileNotInTempDir.toURI().toURL()));
+
+    FileOriginRestrictionFilter recursiveFilter = new FileOriginRestrictionFilter(tempDir, true, OriginMatchResults.ALLOW);
+    assertEquals(OriginMatchResults.ALLOW, recursiveFilter.isAllowed(fileInTempDir.toURI().toURL()));
+    assertEquals(OriginMatchResults.ALLOW, recursiveFilter.isAllowed(fileInSubdirOfTempDir.toURI().toURL()));
+    assertEquals(OriginMatchResults.NO_MATCH, recursiveFilter.isAllowed(fileNotInTempDir.toURI().toURL()));
+  }"
+23,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/nucleus/OriginRestrictionTest.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;","import org.junit.Test;
+
+import static org.junit.Assert.*;"
+24,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/nucleus/ProtocolOriginRestrictionFilterTest.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;","import org.junit.Test;
+
+import static org.junit.Assert.*;"
+25,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-nucleus/src/test/java/com/linkedin/cytodynamics/nucleus/ProtocolOriginRestrictionFilterTest.java,simple,testng,junit,"public class ProtocolOriginRestrictionFilterTest {
+  @Test
+  public void testProtocolOriginRestrictionFilter() throws Exception {
+    ProtocolOriginRestrictionFilter httpOnly = new
+        ProtocolOriginRestrictionFilter(Collections.singleton(""http""), OriginMatchResults.ALLOW);
+
+    assertTrue(httpOnly.matches(new URL(""http://www.example.com/"")));
+    assertEquals(httpOnly.isAllowed(new URL(""http://www.example.com/"")), OriginMatchResults.ALLOW);
+
+    assertFalse(httpOnly.matches(new URL(""https://www.example.com/"")));
+    assertEquals(httpOnly.isAllowed(new URL(""https://www.example.com/"")), OriginMatchResults.NO_MATCH);
+
+    Set<String> protocolSet = new HashSet<>(Arrays.asList(""http"", ""https""));
+    ProtocolOriginRestrictionFilter httpAndHttpsDeny = new
+        ProtocolOriginRestrictionFilter(protocolSet, OriginMatchResults.DENY);
+
+    assertTrue(httpAndHttpsDeny.matches(new URL(""http://www.example.com/"")));
+    assertEquals(httpAndHttpsDeny.isAllowed(new URL(""http://www.example.com/"")), OriginMatchResults.DENY);
+
+    assertTrue(httpAndHttpsDeny.matches(new URL(""https://www.example.com/"")));
+    assertEquals(httpAndHttpsDeny.isAllowed(new URL(""https://www.example.com/"")), OriginMatchResults.DENY);
+  }
+}","public class ProtocolOriginRestrictionFilterTest {
+  @Test
+  public void testProtocolOriginRestrictionFilter() throws Exception {
+    ProtocolOriginRestrictionFilter httpOnly = new
+        ProtocolOriginRestrictionFilter(Collections.singleton(""http""), OriginMatchResults.ALLOW);
+
+    assertTrue(httpOnly.matches(new URL(""http://www.example.com/"")));
+    assertEquals(OriginMatchResults.ALLOW, httpOnly.isAllowed(new URL(""http://www.example.com/"")));
+
+    assertFalse(httpOnly.matches(new URL(""https://www.example.com/"")));
+    assertEquals(OriginMatchResults.NO_MATCH, httpOnly.isAllowed(new URL(""https://www.example.com/"")));
+
+    Set<String> protocolSet = new HashSet<>(Arrays.asList(""http"", ""https""));
+    ProtocolOriginRestrictionFilter httpAndHttpsDeny = new
+        ProtocolOriginRestrictionFilter(protocolSet, OriginMatchResults.DENY);
+
+    assertTrue(httpAndHttpsDeny.matches(new URL(""http://www.example.com/"")));
+    assertEquals(OriginMatchResults.DENY, httpAndHttpsDeny.isAllowed(new URL(""http://www.example.com/"")));
+
+    assertTrue(httpAndHttpsDeny.matches(new URL(""https://www.example.com/"")));
+    assertEquals(OriginMatchResults.DENY, httpAndHttpsDeny.isAllowed(new URL(""https://www.example.com/"")));
+  }
+}"
+26,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/nucleus/TestLoadClassResolve.java,simple,testng,junit,"import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;","import org.junit.Before;
+import org.junit.Test;"
+27,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/nucleus/TestLoadClassResolve.java,simple,testng,junit,  @BeforeMethod,  @Before
+28,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/nucleus/TestLoadClassResolve.java,simple,testng,junit,"  @Test(description = ""Given that loadClass is called with the resolve argument as false, loadClass should properly ""
+      + ""skip the resolve step"")
+
+
+  public void testLoadClassWithResolveFalse() throws Exception {
+    // from parent classloader
+    this.isolatingClassLoader.loadClass(TestInterface.class.getName(), false);
+    // directly from isolating loader
+    this.isolatingClassLoader.loadClass(TestInterfaceImpl.class.getName(), false);
+    // from fallback classloader
+    this.isolatingClassLoader.loadClass(TestInterfaceAOnlyImpl.class.getName(), false);
+    verify(this.isolatingClassLoader, never()).doResolveClass(any());
+  }","  /**
+   * Given that loadClass is called with the resolve argument as false, loadClass should properly skip the resolve step.
+   */
+  @Test
+  public void testLoadClassWithResolveFalse() throws Exception {
+    // from parent classloader
+    this.isolatingClassLoader.loadClass(TestInterface.class.getName(), false);
+    // directly from isolating loader
+    this.isolatingClassLoader.loadClass(TestInterfaceImpl.class.getName(), false);
+    // from fallback classloader
+    this.isolatingClassLoader.loadClass(TestInterfaceAOnlyImpl.class.getName(), false);
+    verify(this.isolatingClassLoader, never()).doResolveClass(any());
+  }"
+29,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/nucleus/TestLoadClassResolve.java,simple,testng,junit,"  @Test(description = ""Given a class to be loaded from the parent classloader and resolve as true, loadClass should ""
+      + ""execute the resolve step"")
+
+
+
+  public void testLoadClassWithResolveTrueFromParent() throws Exception {
+    Class<?> testInterfaceClass = this.isolatingClassLoader.loadClass(TestInterface.class.getName(), true);
+    verify(isolatingClassLoader).doResolveClass(testInterfaceClass);
+  }","  /**
+   * Given a class to be loaded from the parent classloader and resolve as true, loadClass should execute the resolve
+   * step.
+   */
+  @Test
+  public void testLoadClassWithResolveTrueFromParent() throws Exception {
+    Class<?> testInterfaceClass = this.isolatingClassLoader.loadClass(TestInterface.class.getName(), true);
+    verify(isolatingClassLoader).doResolveClass(testInterfaceClass);
+  }"
+30,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/nucleus/TestLoadClassResolve.java,simple,testng,junit,"  @Test(description = ""Given a class to be loaded from the classpath and resolve as true, loadClass should execute the ""
+      + ""resolve step"")
+
+
+  public void testLoadClassWithResolveTrueFromClasspath() throws Exception {
+    Class<?> testInterfaceImplClass = isolatingClassLoader.loadClass(TestInterfaceImpl.class.getName(), true);
+    verify(isolatingClassLoader).doResolveClass(testInterfaceImplClass);
+  }","  /**
+   * Given a class to be loaded from the classpath and resolve as true, loadClass should execute the resolve step.
+   */
+  @Test
+  public void testLoadClassWithResolveTrueFromClasspath() throws Exception {
+    Class<?> testInterfaceImplClass = isolatingClassLoader.loadClass(TestInterfaceImpl.class.getName(), true);
+    verify(isolatingClassLoader).doResolveClass(testInterfaceImplClass);
+  }"
+31,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/nucleus/TestLoadClassResolve.java,simple,testng,junit,"  @Test(description = ""Given a class to be loaded from the fallback classloader and resolve as true, loadClass should ""
+      + ""execute the resolve step"")
+
+
+
+  public void testLoadClassWithResolveTrueFromFallback() throws Exception {
+    Class<?> testInterfaceAOnlyImplClass = isolatingClassLoader.loadClass(TestInterfaceAOnlyImpl.class.getName(), true);
+    verify(isolatingClassLoader).doResolveClass(testInterfaceAOnlyImplClass);
+  }","  /**
+   * Given a class to be loaded from the fallback classloader and resolve as true, loadClass should execute the resolve
+   * step.
+   */
+  @Test
+  public void testLoadClassWithResolveTrueFromFallback() throws Exception {
+    Class<?> testInterfaceAOnlyImplClass = isolatingClassLoader.loadClass(TestInterfaceAOnlyImpl.class.getName(), true);
+    verify(isolatingClassLoader).doResolveClass(testInterfaceAOnlyImplClass);
+  }"
+32,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/test/TestDynamicLoad.java,simple,testng,junit,"import org.testng.annotations.Test;
+import static org.testng.Assert.*;","import org.junit.Ignore;
+import org.junit.Test;
+import static org.junit.Assert.*;"
+33,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/test/TestDynamicLoad.java,complex,testng,junit,"  @Test(description = ""Given that the loader is a parent of another classloader, then it should still properly do ""
+      + ""classloading"")
+
+
+  public void testLoadAsParent() throws Exception {
+    URI apiJarUri = getJarUri(""cytodynamics-test-api"");
+    // need cytodynamics-nucleus for Api annotation in parent
+    URL cytodynamics = getJarUri(""cytodynamics-nucleus"").toURL();
+    ClassLoader apiClassLoader = new URLClassLoader(new URL[]{cytodynamics, apiJarUri.toURL()}, null);
+    ClassLoader loader = LoaderBuilder
+        .anIsolatingLoader()
+        .withOriginRestriction(OriginRestriction.allowByDefault())
+        .withClasspath(Arrays.asList(apiJarUri, getJarUri(""cytodynamics-test-a"")))
+        .withParentRelationship(DelegateRelationshipBuilder.builder()
+            .withDelegateClassLoader(apiClassLoader)
+            .withIsolationLevel(IsolationLevel.FULL)
+            .addDelegatePreferredClassPredicate(new GlobMatcher(""java.*""))
+            .build())
+        .build();
+
+    // build a URLClassLoader with no classpath so only the parent would be used
+    ClassLoader mainClassLoader = new URLClassLoader(new URL[]{}, loader);
+    Class<?> testInterfaceClass = mainClassLoader.loadClass(TestInterface.class.getName());
+    assertEquals(testInterfaceClass.getClassLoader(), apiClassLoader,
+        ""Should delegate up to the API classloader for the API class"");
+    Class<?> nonApiTestInterface = mainClassLoader.loadClass(NonApiTestInterface.class.getName());
+    assertEquals(nonApiTestInterface.getClassLoader(), loader,
+        ""If there is a non-API class which is also in API classloader, shouldn't load from API classloader"");
+    Class<?> testInterfaceImplClass = mainClassLoader.loadClass(TestInterfaceImpl.class.getName());
+    assertEquals(testInterfaceImplClass.getClassLoader(), loader,
+        ""Should delegate up to the isolating loader for the concrete (non-API) class"");
+  }","  /**
+   * Given that the loader is a parent of another classloader, then it should still properly do classloading.
+   */
+  @Test
+  public void testLoadAsParent() throws Exception {
+    URI apiJarUri = getJarUri(""cytodynamics-test-api"");
+    // need cytodynamics-nucleus for Api annotation in parent
+    URL cytodynamics = getJarUri(""cytodynamics-nucleus"").toURL();
+    ClassLoader apiClassLoader = new URLClassLoader(new URL[]{cytodynamics, apiJarUri.toURL()}, null);
+    ClassLoader loader = LoaderBuilder
+        .anIsolatingLoader()
+        .withOriginRestriction(OriginRestriction.allowByDefault())
+        .withClasspath(Arrays.asList(apiJarUri, getJarUri(""cytodynamics-test-a"")))
+        .withParentRelationship(DelegateRelationshipBuilder.builder()
+            .withDelegateClassLoader(apiClassLoader)
+            .withIsolationLevel(IsolationLevel.FULL)
+            .addDelegatePreferredClassPredicate(new GlobMatcher(""java.*""))
+            .build())
+        .build();
+
+    // build a URLClassLoader with no classpath so only the parent would be used
+    ClassLoader mainClassLoader = new URLClassLoader(new URL[]{}, loader);
+    Class<?> testInterfaceClass = mainClassLoader.loadClass(TestInterface.class.getName());
+    assertEquals(""Should delegate up to the API classloader for the API class"", testInterfaceClass.getClassLoader(),
+        apiClassLoader);
+    Class<?> nonApiTestInterface = mainClassLoader.loadClass(NonApiTestInterface.class.getName());
+    assertEquals(""If there is a non-API class which is also in API classloader, shouldn't load from API classloader"",
+        nonApiTestInterface.getClassLoader(), loader);
+    Class<?> testInterfaceImplClass = mainClassLoader.loadClass(TestInterfaceImpl.class.getName());
+    assertEquals(""Should delegate up to the isolating loader for the concrete (non-API) class"",
+        testInterfaceImplClass.getClassLoader(), loader);
+  }"
+34,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/test/TestDynamicLoad.java,simple,testng,junit,"  @Test(description = ""Given that there is a parent and a fallback delegate, and all can load a class, the class ""
+      + ""should be loaded from the parent"")","  /**
+   * Given that there is a parent and a fallback delegate, and all can load a class, the class should be loaded from the
+   * parent.
+   */
+  @Test"
+35,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/test/TestDynamicLoad.java,simple,testng,junit,"  @Test(description = ""Given that there is a parent and a fallback delegate, but only the fallback parent has a ""
+      + ""class, the class should be loaded by the fallback"")","  /**
+   * Given that there is a parent and a fallback delegate, but only the fallback parent has a class, the class should be
+   * loaded by the fallback.
+   */
+  @Test"
+36,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/test/TestDynamicLoad.java,simple,testng,junit,"  @Test(description = ""Given that there is a parent and a fallback delegate, but only the final fallback has a class, ""
+      + ""the class should be loaded by that final fallback"")","  /**
+   * Given that there is a parent and a fallback delegate, but only the final fallback has a class, the class should be
+   * loaded by that final fallback.
+   */
+  @Test"
+37,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/test/TestDynamicLoad.java,simple,testng,junit,"  @Test(description = ""Given FULL isolation level set for the parent and fallback, and a class is not an API, an ""
+      + ""exception should be thrown"", expectedExceptions = CytodynamicsClassNotFoundException.class)"," /**
+   * Given FULL isolation level set for the parent and fallback, and a class is not an API, an exception should be
+   * thrown.
+   * This also tests that a {@link CytodynamicsClassNotFoundException} is thrown when a class can't be found.
+   */
+  @Test(expected = CytodynamicsClassNotFoundException.class)"
+38,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/test/TestDynamicLoad.java,complex,testng,junit,"  @Test(description = ""Given a structure in which the classloader relationships form a graph, and two of the loaders ""
+      + ""have a common parent, then delegation should properly load from the correct loaders"")
+  public void testGraphRelationshipWithCommonParent() throws Exception {
+    URL apiJarUrl = getJarUri(""cytodynamics-test-api"").toURL();
+    // need cytodynamics-nucleus for Api annotation in parent
+    URL cytodynamics = getJarUri(""cytodynamics-nucleus"").toURL();
+    ClassLoader commonParent = new URLClassLoader(new URL[]{cytodynamics, apiJarUrl}, null);
+    ClassLoader partialDelegation =
+        new URLClassLoader(new URL[]{getJarUri(""cytodynamics-test-a"").toURL()}, commonParent);
+    ClassLoader loader = LoaderBuilder
+        .anIsolatingLoader()
+        .withOriginRestriction(OriginRestriction.allowByDefault())
+        .withClasspath(Collections.singletonList(getJarUri(""cytodynamics-test-b"")))
+        .withParentRelationship(DelegateRelationshipBuilder.builder()
+            .withDelegateClassLoader(commonParent)
+            .withIsolationLevel(IsolationLevel.FULL)
+            .addDelegatePreferredClassPredicate(new GlobMatcher(""java.*""))
+            .build())
+        .addFallbackDelegate(DelegateRelationshipBuilder.builder()
+            .withDelegateClassLoader(partialDelegation)
+            .withIsolationLevel(IsolationLevel.FULL)
+            .addDelegatePreferredClassPredicate(new GlobMatcher(""java.*""))
+            // only load concrete classes from fallback; don't load API classes from fallback
+            .addDelegatePreferredClassPredicate(new GlobMatcher(TestInterfaceImpl.class.getName()))
+            .addDelegatePreferredClassPredicate(new GlobMatcher(TestInterfaceAOnlyImpl.class.getName()))
+            .addBlacklistedClassPredicate(new GlobMatcher(TestInterface.class.getName()))
+            .build())
+        .build();
+
+    Object testInterfaceImpl = loader.loadClass(TestInterfaceImpl.class.getName()).newInstance();
+    assertEquals(testInterfaceImpl.getClass().getClassLoader(), loader,
+        ""TestInterfaceImpl needs to come from the main loader"");
+    Class<?> testInterfaceImplInterface = findTestInterface(testInterfaceImpl.getClass());
+    assertEquals(testInterfaceImplInterface.getClassLoader(), commonParent,
+        ""TestInterface which is implemented by TestInterfaceImpl needs to come from the common parent"");
+    Object testInterfaceAOnlyImpl = loader.loadClass(TestInterfaceAOnlyImpl.class.getName()).newInstance();
+    assertEquals(testInterfaceAOnlyImpl.getClass().getClassLoader(), partialDelegation,
+        ""TestInterfaceAOnlyImpl needs to come from the partial delegation classpath"");
+    Class<?> testInterfaceAOnlyImplInterface = findTestInterface(testInterfaceAOnlyImpl.getClass());
+    assertEquals(testInterfaceAOnlyImplInterface.getClassLoader(), commonParent,
+        ""TestInterfaceAOnlyImpl which is implemented by TestInterfaceImpl needs to come from the common parent"");
+
+    // since these are both loaded from the common parent, then this should always be true, but double checking anyways
+    assertEquals(testInterfaceImplInterface, testInterfaceAOnlyImplInterface,
+        ""TestInterface Class should be the same for TestInterfaceImpl and TestInterfaceAOnlyImpl"");
+  }","  @Test
+
+  public void testGraphRelationshipWithCommonParent() throws Exception {
+    URL apiJarUrl = getJarUri(""cytodynamics-test-api"").toURL();
+    // need cytodynamics-nucleus for Api annotation in parent
+    URL cytodynamics = getJarUri(""cytodynamics-nucleus"").toURL();
+    ClassLoader commonParent = new URLClassLoader(new URL[]{cytodynamics, apiJarUrl}, null);
+    ClassLoader partialDelegation =
+        new URLClassLoader(new URL[]{getJarUri(""cytodynamics-test-a"").toURL()}, commonParent);
+    ClassLoader loader = LoaderBuilder
+        .anIsolatingLoader()
+        .withOriginRestriction(OriginRestriction.allowByDefault())
+        .withClasspath(Collections.singletonList(getJarUri(""cytodynamics-test-b"")))
+        .withParentRelationship(DelegateRelationshipBuilder.builder()
+            .withDelegateClassLoader(commonParent)
+            .withIsolationLevel(IsolationLevel.FULL)
+            .addDelegatePreferredClassPredicate(new GlobMatcher(""java.*""))
+            .build())
+        .addFallbackDelegate(DelegateRelationshipBuilder.builder()
+            .withDelegateClassLoader(partialDelegation)
+            .withIsolationLevel(IsolationLevel.FULL)
+            .addDelegatePreferredClassPredicate(new GlobMatcher(""java.*""))
+            // only load concrete classes from fallback; don't load API classes from fallback
+            .addDelegatePreferredClassPredicate(new GlobMatcher(TestInterfaceImpl.class.getName()))
+            .addDelegatePreferredClassPredicate(new GlobMatcher(TestInterfaceAOnlyImpl.class.getName()))
+            .addBlacklistedClassPredicate(new GlobMatcher(TestInterface.class.getName()))
+            .build())
+        .build();
+
+    Object testInterfaceImpl = loader.loadClass(TestInterfaceImpl.class.getName()).newInstance();
+    assertEquals(""TestInterfaceImpl needs to come from the main loader"", testInterfaceImpl.getClass().getClassLoader(),
+        loader);
+    Class<?> testInterfaceImplInterface = findTestInterface(testInterfaceImpl.getClass());
+    assertEquals(""TestInterface which is implemented by TestInterfaceImpl needs to come from the common parent"",
+        testInterfaceImplInterface.getClassLoader(), commonParent);
+    Object testInterfaceAOnlyImpl = loader.loadClass(TestInterfaceAOnlyImpl.class.getName()).newInstance();
+    assertEquals(""TestInterfaceAOnlyImpl needs to come from the partial delegation classpath"",
+        testInterfaceAOnlyImpl.getClass().getClassLoader(), partialDelegation);
+    Class<?> testInterfaceAOnlyImplInterface = findTestInterface(testInterfaceAOnlyImpl.getClass());
+    assertEquals(
+        ""TestInterfaceAOnlyImpl which is implemented by TestInterfaceImpl needs to come from the common parent"",
+        testInterfaceAOnlyImplInterface.getClassLoader(), commonParent);
+    // since these are both loaded from the common parent, then this should always be true, but double checking anyways
+    assertEquals(""TestInterface Class should be the same for TestInterfaceImpl and TestInterfaceAOnlyImpl"",
+        testInterfaceImplInterface, testInterfaceAOnlyImplInterface);
+  }"
+39,https://github.com/linkedin/Cytodynamics/commit/e1f2795ef9a284bdeae933349c1fc11addccd3a11,Cytodynamics,e1f2795ef9a284bdeae933349c1fc11addccd3a11,cytodynamics-test-container/src/test/java/com/linkedin/cytodynamics/test/TestDynamicLoad.java,simple,testng,junit,"  private static void assertResourcesFound(ClassLoader loader, String resourceName, List<String> resourceContent)
+      throws IOException {
+    URL dataUrl = loader.getResource(resourceName);
+    assertEquals(readLine(dataUrl.openStream()), resourceContent.get(0));
+    assertEquals(readLine(loader.getResourceAsStream(resourceName)), resourceContent.get(0));
+    Enumeration<URL> dataUrls = loader.getResources(resourceName);
+    for (String expectedContent : resourceContent) {
+      assertTrue(dataUrls.hasMoreElements(),
+          String.format(""Expected to find resource with content %s, but no more resources found"", expectedContent));
+
+      assertEquals(readLine(dataUrls.nextElement().openStream()), expectedContent);
+    }
+    assertFalse(dataUrls.hasMoreElements());
+  }","  private static void assertResourcesFound(ClassLoader loader, String resourceName, List<String> resourceContent)
+      throws IOException {
+    URL dataUrl = loader.getResource(resourceName);
+    assertEquals(readLine(dataUrl.openStream()), resourceContent.get(0));
+    assertEquals(readLine(loader.getResourceAsStream(resourceName)), resourceContent.get(0));
+    Enumeration<URL> dataUrls = loader.getResources(resourceName);
+    for (String expectedContent : resourceContent) {
+      assertTrue(
+          String.format(""Expected to find resource with content %s, but no more resources found"", expectedContent),
+          dataUrls.hasMoreElements());
+      assertEquals(readLine(dataUrls.nextElement().openStream()), expectedContent);
+    }
+    assertFalse(dataUrls.hasMoreElements());
+  }"
+40,https://github.com/scijava/native-lib-loader/commit/6dabcd249b1dec7e9ba024b46ddb2e28fc4d55f0,native-lib-loader,6dabcd249b1dec7e9ba024b46ddb2e28fc4d55f0,src/test/java/org/scijava/nativelib/NativeLibraryUtilTest.java,simple,testng,junit,"import org.testng.annotations.Test;
+
+import static org.fest.assertions.Assertions.assertThat;","import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;"
+41,https://github.com/scijava/native-lib-loader/commit/6dabcd249b1dec7e9ba024b46ddb2e28fc4d55f0,native-lib-loader,6dabcd249b1dec7e9ba024b46ddb2e28fc4d55f0,src/test/java/org/scijava/nativelib/NativeLibraryUtilTest.java,complex,testng,junit,"    @Test
+    public void if_no_version_was_found_library_name_is_returned () throws Exception {
+        String versionedLibraryName = NativeLibraryUtil.getVersionedLibraryName(NativeLibraryUtil.class, ""native-lib-loader"");
+
+        assertThat(versionedLibraryName).isEqualTo(""native-lib-loader"");
+    }","    @Test
+    public void ifNoVersionWasFoundLibraryNameIsReturned() throws Exception {
+        final String versionedLibraryName = NativeLibraryUtil.getVersionedLibraryName(NativeLibraryUtil.class, ""native-lib-loader"");
+        assertEquals(""native-lib-loader"", versionedLibraryName);
+
+    }"
+42,https://github.com/scijava/native-lib-loader/commit/6dabcd249b1dec7e9ba024b46ddb2e28fc4d55f0,native-lib-loader,6dabcd249b1dec7e9ba024b46ddb2e28fc4d55f0,src/test/java/org/scijava/nativelib/NativeLoaderTest.java,simple,testng,junit,import org.testng.annotations.Test;,import org.junit.Test;
+43,https://github.com/scijava/native-lib-loader/commit/6dabcd249b1dec7e9ba024b46ddb2e28fc4d55f0,native-lib-loader,6dabcd249b1dec7e9ba024b46ddb2e28fc4d55f0,src/test/java/org/scijava/nativelib/NativeLoaderTest.java,simple,testng,junit,"    @Test(expectedExceptions = IOException.class)
+    public void example_how_to_use() throws Exception {
+
+
+
+        NativeLoader.loadLibrary(""mylib"");
+
+        // expect IOException, because this lib does not exists
+    }","    @Test(expected = IOException.class)
+    public void exampleHowToUse() throws Exception {
+        NativeLoader.loadLibrary(""mylib"");
+        // expect IOException, because this lib does not exist
+
+    }"
+44,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/application-mgt/org.wso2.carbon.identity.application.common/src/test/java/org/wso2/carbon/identity/application/common/model/test/ProvisioningConnectorConfigTest.java,simple,junit,testng,"import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;","import org.testng.annotations.Test;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;"
+45,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/authentication-framework/org.wso2.carbon.identity.application.authentication.framework/src/test/java/org/wso2/carbon/identity/application/authentication/framwork/test/utils/CommonTestUtils.java,simple,junit,testng,"import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;","import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;"
+46,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordLengthPolicyTest.java,simple,junit,testng,import junit.framework.TestCase;,"import org.testng.annotations.Test;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;"
+47,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordLengthPolicyTest.java,complex,junit,testng,"        public void testMaxLength() {
+
+                assertFalse(""max length check failed"", policy.enforce(""password123""));
+                assertTrue(""max length check failed"", policy.enforce(""password""));
+        }","    @Test
+    public void testMaxLength() {
+
+        assertFalse(policy.enforce(""password123""), ""max length check failed"");
+        assertTrue(policy.enforce(""password""), ""max length check failed"");
+    }"
+48,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordLengthPolicyTest.java,complex,junit,testng,"        public void testMinLength() {
+                assertFalse(""min length check failed"", policy.enforce(""passw""));
+                assertTrue(""min length check failed"", policy.enforce(""password""));
+        }","    @Test
+    public void testMinLength() {
+        assertFalse(policy.enforce(""passw""), ""min length check failed"");
+        assertTrue(policy.enforce(""password""), ""min length check failed"");
+    }"
+49,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordLengthPolicyTest.java,complex,junit,testng,"        public void testNullInput() {
+                assertTrue(""null input check failed"", policy.enforce(null));
+        }","    @Test
+    public void testNullInput() {
+        assertTrue(policy.enforce(null), ""null input check failed"");
+    }"
+50,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordNamePolicyTest.java,simple,junit,testng,import junit.framework.TestCase;,"import org.testng.annotations.Test;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;"
+51,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordNamePolicyTest.java,simple,junit,testng,"	public void testUsernameSameasPassword(){
+		
+		assertFalse(""username same as password failed"", policy.enforce(""password"", ""password""));
+	}","    @Test
+    public void testUsernameSameAsPassword() {
+        assertFalse(policy.enforce(""password"", ""password""), ""username same as password failed"");
+    }"
+52,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordNamePolicyTest.java,simple,junit,testng,"	public void testDifferentUsername() {
+		
+		assertTrue(""username different than password failed"", policy.enforce(""password"",""username""));
+	}","    @Test
+    public void testDifferentUsername() {
+        assertTrue(policy.enforce(""password"", ""username""), ""username different than password failed"");
+    }"
+53,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordNamePolicyTest.java,simple,junit,testng,"	public void testNullInput() {
+		
+		assertTrue(""null input failed"", policy.enforce(null));
+	}","    @Test
+    public void testNullInput() {
+        assertTrue(policy.enforce(null), ""null input failed"");
+    }"
+54,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordPatternPolicyTest.java,simple,junit,testng,import junit.framework.TestCase;,"import org.testng.annotations.Test;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;"
+55,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordPatternPolicyTest.java,complex,junit,testng,"    public void testPassPatterns() {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(""pattern"", ""^((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%&*])).{0,100}$"");
+        policy.init(params);
+        assertTrue(""pattern check failed "" + policy.getErrorMessage(), policy.enforce(""passwordW@1""));
+        assertTrue(""pattern check failed "" + policy.getErrorMessage(), policy.enforce(""passwordDW@1""));
+        assertTrue(""pattern check failed "" + policy.getErrorMessage(), policy.enforce(""PASSWORd#5""));
+    }","    @Test
+    public void testPassPatterns() {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(""pattern"", ""^((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%&*])).{0,100}$"");
+        policy.init(params);
+        assertTrue(policy.enforce(""passwordW@1""), ""pattern check failed "" + policy.getErrorMessage());
+        assertTrue(policy.enforce(""passwordDW@1""), ""pattern check failed "" + policy.getErrorMessage());
+        assertTrue(policy.enforce(""PASSWORd#5""), ""pattern check failed "" + policy.getErrorMessage());
+    }"
+56,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordPatternPolicyTest.java,complex,junit,testng,"    public void testFailPatterns() {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(""pattern"", ""^((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%&*])).{0,100}$"");
+        policy.init(params);
+        assertFalse(""pattern fail check failed "" + policy.getErrorMessage(), policy.enforce(""password@1""));
+        assertFalse(""pattern fail check failed "" + policy.getErrorMessage(), policy.enforce(""password""));
+        assertFalse(""pattern fail check failed "" + policy.getErrorMessage(), policy.enforce(""passwordW3""));
+        assertFalse(""pattern fail check failed "" + policy.getErrorMessage(), policy.enforce(""password#@1""));
+        assertFalse(""pattern fail check failed "" + policy.getErrorMessage(), policy.enforce(""PASSWORD@1""));
+    }","    @Test
+    public void testFailPatterns() {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(""pattern"", ""^((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%&*])).{0,100}$"");
+        policy.init(params);
+        assertFalse(policy.enforce(""password@1""), ""pattern fail check failed "" + policy.getErrorMessage());
+        assertFalse(policy.enforce(""password""), ""pattern fail check failed "" + policy.getErrorMessage());
+        assertFalse(policy.enforce(""passwordW3""), ""pattern fail check failed "" + policy.getErrorMessage());
+        assertFalse(policy.enforce(""password#@1""), ""pattern fail check failed "" + policy.getErrorMessage());
+        assertFalse(policy.enforce(""PASSWORD@1""), ""pattern fail check failed "" + policy.getErrorMessage());
+    }"
+57,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordPatternPolicyTest.java,complex,junit,testng,"    public void testNullInput() {
+        assertTrue(""null input check failed"", policy.enforce(null));
+    }","    @Test
+    public void testNullInput() {
+        assertTrue(policy.enforce(null), ""null input check failed"");
+    }"
+58,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordWhitespacePolicyTest.java,simple,junit,testng,import junit.framework.TestCase;,"import org.testng.annotations.Test;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;"
+59,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordWhitespacePolicyTest.java,complex,junit,testng,"	public void testWhitespacesinPassword() {
+		assertFalse(""white spaces in password check failed"", policy.enforce(""passwor s""));
+		assertFalse(""white spaces in password check failed"", policy.enforce(""pass wor s""));
+		assertFalse(""white spaces in password check failed"", policy.enforce(""pas   swor s""));
+	}","    @Test
+    public void testWhiteSpacesInPassword() {
+        assertFalse(policy.enforce(""passwor s""), ""white spaces in password check failed"");
+        assertFalse(policy.enforce(""pass wor s""), ""white spaces in password check failed"");
+        assertFalse(policy.enforce(""pas   swor s""), ""white spaces in password check failed"");
+    }"
+60,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordWhitespacePolicyTest.java,complex,junit,testng,"	public void testCorrectPassword() {
+		assertTrue(""no white spaces in password check failed"", policy.enforce(""passwors""));
+	}","    @Test
+    public void testCorrectPassword() {
+        assertTrue(policy.enforce(""passwors""), ""no white spaces in password check failed"");
+    }"
+61,https://github.com/wso2/carbon-identity-framework/commit/883d5923ee5ad07343f16025d2ea440b3c697701,carbon-identity-framework,883d5923ee5ad07343f16025d2ea440b3c697701,components/identity-mgt/org.wso2.carbon.identity.mgt/src/test/java/org/wso2/carbon/identity/mgt/policy/password/DefaultPasswordWhitespacePolicyTest.java,complex,junit,testng,"	public void testNullInput(){
+		assertTrue(""null input failed"", policy.enforce(null));
+	}","    @Test
+    public void testNullInput() {
+        assertTrue(policy.enforce(null), ""null input failed"");
+    }"
+62,https://github.com/PicnicSupermarket/reactive-support/commit/44239a9f68c3791f1ff4126c71eab8c7fd685c8d,reactive-support,44239a9f68c3791f1ff4126c71eab8c7fd685c8d,rxjava-support/src/test/java/tech/picnic/rx/PicnicRxPluginsTest.java,simple,testng,junit,"import static org.testng.Assert.assertEquals;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;","import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;"
+63,https://github.com/PicnicSupermarket/reactive-support/commit/44239a9f68c3791f1ff4126c71eab8c7fd685c8d,reactive-support,44239a9f68c3791f1ff4126c71eab8c7fd685c8d,rxjava-support/src/test/java/tech/picnic/rx/PicnicRxPluginsTest.java,simple,testng,junit,@Test(singleThreaded = true),@Execution(ExecutionMode.SAME_THREAD)
+64,https://github.com/PicnicSupermarket/reactive-support/commit/44239a9f68c3791f1ff4126c71eab8c7fd685c8d,reactive-support,44239a9f68c3791f1ff4126c71eab8c7fd685c8d,rxjava-support/src/test/java/tech/picnic/rx/PicnicRxPluginsTest.java,complex,testng,junit,"  @BeforeClass
+  void init() {
+    PicnicRxPlugins.configureContextPropagation(Context.createRxThreadLocal());
+  }","  @BeforeAll
+  static void setUp() {
+    PicnicRxPlugins.configureContextPropagation(Context.createRxThreadLocal());
+  }"
+65,https://github.com/PicnicSupermarket/reactive-support/commit/44239a9f68c3791f1ff4126c71eab8c7fd685c8d,reactive-support,44239a9f68c3791f1ff4126c71eab8c7fd685c8d,rxjava-support/src/test/java/tech/picnic/rx/PicnicRxPluginsTest.java,complex,testng,junit,"  @AfterClass
+  void clean() {
+    PicnicRxPlugins.unsetContextPropagation();
+  }","  @AfterAll
+  static void tearDown() {
+    PicnicRxPlugins.unsetContextPropagation();
+  }"
+66,https://github.com/PicnicSupermarket/reactive-support/commit/44239a9f68c3791f1ff4126c71eab8c7fd685c8d,reactive-support,44239a9f68c3791f1ff4126c71eab8c7fd685c8d,rxjava-support/src/test/java/tech/picnic/rx/PicnicRxPluginsTest.java,complex,testng,junit,"    void verifyCurrentThread() {
+      assertEquals(threadLocalContext.get(), token.orElse(null));
+    }","    void verifyCurrentThread() {
+      assertEquals(token.orElse(null), threadLocalContext.get());
+    }"
+67,https://github.com/PicnicSupermarket/reactive-support/commit/44239a9f68c3791f1ff4126c71eab8c7fd685c8d,reactive-support,44239a9f68c3791f1ff4126c71eab8c7fd685c8d,rxjava-support/src/test/java/tech/picnic/rx/RetryStrategyTest.java,simple,testng,junit,"import static org.testng.Assert.assertEquals;
+import org.testng.annotations.Test;","import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;"
+68,https://github.com/PicnicSupermarket/reactive-support/commit/44239a9f68c3791f1ff4126c71eab8c7fd685c8d,reactive-support,44239a9f68c3791f1ff4126c71eab8c7fd685c8d,rxjava-support/src/test/java/tech/picnic/rx/RetryStrategyTest.java,complex,testng,junit,"  public void testExponentialBackoff() {
+    AtomicInteger retries = new AtomicInteger();
+    TestScheduler scheduler = new TestScheduler();
+    TestSubscriber<Integer> test =
+        errorSource(10)
+            .doOnSubscribe(d -> retries.incrementAndGet())
+            .retryWhen(
+                RetryStrategy.always()
+                    .withBackoffScheduler(scheduler)
+                    .exponentialBackoff(Duration.ofMillis(100))
+                    .build())
+            .test();
+    test.assertNotTerminated().assertNoValues();
+    for (int i = 1, d = 100, t = 0; i <= 10; ++i, t += d, d *= 2) {
+      scheduler.advanceTimeTo(t, MILLISECONDS);
+      test.assertNotTerminated().assertNoValues();
+      assertEquals(retries.get(), i);
+      scheduler.advanceTimeBy(d - 1, MILLISECONDS);
+      test.assertNotTerminated().assertNoValues();
+      assertEquals(retries.get(), i);
+    }
+    scheduler.advanceTimeBy(1, MILLISECONDS);
+    test.assertValue(11).assertComplete();
+  }","  @Test
+  void testExponentialBackoff() {
+    AtomicInteger retries = new AtomicInteger();
+    TestScheduler scheduler = new TestScheduler();
+    TestSubscriber<Integer> test =
+        errorSource(10)
+            .doOnSubscribe(d -> retries.incrementAndGet())
+            .retryWhen(
+                RetryStrategy.always()
+                    .withBackoffScheduler(scheduler)
+                    .exponentialBackoff(Duration.ofMillis(100))
+                    .build())
+            .test();
+    test.assertNotTerminated().assertNoValues();
+    for (int i = 1, d = 100, t = 0; i <= 10; ++i, t += d, d *= 2) {
+      scheduler.advanceTimeTo(t, MILLISECONDS);
+      test.assertNotTerminated().assertNoValues();
+      assertEquals(i, retries.get());
+      scheduler.advanceTimeBy(d - 1, MILLISECONDS);
+      test.assertNotTerminated().assertNoValues();
+      assertEquals(i, retries.get());
+    }
+    scheduler.advanceTimeBy(1, MILLISECONDS);
+    test.assertValue(11).assertComplete();
+  }"
+69,https://github.com/apache/incubator-pulsar/commit/fe7311c637181cf6545e73fee066d9a2840b0a59,incubator-pulsar,fe7311c637181cf6545e73fee066d9a2840b0a59,pulsar-broker/src/test/java/org/apache/pulsar/client/api/DeadLetterTopicTest.java,simple,junit,testng,"import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;","import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertNotNull;"
+70,https://github.com/apache/incubator-pulsar/commit/fe7311c637181cf6545e73fee066d9a2840b0a59,incubator-pulsar,fe7311c637181cf6545e73fee066d9a2840b0a59,pulsar-flink/src/test/java/org/apache/flink/batch/connectors/pulsar/PulsarJsonOutputFormatTest.java,simple,junit,testng,"public class PulsarJsonOutputFormatTest {
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPulsarJsonOutputFormatConstructorWhenServiceUrlIsNull() {
+        new PulsarJsonOutputFormat(null, ""testTopic"");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPulsarJsonOutputFormatConstructorWhenTopicNameIsNull() {
+        new PulsarJsonOutputFormat(""testServiceUrl"", null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPulsarJsonOutputFormatConstructorWhenTopicNameIsBlank() {
+        new PulsarJsonOutputFormat(""testServiceUrl"", "" "");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPulsarJsonOutputFormatConstructorWhenServiceUrlIsBlank() {
+        new PulsarJsonOutputFormat("" "", ""testTopic"");
+    }","public class PulsarJsonOutputFormatTest {
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testPulsarJsonOutputFormatConstructorWhenServiceUrlIsNull() {
+        new PulsarJsonOutputFormat(null, ""testTopic"");
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testPulsarJsonOutputFormatConstructorWhenTopicNameIsNull() {
+        new PulsarJsonOutputFormat(""testServiceUrl"", null);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testPulsarJsonOutputFormatConstructorWhenTopicNameIsBlank() {
+        new PulsarJsonOutputFormat(""testServiceUrl"", "" "");
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testPulsarJsonOutputFormatConstructorWhenServiceUrlIsBlank() {
+        new PulsarJsonOutputFormat("" "", ""testTopic"");
+    }"
+71,https://github.com/apache/incubator-pulsar/commit/fe7311c637181cf6545e73fee066d9a2840b0a59,incubator-pulsar,fe7311c637181cf6545e73fee066d9a2840b0a59,pulsar-functions/instance/src/test/java/org/apache/pulsar/functions/instance/ContextImplTest.java,simple,junit,testng,"    @Before
+    public void setup() {
+        config = new InstanceConfig();
+        FunctionDetails functionDetails = FunctionDetails.newBuilder()
+            .setUserConfig("""")
+            .build();
+        config.setFunctionDetails(functionDetails);
+        logger = mock(Logger.class);
+        client = mock(PulsarClientImpl.class);
+        when(client.newProducer()).thenReturn(new ProducerBuilderImpl(client, Schema.BYTES));
+        when(client.createProducerAsync(Matchers.any(ProducerConfigurationData.class), Matchers.any(Schema.class), eq(null)))
+                .thenReturn(CompletableFuture.completedFuture(producer));
+        when(client.getSchema(anyString())).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+        when(producer.sendAsync(anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+        context = new ContextImpl(
+            config,
+            logger,
+            client,
+            new ArrayList<>(),
+            new EnvironmentBasedSecretsProvider(), new CollectorRegistry(), new String[0],
+                Utils.ComponentType.FUNCTION);
+    }","    @BeforeMethod
+    public void setup() {
+        config = new InstanceConfig();
+        FunctionDetails functionDetails = FunctionDetails.newBuilder()
+            .setUserConfig("""")
+            .build();
+        config.setFunctionDetails(functionDetails);
+        logger = mock(Logger.class);
+        client = mock(PulsarClientImpl.class);
+        when(client.newProducer()).thenReturn(new ProducerBuilderImpl(client, Schema.BYTES));
+        when(client.createProducerAsync(Matchers.any(ProducerConfigurationData.class), Matchers.any(Schema.class), eq(null)))
+                .thenReturn(CompletableFuture.completedFuture(producer));
+        when(client.getSchema(anyString())).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+        when(producer.sendAsync(anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+        context = new ContextImpl(
+            config,
+            logger,
+            client,
+            new ArrayList<>(),
+            new EnvironmentBasedSecretsProvider(), new CollectorRegistry(), new String[0],
+                Utils.ComponentType.FUNCTION);
+    }"
+72,https://github.com/atomix/atomix/commit/3e92f8253da0e74291d0a90f6f740986df2e9869,atomix,3e92f8253da0e74291d0a90f6f740986df2e9869,copycat-core/src/test/java/net/kuujo/copycat/AbstractCopycatTest.java,simple,junit,testng,"  protected Set<CopycatContext> startCluster(int numInstances) throws InterruptedException {
+    Set<CopycatContext> contexts = createCluster(numInstances);
+    startCluster(contexts);
+    return contexts;
+  }","  protected Set<CopycatContext> startCluster(int numInstances) throws Throwable {
+    Set<CopycatContext> contexts = createCluster(numInstances);
+    startCluster(contexts);
+    return contexts;
+  }"
+73,https://github.com/atomix/atomix/commit/3e92f8253da0e74291d0a90f6f740986df2e9869,atomix,3e92f8253da0e74291d0a90f6f740986df2e9869,copycat-core/src/test/java/net/kuujo/copycat/AbstractCopycatTest.java,simple,junit,testng,"protected Set<CopycatContext> createCluster(int numInstances) {
+    LocalProtocol protocol = new LocalProtocol();
+    Set<CopycatContext> instances = new HashSet<>(numInstances);
+    for (int i = 1; i <= numInstances; i++) {
+      LocalClusterConfig config = new LocalClusterConfig();
+      config.setLocalMember(String.valueOf(i));
+      for (int j = 1; j <= numInstances; j++) {
+        if (j != i) {
+          config.addRemoteMember(String.valueOf(j));
+        }
+      }
+      instances.add(CopycatContext.context(new TestStateMachine(), new MemoryMappedFileLog(UUID.randomUUID().toString()), new Cluster<Member>(protocol, config)));
+    }
+    return instances;
+  }","  protected Set<CopycatContext> createCluster(int numInstances) {
+    LocalProtocol protocol = new LocalProtocol();
+    Set<CopycatContext> instances = new HashSet<>(numInstances);
+    for (int i = 1; i <= numInstances; i++) {
+      LocalClusterConfig config = new LocalClusterConfig();
+      config.setLocalMember(String.valueOf(i));
+      for (int j = 1; j <= numInstances; j++) {
+        if (j != i) {
+          config.addRemoteMember(String.valueOf(j));
+        }
+      }
+      instances.add(CopycatContext.context(new TestStateMachine(), new MemoryMappedFileLog(String.format(""target/test-logs/%s"", UUID.randomUUID())), new Cluster<Member>(protocol, config)));
+    }
+    return instances;
+  }"
+74,https://github.com/aws/aws-dynamodb-encryption-java/commit/64183e9edadee5c75da7780f934cf76e21c92393,aws-dynamodb-encryption-java,64183e9edadee5c75da7780f934cf76e21c92393,src/test/java/com/amazonaws/services/dynamodbv2/datamodeling/encryption/DelegatedEncryptionTest.java,simple,junit,testng,"    @Before
+    public void setUp() throws Exception {
+        prov = new SymmetricStaticProvider(encryptionKey, macKey,
+                Collections.<String, String>emptyMap());
+        encryptor = DynamoDBEncryptor.getInstance(prov, ""encryptor-"");
+
+        attribs = new HashMap<String, AttributeValue>();
+        attribs.put(""intValue"", new AttributeValue().withN(""123""));
+        attribs.put(""stringValue"", new AttributeValue().withS(""Hello world!""));
+        attribs.put(""byteArrayValue"", new AttributeValue().withB(ByteBuffer.wrap(new byte[]{0, 1, 2, 3, 4, 5})));
+        attribs.put(""stringSet"", new AttributeValue().withSS(""Goodbye"", ""Cruel"", ""World"", ""?""));
+        attribs.put(""intSet"", new AttributeValue().withNS(""1"", ""200"", ""10"", ""15"", ""0""));
+        attribs.put(""hashKey"", new AttributeValue().withN(""5""));
+        attribs.put(""rangeKey"", new AttributeValue().withN(""7""));
+        attribs.put(""version"", new AttributeValue().withN(""0""));
+
+        context = new EncryptionContext.Builder()
+                .withTableName(""TableName"")
+                .withHashKeyName(""hashKey"")
+                .withRangeKeyName(""rangeKey"")
+                .build();
+    }","    @BeforeMethod
+    public void setUp() throws Exception {
+        prov = new SymmetricStaticProvider(encryptionKey, macKey,
+                Collections.<String, String>emptyMap());
+        encryptor = DynamoDBEncryptor.getInstance(prov, ""encryptor-"");
+
+        attribs = new HashMap<String, AttributeValue>();
+        attribs.put(""intValue"", new AttributeValue().withN(""123""));
+        attribs.put(""stringValue"", new AttributeValue().withS(""Hello world!""));
+        attribs.put(""byteArrayValue"", new AttributeValue().withB(ByteBuffer.wrap(new byte[]{0, 1, 2, 3, 4, 5})));
+        attribs.put(""stringSet"", new AttributeValue().withSS(""Goodbye"", ""Cruel"", ""World"", ""?""));
+        attribs.put(""intSet"", new AttributeValue().withNS(""1"", ""200"", ""10"", ""15"", ""0""));
+        attribs.put(""hashKey"", new AttributeValue().withN(""5""));
+        attribs.put(""rangeKey"", new AttributeValue().withN(""7""));
+        attribs.put(""version"", new AttributeValue().withN(""0""));
+
+        context = new EncryptionContext.Builder()
+                .withTableName(""TableName"")
+                .withHashKeyName(""hashKey"")
+                .withRangeKeyName(""rangeKey"")
+                .build();
+    }"
+75,https://github.com/aws/aws-dynamodb-encryption-java/commit/64183e9edadee5c75da7780f934cf76e21c92393,aws-dynamodb-encryption-java,64183e9edadee5c75da7780f934cf76e21c92393,src/test/java/com/amazonaws/services/dynamodbv2/datamodeling/encryption/DelegatedEncryptionTest.java,simple,junit,testng,"    @Test(expected = SignatureException.class)
+    public void fullEncryptionBadSignature() throws GeneralSecurityException {
+        Map<String, AttributeValue> encryptedAttributes =
+                encryptor.encryptAllFieldsExcept(Collections.unmodifiableMap(attribs), context, ""hashKey"", ""rangeKey"", ""version"");
+        assertThat(encryptedAttributes, AttrMatcher.invert(attribs));
+        encryptedAttributes.get(""hashKey"").setN(""666"");
+        encryptor.decryptAllFieldsExcept(Collections.unmodifiableMap(encryptedAttributes), context, ""hashKey"", ""rangeKey"", ""version"");
+    }","    @Test(expectedExceptions = SignatureException.class)
+    public void fullEncryptionBadSignature() throws GeneralSecurityException {
+        Map<String, AttributeValue> encryptedAttributes =
+                encryptor.encryptAllFieldsExcept(Collections.unmodifiableMap(attribs), context, ""hashKey"", ""rangeKey"", ""version"");
+        assertThat(encryptedAttributes, AttrMatcher.invert(attribs));
+        encryptedAttributes.get(""hashKey"").setN(""666"");
+        encryptor.decryptAllFieldsExcept(Collections.unmodifiableMap(encryptedAttributes), context, ""hashKey"", ""rangeKey"", ""version"");
+    }"
+76,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/api/core/CqlIdentifierTest.java,simple,testng,junit,import org.testng.annotations.Test;,import org.junit.Test;
+77,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/api/core/CqlIdentifierTest.java,simple,testng,junit,"  @Test(expectedExceptions = IllegalArgumentException.class)
+  public void should_fail_to_build_from_valid_cql_if_special_characters() {
+    CqlIdentifier.fromCql(""foo bar"");
+  }","  @Test(expected = IllegalArgumentException.class)
+  public void should_fail_to_build_from_valid_cql_if_special_characters() {
+    CqlIdentifier.fromCql(""foo bar"");
+  }"
+78,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/api/core/CqlIdentifierTest.java,simple,testng,junit,"@Test(expectedExceptions = IllegalArgumentException.class)
+  public void should_fail_to_build_from_valid_cql_if_reserved_keyword() {
+    CqlIdentifier.fromCql(""Create"");
+  }","  @Test(expected = IllegalArgumentException.class)
+  public void should_fail_to_build_from_valid_cql_if_reserved_keyword() {
+    CqlIdentifier.fromCql(""Create"");
+  }"
+79,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/api/core/time/MonotonicTimestampGeneratorTestBase.java,simple,testng,junit,"  @BeforeMethod
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+
+    Mockito.when(config.defaultProfile()).thenReturn(defaultConfigProfile);
+    Mockito.when(context.config()).thenReturn(config);
+
+    // Disable warnings by default
+    Mockito.when(defaultConfigProfile.isDefined(WARNING_THRESHOLD_OPTION)).thenReturn(true);
+    Mockito.when(defaultConfigProfile.getDuration(WARNING_THRESHOLD_OPTION))
+        .thenReturn(Duration.ofNanos(0));
+    // Actual value doesn't really matter since we only test the first warning
+    Mockito.when(defaultConfigProfile.getDuration(WARNING_INTERVAL_OPTION))
+        .thenReturn(Duration.ofSeconds(10));
+
+    logger = (Logger) LoggerFactory.getLogger(MonotonicTimestampGenerator.class);
+    logger.addAppender(appender);
+  }","  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+
+    Mockito.when(config.defaultProfile()).thenReturn(defaultConfigProfile);
+    Mockito.when(context.config()).thenReturn(config);
+
+    // Disable warnings by default
+    Mockito.when(defaultConfigProfile.isDefined(WARNING_THRESHOLD_OPTION)).thenReturn(true);
+    Mockito.when(defaultConfigProfile.getDuration(WARNING_THRESHOLD_OPTION))
+        .thenReturn(Duration.ofNanos(0));
+    // Actual value doesn't really matter since we only test the first warning
+    Mockito.when(defaultConfigProfile.getDuration(WARNING_INTERVAL_OPTION))
+        .thenReturn(Duration.ofSeconds(10));
+
+    logger = (Logger) LoggerFactory.getLogger(MonotonicTimestampGenerator.class);
+    logger.addAppender(appender);
+  }"
+80,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/api/core/time/MonotonicTimestampGeneratorTestBase.java,simple,testng,junit,"  @AfterMethod
+  public void teardown() {
+    logger.detachAppender(appender);
+  }","  @After
+  public void teardown() {
+    logger.detachAppender(appender);
+  }"
+81,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/channel/ChannelHandlerTestBase.java,simple,testng,junit,import org.testng.annotations.BeforeMethod;,import org.junit.Before;
+82,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/channel/ChannelHandlerTestBase.java,simple,testng,junit,"  @BeforeMethod
+  public void setup() {
+    channel = new EmbeddedChannel();
+  }","  @Before
+  public void setup() {
+    channel = new EmbeddedChannel();
+  }"
+83,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/channel/ConnectInitHandlerTest.java,simple,testng,junit,"import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;","import org.junit.Before;
+import org.junit.Test;"
+84,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/channel/ConnectInitHandlerTest.java,simple,testng,junit,"  @BeforeMethod
+  @Override
+  public void setup() {
+    super.setup();
+    handler = new TestHandler();
+    channel.pipeline().addLast(handler);
+  }","  @Before
+  @Override
+  public void setup() {
+    super.setup();
+    handler = new TestHandler();
+    channel.pipeline().addLast(handler);
+  }"
+85,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/channel/ProtocolInitHandlerTest.java,simple,testng,junit,"  @BeforeMethod
+  @Override
+  public void setup() {
+    super.setup();
+    MockitoAnnotations.initMocks(this);
+    Mockito.when(internalDriverContext.config()).thenReturn(driverConfig);
+    Mockito.when(driverConfig.defaultProfile()).thenReturn(defaultConfigProfile);
+    Mockito.when(defaultConfigProfile.getDuration(CoreDriverOption.CONNECTION_INIT_QUERY_TIMEOUT))
+        .thenReturn(Duration.ofMillis(QUERY_TIMEOUT_MILLIS));
+    Mockito.when(internalDriverContext.protocolVersionRegistry())
+        .thenReturn(protocolVersionRegistry);
+
+    channel
+        .pipeline()
+        .addLast(
+            ""inflight"",
+            new InFlightHandler(
+                CoreProtocolVersion.V4,
+                new StreamIdGenerator(100),
+                Integer.MAX_VALUE,
+                100,
+                null,
+                channel.newPromise(),
+                null,
+                ""test""));
+  }","  @Before
+  @Override
+  public void setup() {
+    super.setup();
+    MockitoAnnotations.initMocks(this);
+    Mockito.when(internalDriverContext.config()).thenReturn(driverConfig);
+    Mockito.when(driverConfig.defaultProfile()).thenReturn(defaultConfigProfile);
+    Mockito.when(defaultConfigProfile.getDuration(CoreDriverOption.CONNECTION_INIT_QUERY_TIMEOUT))
+        .thenReturn(Duration.ofMillis(QUERY_TIMEOUT_MILLIS));
+    Mockito.when(internalDriverContext.protocolVersionRegistry())
+        .thenReturn(protocolVersionRegistry);
+
+    channel
+        .pipeline()
+        .addLast(
+            ""inflight"",
+            new InFlightHandler(
+                CoreProtocolVersion.V4,
+                new StreamIdGenerator(100),
+                Integer.MAX_VALUE,
+                100,
+                null,
+                channel.newPromise(),
+                null,
+                ""test""));
+  }"
+86,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/config/typesafe/PeriodicTypeSafeDriverConfigLoaderTest.java,simple,testng,junit,"  @BeforeMethod
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+
+    Mockito.when(context.clusterName()).thenReturn(""test"");
+    Mockito.when(context.nettyOptions()).thenReturn(nettyOptions);
+    Mockito.when(nettyOptions.adminEventExecutorGroup()).thenReturn(adminEventExecutorGroup);
+
+    adminExecutor = new ScheduledTaskCapturingEventLoop(adminEventExecutorGroup);
+    Mockito.when(adminEventExecutorGroup.next()).thenReturn(adminExecutor);
+
+    eventBus = Mockito.spy(new EventBus(""test""));
+    Mockito.when(context.eventBus()).thenReturn(eventBus);
+
+    // The already loaded config in the context.
+    // In real life, it's the object managed by the loader, but in this test it's simpler to mock
+    // it.
+    Mockito.when(context.config()).thenReturn(config);
+    Mockito.when(config.defaultProfile()).thenReturn(defaultConfigProfile);
+    Mockito.when(defaultConfigProfile.getDuration(CoreDriverOption.CONFIG_RELOAD_INTERVAL))
+        .thenReturn(Duration.ofSeconds(12));
+
+    configSource = new AtomicReference<>(""required_int = 42"");
+  }","  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+
+    Mockito.when(context.clusterName()).thenReturn(""test"");
+    Mockito.when(context.nettyOptions()).thenReturn(nettyOptions);
+    Mockito.when(nettyOptions.adminEventExecutorGroup()).thenReturn(adminEventExecutorGroup);
+
+    adminExecutor = new ScheduledTaskCapturingEventLoop(adminEventExecutorGroup);
+    Mockito.when(adminEventExecutorGroup.next()).thenReturn(adminExecutor);
+
+    eventBus = Mockito.spy(new EventBus(""test""));
+    Mockito.when(context.eventBus()).thenReturn(eventBus);
+
+    // The already loaded config in the context.
+    // In real life, it's the object managed by the loader, but in this test it's simpler to mock
+    // it.
+    Mockito.when(context.config()).thenReturn(config);
+    Mockito.when(config.defaultProfile()).thenReturn(defaultConfigProfile);
+    Mockito.when(defaultConfigProfile.getDuration(CoreDriverOption.CONFIG_RELOAD_INTERVAL))
+        .thenReturn(Duration.ofSeconds(12));
+
+    configSource = new AtomicReference<>(""required_int = 42"");
+  }"
+87,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/config/typesafe/TypeSafeDriverConfigTest.java,simple,testng,junit,import org.testng.annotations.Test;,"import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;"
+88,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/control/ControlConnectionTestBase.java,simple,testng,junit,"import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;","import org.junit.After;
+import org.junit.Before;"
+89,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/control/ControlConnectionTestBase.java,simple,testng,junit,"  @AfterMethod
+  public void teardown() {
+    adminEventLoopGroup.shutdownGracefully(100, 200, TimeUnit.MILLISECONDS);
+  }","  @After
+  public void teardown() {
+    adminEventLoopGroup.shutdownGracefully(100, 200, TimeUnit.MILLISECONDS);
+  }"
+90,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/cql/CqlPrepareHandlerTest.java,simple,testng,junit,"  @BeforeMethod
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+
+    // By default, simulate that the prepared statement is not already in the driver's cache
+    Mockito.when(processor.cache(any(DefaultPreparedStatement.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+  }","  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+
+    // By default, simulate that the prepared statement is not already in the driver's cache
+    Mockito.when(processor.cache(any(DefaultPreparedStatement.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+  }"
+91,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/cql/CqlRequestHandlerRetryTest.java,simple,testng,junit,"  @Test(dataProvider = ""allIdempotenceConfigs"")
+
+  public void should_always_try_next_node_if_bootstrapping(
+      boolean defaultIdempotence, SimpleStatement statement) {
+    try (RequestHandlerTestHarness harness =
+        RequestHandlerTestHarness.builder()
+            .withDefaultIdempotence(defaultIdempotence)
+            .withResponse(
+                node1,
+                defaultFrameOf(
+                    new Error(ProtocolConstants.ErrorCode.IS_BOOTSTRAPPING, ""mock message"")))
+            .withResponse(node2, defaultFrameOf(singleRow()))
+            .build()) {
+
+      CompletionStage<AsyncResultSet> resultSetFuture =
+          new CqlRequestHandler(statement, harness.getSession(), harness.getContext(), ""test"")
+              .asyncResult();
+
+      assertThat(resultSetFuture)
+          .isSuccess(
+              resultSet -> {
+                Iterator<Row> rows = resultSet.iterator();
+                assertThat(rows.hasNext()).isTrue();
+                assertThat(rows.next().getString(""message"")).isEqualTo(""hello, world"");
+
+                ExecutionInfo executionInfo = resultSet.getExecutionInfo();
+                assertThat(executionInfo.getCoordinator()).isEqualTo(node2);
+                assertThat(executionInfo.getErrors()).hasSize(1);
+                assertThat(executionInfo.getErrors().get(0).getKey()).isEqualTo(node1);
+                assertThat(executionInfo.getErrors().get(0).getValue())
+                    .isInstanceOf(BootstrappingException.class);
+                assertThat(executionInfo.getIncomingPayload()).isEmpty();
+                assertThat(executionInfo.getPagingState()).isNull();
+                assertThat(executionInfo.getSpeculativeExecutionCount()).isEqualTo(0);
+                assertThat(executionInfo.getSuccessfulExecutionIndex()).isEqualTo(0);
+                assertThat(executionInfo.getWarnings()).isEmpty();
+
+                Mockito.verifyNoMoreInteractions(harness.getContext().retryPolicy());
+              });
+    }
+  }","  @Test
+  @UseDataProvider(""allIdempotenceConfigs"")
+  public void should_always_try_next_node_if_bootstrapping(
+      boolean defaultIdempotence, SimpleStatement statement) {
+    try (RequestHandlerTestHarness harness =
+        RequestHandlerTestHarness.builder()
+            .withDefaultIdempotence(defaultIdempotence)
+            .withResponse(
+                node1,
+                defaultFrameOf(
+                    new Error(ProtocolConstants.ErrorCode.IS_BOOTSTRAPPING, ""mock message"")))
+            .withResponse(node2, defaultFrameOf(singleRow()))
+            .build()) {
+
+      CompletionStage<AsyncResultSet> resultSetFuture =
+          new CqlRequestHandler(statement, harness.getSession(), harness.getContext(), ""test"")
+              .asyncResult();
+
+      assertThat(resultSetFuture)
+          .isSuccess(
+              resultSet -> {
+                Iterator<Row> rows = resultSet.iterator();
+                assertThat(rows.hasNext()).isTrue();
+                assertThat(rows.next().getString(""message"")).isEqualTo(""hello, world"");
+
+                ExecutionInfo executionInfo = resultSet.getExecutionInfo();
+                assertThat(executionInfo.getCoordinator()).isEqualTo(node2);
+                assertThat(executionInfo.getErrors()).hasSize(1);
+                assertThat(executionInfo.getErrors().get(0).getKey()).isEqualTo(node1);
+                assertThat(executionInfo.getErrors().get(0).getValue())
+                    .isInstanceOf(BootstrappingException.class);
+                assertThat(executionInfo.getIncomingPayload()).isEmpty();
+                assertThat(executionInfo.getPagingState()).isNull();
+                assertThat(executionInfo.getSpeculativeExecutionCount()).isEqualTo(0);
+                assertThat(executionInfo.getSuccessfulExecutionIndex()).isEqualTo(0);
+                assertThat(executionInfo.getWarnings()).isEmpty();
+
+                Mockito.verifyNoMoreInteractions(harness.getContext().retryPolicy());
+              });
+    }
+  }"
+92,https://github.com/datastax/java-driver/commit/7d962af9291f69f0da6115375efd5bd5224a2353,java-driver,7d962af9291f69f0da6115375efd5bd5224a2353,core/src/test/java/com/datastax/oss/driver/internal/core/cql/CqlRequestHandlerRetryTest.java,simple,testng,junit,"  @Test(dataProvider = ""allIdempotenceConfigs"")
+
+  public void should_always_rethrow_query_validation_error(
+      boolean defaultIdempotence, SimpleStatement statement) {
+    try (RequestHandlerTestHarness harness =
+        RequestHandlerTestHarness.builder()
+            .withDefaultIdempotence(defaultIdempotence)
+            .withResponse(
+                node1,
+                defaultFrameOf(new Error(ProtocolConstants.ErrorCode.INVALID, ""mock message"")))
+            .build()) {
+
+      CompletionStage<AsyncResultSet> resultSetFuture =
+          new CqlRequestHandler(statement, harness.getSession(), harness.getContext(), ""test"")
+              .asyncResult();
+
+      assertThat(resultSetFuture)
+          .isFailed(
+              error -> {
+                assertThat(error)
+                    .isInstanceOf(InvalidQueryException.class)
+                    .hasMessage(""mock message"");
+                Mockito.verifyNoMoreInteractions(harness.getContext().retryPolicy());
+              });
+    }
+  }","  @Test
+  @UseDataProvider(""allIdempotenceConfigs"")
+  public void should_always_rethrow_query_validation_error(
+      boolean defaultIdempotence, SimpleStatement statement) {
+    try (RequestHandlerTestHarness harness =
+        RequestHandlerTestHarness.builder()
+            .withDefaultIdempotence(defaultIdempotence)
+            .withResponse(
+                node1,
+                defaultFrameOf(new Error(ProtocolConstants.ErrorCode.INVALID, ""mock message"")))
+            .build()) {
+
+      CompletionStage<AsyncResultSet> resultSetFuture =
+          new CqlRequestHandler(statement, harness.getSession(), harness.getContext(), ""test"")
+              .asyncResult();
+
+      assertThat(resultSetFuture)
+          .isFailed(
+              error -> {
+                assertThat(error)
+                    .isInstanceOf(InvalidQueryException.class)
+                    .hasMessage(""mock message"");
+                Mockito.verifyNoMoreInteractions(harness.getContext().retryPolicy());
+              });
+    }
+  }"
+93,https://github.com/fakereplace/fakereplace/commit/8748fb56532c5f6dabe5457333506e891a386623,fakereplace,8748fb56532c5f6dabe5457333506e891a386623,core/src/test/java/a/org/fakereplace/test/basic/reflection/FieldTest.java,simple,testng,junit,"@Test()
+    public void testFieldAccess() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+
+        DoStuff d = new DoStuff();
+        Field f = d.getClass().getField(""field"");
+        String s = (String) f.get(d);
+        assert s.equals(""hello world"");
+        f.set(d, ""bye world"");
+        s = (String) f.get(d);
+        assert s.equals(""bye world"");
+
+    }","    @Test
+    public void testFieldAccess() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+
+        DoStuff d = new DoStuff();
+        Field f = d.getClass().getField(""field"");
+        String s = (String) f.get(d);
+        Assert.assertEquals(""hello world"", s);
+        f.set(d, ""bye world"");
+        s = (String) f.get(d);
+        Assert.assertEquals(""bye world"", s);
+
+    }"
+94,https://github.com/fakereplace/fakereplace/commit/8748fb56532c5f6dabe5457333506e891a386623,fakereplace,8748fb56532c5f6dabe5457333506e891a386623,core/src/test/java/a/org/fakereplace/test/basic/reflection/FieldTest.java,simple,testng,junit,"public class FinalMethodTest {
+    @Test
+    public void testFinalMethodModifiers() throws SecurityException, NoSuchMethodException {
+        Method m = ClassWithFinalMethods.class.getMethod(""method"");
+        assert (m.getModifiers() & Modifier.FINAL) != 0;
+    }
+}","public class FinalMethodTest {
+    @Test
+    public void testFinalMethodModifiers() throws SecurityException, NoSuchMethodException {
+        Method m = ClassWithFinalMethods.class.getMethod(""method"");
+        Assert.assertTrue((m.getModifiers() & Modifier.FINAL) != 0);
+    }
+}"
+95,https://github.com/fakereplace/fakereplace/commit/8748fb56532c5f6dabe5457333506e891a386623,fakereplace,8748fb56532c5f6dabe5457333506e891a386623,core/src/test/java/a/org/fakereplace/test/basic/reflection/FieldTest.java,simple,testng,junit,"    @Test(expectedExceptions = IllegalAccessException.class)
+    public void testMethodPermissionsOnOtherClass() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        Method m = MethodPermissionBean.class.getDeclaredMethod(""method"");
+        m.invoke(null);
+    }","    @Test(expected = IllegalAccessException.class)
+    public void testMethodPermissionsOnOtherClass() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        Method m = MethodPermissionBean.class.getDeclaredMethod(""method"");
+        m.invoke(null);
+    }"
+96,https://github.com/fakereplace/fakereplace/commit/8748fb56532c5f6dabe5457333506e891a386623,fakereplace,8748fb56532c5f6dabe5457333506e891a386623,core/src/test/java/a/org/fakereplace/test/basic/replacement/BasicReplacementTest.java,simple,testng,junit,"    @Test
+    public void testInstrumentationReplacement() {
+        BasicTestRep re = new BasicTestRep();
+        int val0 = re.value();
+        assert val0 == 0 : ""Test setup wrong"";
+        ClassReplacer cr = new ClassReplacer();
+        cr.queueClassForReplacement(BasicTestRep.class, BasicTestRep1.class);
+        cr.replaceQueuedClassesWithInstrumentation();
+        re = new BasicTestRep();
+        val0 = re.value();
+        assert val0 == 1 : ""BasicTestRep was not replaced"";
+
+    }","    @Test
+    public void testInstrumentationReplacement() {
+        BasicTestRep re = new BasicTestRep();
+        int val0 = re.value();
+        Assert.assertEquals(""Test setup wrong"", 0 , val0);
+        ClassReplacer cr = new ClassReplacer();
+        cr.queueClassForReplacement(BasicTestRep.class, BasicTestRep1.class);
+        cr.replaceQueuedClassesWithInstrumentation();
+        re = new BasicTestRep();
+        val0 = re.value();
+        Assert.assertEquals(""BasicTestRep was not replaced"",1, val0  ) ;
+
+    }"
+97,https://github.com/fakereplace/fakereplace/commit/8748fb56532c5f6dabe5457333506e891a386623,fakereplace,8748fb56532c5f6dabe5457333506e891a386623,core/src/test/java/a/org/fakereplace/test/basic/replacement/BasicReplacementTest.java,simple,testng,junit,"    @Test
+    public void testFakeReplaceReplacement() {
+        InstTestRep re = new InstTestRep();
+        int val0 = re.value();
+        assert val0 == 0 : ""Test setup wrong"";
+        ClassReplacer cr = new ClassReplacer();
+        cr.queueClassForReplacement(InstTestRep.class, InstTestRep1.class);
+        cr.replaceQueuedClasses();
+        re = new InstTestRep();
+        val0 = re.value();
+        assert val0 == 1 : ""InstTestRep was not replaced"";
+
+    }","    @Test
+    public void testFakeReplaceReplacement() {
+        InstTestRep re = new InstTestRep();
+        int val0 = re.value();
+        Assert.assertEquals( ""Test setup wrong"", 0, val0);
+        ClassReplacer cr = new ClassReplacer();
+        cr.queueClassForReplacement(InstTestRep.class, InstTestRep1.class);
+        cr.replaceQueuedClasses();
+        re = new InstTestRep();
+        val0 = re.value();
+        Assert.assertEquals(""InstTestRep was not replaced"", 1,  val0 );
+
+    }"
+98,https://github.com/fakereplace/fakereplace/commit/8748fb56532c5f6dabe5457333506e891a386623,fakereplace,8748fb56532c5f6dabe5457333506e891a386623,core/src/test/java/a/org/fakereplace/test/replacement/abstractmethod/AbstractMethodTest.java,simple,testng,junit,"    @BeforeClass(groups = ""abstractmethod"")
+    public void setup() {
+        ClassReplacer rep = new ClassReplacer();
+        rep.queueClassForReplacement(AbstractClass.class, AbstractClass1.class);
+        rep.queueClassForReplacement(AbstractCaller.class, AbstractCaller1.class);
+        rep.queueClassForReplacement(BigChild.class, BigChild1.class);
+        rep.queueClassForReplacement(SmallChild.class, SmallChild1.class);
+        rep.replaceQueuedClasses();
+    }","    @BeforeClass
+    public static void setup() {
+        ClassReplacer rep = new ClassReplacer();
+        rep.queueClassForReplacement(AbstractClass.class, AbstractClass1.class);
+        rep.queueClassForReplacement(AbstractCaller.class, AbstractCaller1.class);
+        rep.queueClassForReplacement(BigChild.class, BigChild1.class);
+        rep.queueClassForReplacement(SmallChild.class, SmallChild1.class);
+        rep.replaceQueuedClasses();
+    }"
+99,https://github.com/fakereplace/fakereplace/commit/8748fb56532c5f6dabe5457333506e891a386623,fakereplace,8748fb56532c5f6dabe5457333506e891a386623,core/src/test/java/a/org/fakereplace/test/replacement/abstractmethod/AbstractMethodTest.java,simple,testng,junit,"    @Test(groups = ""abstractmethod"")
+    public void testAbstractMethod() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        AbstractCaller caller = new AbstractCaller();
+        BigChild big = new BigChild();
+        SmallChild small = new SmallChild();
+
+        assert caller.getValue(big).equals(""big"");
+        assert caller.getValue(small).equals(""small"");
+    }","    @Test
+    public void testAbstractMethod() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        AbstractCaller caller = new AbstractCaller();
+        BigChild big = new BigChild();
+        SmallChild small = new SmallChild();
+
+        Assert.assertEquals(""big"", caller.getValue(big));
+        Assert.assertEquals(""small"", caller.getValue(small));
+    }"
+100,https://github.com/hudson/hudson-2.x/commit/434b589e557289c93b5e4db2fcad4cf392a1b7da,hudson-2.x,434b589e557289c93b5e4db2fcad4cf392a1b7da,hudson-test-ui/src/test/java/org/hudsonci/test/ui/BaseUITest.java,simple,testng,junit,"import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;","import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;"
+101,https://github.com/hudson/hudson-2.x/commit/434b589e557289c93b5e4db2fcad4cf392a1b7da,hudson-2.x,434b589e557289c93b5e4db2fcad4cf392a1b7da,hudson-test-ui/src/test/java/org/hudsonci/test/ui/BaseUITest.java,simple,testng,junit,"    protected void waitForTextPresent(String successText, String failureText) {
+        boolean isSuccessTextPresent = false;
+        for (int i = 0; i < VERIFICATION_ATTEMPTS_COUNT; i++) {
+            if (failureText != null) {
+                assertFalse(getSelenium().isTextPresent(failureText), ""Failure text is present:"" + failureText);
+            }
+            try {
+                if (getSelenium().isTextPresent(successText)) {
+                    isSuccessTextPresent = true;
+                    break;
+                }
+            } catch (Exception ignored) {
+            }
+            waitQuietly(VERIFICATION_ATTEMPT_PERIOD);
+        }
+        assertTrue(isSuccessTextPresent, ""Cannot find success text:"" + successText);
+    }","    protected void waitForTextPresent(String successText, String failureText) {
+        boolean isSuccessTextPresent = false;
+        for (int i = 0; i < VERIFICATION_ATTEMPTS_COUNT; i++) {
+            if (failureText != null) {
+                assertFalse(""Failure text is present:"" + failureText, getSelenium().isTextPresent(failureText));
+            }
+            try {
+                if (getSelenium().isTextPresent(successText)) {
+                    isSuccessTextPresent = true;
+                    break;
+                }
+            } catch (Exception ignored) {
+            }
+            waitQuietly(VERIFICATION_ATTEMPT_PERIOD);
+        }
+        assertTrue(""Cannot find success text:"" + successText, isSuccessTextPresent);
+    }"
+102,https://github.com/hypergraphdb/hypergraphdb/commit/c98811719edb1686e59d606fe9f0061d64c9af46,hypergraphdb,c98811719edb1686e59d606fe9f0061d64c9af46,storage/bdb-je/test/java/hgtest/storage/bje/BJEStorageImplementation/BJEStorageImplementationTestBasis.java,simple,testng,junit,"	@BeforeMethod
+	@Exported(""up1"")
+	protected void resetMocksAndDeleteTestDirectory()
+	{
+		PowerMock.resetAll();
+		TestUtils.deleteDirectory(testDatabaseDirectory);
+	}","	@Before
+	@Exported(""up1"")
+	protected void resetMocksAndDeleteTestDirectory()
+	{
+		PowerMock.resetAll();
+		TestUtils.deleteDirectory(testDatabaseDirectory);
+	}"
+103,https://github.com/hypergraphdb/hypergraphdb/commit/c98811719edb1686e59d606fe9f0061d64c9af46,hypergraphdb,c98811719edb1686e59d606fe9f0061d64c9af46,storage/bdb-je/test/java/hgtest/storage/bje/BJEStorageImplementation/BJEStorageImplementationTestBasis.java,simple,testng,junit,"	@AfterMethod
+	@Exported(""down1"")
+	protected void verifyMocksAndDeleteTestDirectory()
+	{
+		PowerMock.verifyAll();
+		TestUtils.deleteDirectory(testDatabaseDirectory);
+	}","	@After
+	@Exported(""down1"")
+	protected void verifyMocksAndDeleteTestDirectory()
+	{
+		PowerMock.verifyAll();
+		TestUtils.deleteDirectory(testDatabaseDirectory);
+	}"
+104,https://github.com/hypergraphdb/hypergraphdb/commit/c98811719edb1686e59d606fe9f0061d64c9af46,hypergraphdb,c98811719edb1686e59d606fe9f0061d64c9af46,storage/bdb-je/test/java/hgtest/storage/bje/BJEStorageImplementation/BJEStorageImplementation_getIndex_ByNameOnlyTest.java,simple,testng,junit,"import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;","import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;"
+105,https://github.com/hypergraphdb/hypergraphdb/commit/c98811719edb1686e59d606fe9f0061d64c9af46,hypergraphdb,c98811719edb1686e59d606fe9f0061d64c9af46,storage/bdb-je/test/java/hgtest/storage/bje/BJEStorageImplementation/BJEStorageImplementation_getIndex_ByNameOnlyTest.java,simple,testng,junit,"    @AfterMethod
+    @Exported(""down1"")
+        public void verifyMocksAndDeleteTestDirectory() throws Exception
+        {
+                PowerMock.verifyAll();
+                environment.close();
+                TestUtils.deleteDirectory(envHome);
+        }","    @After
+    @Exported(""down1"")
+        public void verifyMocksAndDeleteTestDirectory() throws Exception
+        {
+                PowerMock.verifyAll();
+                environment.close();
+                TestUtils.deleteDirectory(envHome);
+        }"
+106,https://github.com/jboss-remoting/jboss-remoting/commit/15989139a86b660e2f787f430024f60672e11060,jboss-remoting,15989139a86b660e2f787f430024f60672e11060,src/test/java/org/jboss/remoting3/test/LocalChannelTest.java,simple,testng,junit,"    @BeforeMethod
+    public void testStart() {
+        ChannelPair channelPair = endpoint.createChannelPair();
+        sendChannel = channelPair.getLeftChannel();
+        recvChannel = channelPair.getRightChannel();
+    }","    @Before
+    public void testStart() {
+        ChannelPair channelPair = endpoint.createChannelPair();
+        sendChannel = channelPair.getLeftChannel();
+        recvChannel = channelPair.getRightChannel();
+    }"
+107,https://github.com/jboss-remoting/jboss-remoting/commit/15989139a86b660e2f787f430024f60672e11060,jboss-remoting,15989139a86b660e2f787f430024f60672e11060,src/test/java/org/jboss/remoting3/test/LocalChannelTest.java,simple,testng,junit,"    @AfterMethod
+    public void testFinish() {
+        IoUtils.safeClose(sendChannel);
+        IoUtils.safeClose(recvChannel);
+    }","    @After
+    public void testFinish() {
+        IoUtils.safeClose(sendChannel);
+        IoUtils.safeClose(recvChannel);
+    }"
+108,https://github.com/jenkinsci/artifactory-plugin/commit/9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,artifactory-plugin,9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,src/test/java/org/jfrog/hudson/release/ReleaseActionTest.java,simple,testng,junit,"    @BeforeMethod
+    public void setup() {
+        action = new MavenReleaseAction(null);
+    }","    @Before
+    public void setup() {
+        action = new MavenReleaseAction(null);
+    }"
+109,https://github.com/jenkinsci/artifactory-plugin/commit/9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,artifactory-plugin,9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,src/test/java/org/jfrog/hudson/release/ReleaseActionTest.java,simple,testng,junit,"    public void nextVersionSimpleMinor() {
+        assertEquals(action.calculateNextVersion(""1.2""), ""1.3-SNAPSHOT"");
+        assertEquals(action.calculateNextVersion(""3.2.12""), ""3.2.13-SNAPSHOT"");
+    }","    @Test
+    public void nextVersionSimpleMinor() {
+        assertEquals(""1.3-SNAPSHOT"", action.calculateNextVersion(""1.2""));
+        assertEquals(""3.2.13-SNAPSHOT"", action.calculateNextVersion(""3.2.12""));
+    }"
+110,https://github.com/jenkinsci/artifactory-plugin/commit/9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,artifactory-plugin,9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,src/test/java/org/jfrog/hudson/release/ReleaseActionTest.java,simple,testng,junit,"    public void nextVersionNoMinor() {
+        assertEquals(action.calculateNextVersion(""1""), ""2-SNAPSHOT"");
+        assertEquals(action.calculateNextVersion(""938""), ""939-SNAPSHOT"");
+    }","    @Test
+    public void nextVersionNoMinor() {
+        assertEquals(""2-SNAPSHOT"", action.calculateNextVersion(""1""));
+        assertEquals(""939-SNAPSHOT"", action.calculateNextVersion(""938""));
+    }"
+111,https://github.com/jenkinsci/artifactory-plugin/commit/9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,artifactory-plugin,9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,src/test/java/org/jfrog/hudson/release/ReleaseActionTest.java,simple,testng,junit,"    public void nextVersionCompoundMinor() {
+        assertEquals(action.calculateNextVersion(""1.2.3-4""), ""1.2.3-5-SNAPSHOT"");
+    }","    @Test
+    public void nextVersionCompoundMinor() {
+        assertEquals(""1.2.3-5-SNAPSHOT"", action.calculateNextVersion(""1.2.3-4""));
+    }"
+112,https://github.com/jenkinsci/artifactory-plugin/commit/9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,artifactory-plugin,9c5adb5e57bbf2fbf291cb0d53ca3108f5d402dd,src/test/java/org/jfrog/hudson/release/ReleaseActionTest.java,simple,testng,junit,"    public void unsupportedVersions() {
+        // currently unsupported until custom/improved logic implementation
+        assertEquals(action.calculateNextVersion(""1-beta""), ""1-beta"");
+        assertEquals(action.calculateNextVersion(""1.2-alpha""), ""1.2-alpha"");
+    }","    @Test
+    public void unsupportedVersions() {
+        // currently unsupported until custom/improved logic implementation
+        assertEquals(""1-beta"", action.calculateNextVersion(""1-beta""));
+        assertEquals(""1.2-alpha"", action.calculateNextVersion(""1.2-alpha""));
+    }"
+113,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_bean_invalidPropertyName() {
+        Bean test = Address.meta().builder().build();
+        try {
+            test.property(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_bean_invalidPropertyName() {
+        Bean test = Address.meta().builder().build();
+        try {
+            test.property(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+114,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_builder_getInvalidPropertyName() {
+        BeanBuilder<? extends Address> builder = Address.meta().builder();
+        try {
+            builder.get(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_builder_getInvalidPropertyName() {
+        BeanBuilder<? extends Address> builder = Address.meta().builder();
+        try {
+            builder.get(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+115,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_builder_setInvalidPropertyName() {
+        BeanBuilder<? extends Address> builder = Address.meta().builder();
+        try {
+            builder.set(""Rubbish"", """");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_builder_setInvalidPropertyName() {
+        BeanBuilder<? extends Address> builder = Address.meta().builder();
+        try {
+            builder.set(""Rubbish"", """");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+116,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_metaBean_invalidPropertyName() {
+        MetaBean test = Address.meta();
+        try {
+            test.metaProperty(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_metaBean_invalidPropertyName() {
+        MetaBean test = Address.meta();
+        try {
+            test.metaProperty(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+117,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestLight.java,simple,testng,junit,"import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;","import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;"
+118,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestMetaBean.java,simple,testng,junit,"    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void test_registerMetaBean() {
+        // register once OK
+        assertNotNull(ImmPerson.meta());
+        // register second time not OK
+        MetaBean.register(ImmPerson.meta());
+    }","    @Test(expected = IllegalArgumentException.class)
+    public void test_registerMetaBean() {
+        // register once OK
+        assertNotNull(ImmPerson.meta());
+        // register second time not OK
+        MetaBean.register(ImmPerson.meta());
+    }"
+119,https://github.com/RestComm/jss7/commit/99c57ff897e605d7427d5c892032fe28f409f2af,jss7,99c57ff897e605d7427d5c892032fe28f409f2af,m3ua/impl/src/test/java/org/mobicents/protocols/ss7/m3ua/impl/M3UAManagementTest.java,simple,junit,testng,"	@Before
+	public void setUp() throws Exception {
+		this.transportManagement = new TransportManagement();
+
+		this.m3uaMgmt = new M3UAManagement(""M3UAManagementTest"");
+		this.m3uaMgmt.setTransportManagement(this.transportManagement);
+		this.m3uaMgmt.start();
+	}","	@BeforeMethod
+	public void setUp() throws Exception {
+		this.transportManagement = new TransportManagement();
+
+		this.m3uaMgmt = new M3UAManagement(""M3UAManagementTest"");
+		this.m3uaMgmt.setTransportManagement(this.transportManagement);
+		this.m3uaMgmt.start();
+	}"
+120,https://github.com/RestComm/jss7/commit/99c57ff897e605d7427d5c892032fe28f409f2af,jss7,99c57ff897e605d7427d5c892032fe28f409f2af,m3ua/impl/src/test/java/org/mobicents/protocols/ss7/m3ua/impl/M3UAManagementTest.java,simple,junit,testng,"	@After
+	public void tearDown() throws Exception {
+		m3uaMgmt.stop();
+	}","	@AfterMethod
+	public void tearDown() throws Exception {
+		m3uaMgmt.stop();
+	}"
+121,https://github.com/RestComm/jss7/commit/99c57ff897e605d7427d5c892032fe28f409f2af,jss7,99c57ff897e605d7427d5c892032fe28f409f2af,m3ua/impl/src/test/java/org/mobicents/protocols/ss7/m3ua/impl/RemSgFSMTest.java,simple,junit,testng,"	@Before
+	public void setUp() throws Exception {
+		this.transportManagement = new TransportManagement();
+		this.clientM3UAMgmt = new M3UAManagement(""RemSgFSMTest"");
+		this.clientM3UAMgmt.setTransportManagement(this.transportManagement);
+		this.clientM3UAMgmt.start();
+
+	}","	@BeforeMethod
+	public void setUp() throws Exception {
+		this.transportManagement = new TransportManagement();
+		this.clientM3UAMgmt = new M3UAManagement(""RemSgFSMTest"");
+		this.clientM3UAMgmt.setTransportManagement(this.transportManagement);
+		this.clientM3UAMgmt.start();
+
+	}"
+122,https://github.com/RestComm/jss7/commit/99c57ff897e605d7427d5c892032fe28f409f2af,jss7,99c57ff897e605d7427d5c892032fe28f409f2af,m3ua/impl/src/test/java/org/mobicents/protocols/ss7/m3ua/impl/RemSgFSMTest.java,simple,junit,testng,"	@After
+	public void tearDown() throws Exception {
+		clientM3UAMgmt.getAppServers().clear();
+		clientM3UAMgmt.getAspfactories().clear();
+		clientM3UAMgmt.getRoute().clear();
+		clientM3UAMgmt.stop();
+	}","	@AfterMethod
+	public void tearDown() throws Exception {
+		clientM3UAMgmt.getAppServers().clear();
+		clientM3UAMgmt.getAspfactories().clear();
+		clientM3UAMgmt.getRoute().clear();
+		clientM3UAMgmt.stop();
+	}"
+123,https://github.com/RestComm/jss7/commit/99c57ff897e605d7427d5c892032fe28f409f2af,jss7,99c57ff897e605d7427d5c892032fe28f409f2af,m3ua/impl/src/test/java/org/mobicents/protocols/ss7/m3ua/impl/SgFSMTest.java,simple,junit,testng,"	@Before
+	public void setUp() throws Exception {
+		this.transportManagement = new TransportManagement();
+		this.serverM3UAMgmt = new M3UAManagement(""SgFSMTest"");
+		this.serverM3UAMgmt.setTransportManagement(this.transportManagement);
+		this.serverM3UAMgmt.start();
+
+	}","	@BeforeMethod
+	public void setUp() throws Exception {
+		this.transportManagement = new TransportManagement();
+		this.serverM3UAMgmt = new M3UAManagement(""SgFSMTest"");
+		this.serverM3UAMgmt.setTransportManagement(this.transportManagement);
+		this.serverM3UAMgmt.start();
+
+	}"
+124,https://github.com/RestComm/jss7/commit/99c57ff897e605d7427d5c892032fe28f409f2af,jss7,99c57ff897e605d7427d5c892032fe28f409f2af,m3ua/impl/src/test/java/org/mobicents/protocols/ss7/m3ua/impl/parameter/ParameterTest.java,simple,junit,testng,"	@Test
+	public void testProtocolData1() throws IOException {
+		ProtocolDataImpl p1 = (ProtocolDataImpl) factory.createProtocolData(1408, 14150, 1, 1, 0, 1, new byte[] { 1, 2,
+				3, 4 });
+		p1.write(out);
+
+		byte[] data = out.array();
+
+		ProtocolDataImpl p2 = (ProtocolDataImpl) factory.createParameter(getTag(data), getValue(data));
+
+		assertEquals(p1.getTag(), p2.getTag());
+		assertEquals(p1.getOpc(), p2.getOpc());
+		assertEquals(p1.getDpc(), p2.getDpc());
+		assertEquals(p1.getSI(), p2.getSI());
+		assertEquals(p1.getNI(), p2.getNI());
+		assertEquals(p1.getMP(), p2.getMP());
+		assertEquals(p1.getSLS(), p2.getSLS());
+
+		boolean isDataCorrect = Arrays.equals(p1.getData(), p2.getData());
+		assertTrue(""Data mismatch"", isDataCorrect);
+	}","	@Test
+	public void testProtocolData1() throws IOException {
+		ProtocolDataImpl p1 = (ProtocolDataImpl) factory.createProtocolData(1408, 14150, 1, 1, 0, 1, new byte[] { 1, 2,
+				3, 4 });
+		p1.write(out);
+
+		byte[] data = out.array();
+
+		ProtocolDataImpl p2 = (ProtocolDataImpl) factory.createParameter(getTag(data), getValue(data));
+
+		assertEquals(p1.getTag(), p2.getTag());
+		assertEquals(p1.getOpc(), p2.getOpc());
+		assertEquals(p1.getDpc(), p2.getDpc());
+		assertEquals(p1.getSI(), p2.getSI());
+		assertEquals(p1.getNI(), p2.getNI());
+		assertEquals(p1.getMP(), p2.getMP());
+		assertEquals(p1.getSLS(), p2.getSLS());
+
+		boolean isDataCorrect = Arrays.equals(p1.getData(), p2.getData());
+		assertTrue(isDataCorrect, ""Data mismatch"");
+	}"
+125,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_bean_invalidPropertyName() {
+        Bean test = Address.meta().builder().build();
+        try {
+            test.property(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_bean_invalidPropertyName() {
+        Bean test = Address.meta().builder().build();
+        try {
+            test.property(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+126,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_builder_getInvalidPropertyName() {
+        BeanBuilder<? extends Address> builder = Address.meta().builder();
+        try {
+            builder.get(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_builder_getInvalidPropertyName() {
+        BeanBuilder<? extends Address> builder = Address.meta().builder();
+        try {
+            builder.get(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+127,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_builder_setInvalidPropertyName() {
+        BeanBuilder<? extends Address> builder = Address.meta().builder();
+        try {
+            builder.set(""Rubbish"", """");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_builder_setInvalidPropertyName() {
+        BeanBuilder<? extends Address> builder = Address.meta().builder();
+        try {
+            builder.set(""Rubbish"", """");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+128,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_metaBean_invalidPropertyName() {
+        MetaBean test = Address.meta();
+        try {
+            test.metaProperty(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_metaBean_invalidPropertyName() {
+        MetaBean test = Address.meta();
+        try {
+            test.metaProperty(""Rubbish"");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+129,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/TestAddress.java,simple,testng,junit,"    @Test(expectedExceptions=NoSuchElementException.class)
+    public void test_builder_subclass_setInvalidPropertyName() {
+        ImmSubSubPersonFinal.Builder builder = ImmSubSubPersonFinal.meta().builder();
+        try {
+            builder.set(""Rubbish"", """");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }","    @Test(expected = NoSuchElementException.class)
+    public void test_builder_subclass_setInvalidPropertyName() {
+        ImmSubSubPersonFinal.Builder builder = ImmSubSubPersonFinal.meta().builder();
+        try {
+            builder.set(""Rubbish"", """");
+        } catch (NoSuchElementException ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }"
+130,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/bin/TestSerializeBin.java,complex,testng,junit,"    public void test_readWriteJodaConvertWrapper() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (DataOutputStream out = new DataOutputStream(baos)) {
+            out.writeByte(MsgPack.MIN_FIX_ARRAY + 2);
+            out.writeByte(1);
+            out.writeByte(MsgPack.MIN_FIX_MAP + 2);
+            out.writeByte(MsgPack.MIN_FIX_STR + 4);
+            out.writeBytes(""bean"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 7);
+            out.writeBytes(""Hello:9"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 11);
+            out.writeBytes(""description"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 5);
+            out.writeBytes(""Weird"");
+        }
+        byte[] expected = baos.toByteArray();
+
+        JodaConvertWrapper wrapper = new JodaConvertWrapper();
+        JodaConvertBean bean = new JodaConvertBean(""Hello:9"");
+        wrapper.setBean(bean);
+        wrapper.setDescription(""Weird"");
+        byte[] bytes = JodaBeanSer.COMPACT.binWriter().write(wrapper, false);
+        assertEquals(bytes, expected);
+        Bean parsed = JodaBeanSer.COMPACT.binReader().read(bytes, JodaConvertWrapper.class);
+        BeanAssert.assertBeanEquals(wrapper, parsed);
+    }","    @Test
+    public void test_readWriteJodaConvertWrapper() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (DataOutputStream out = new DataOutputStream(baos)) {
+            out.writeByte(MsgPack.MIN_FIX_ARRAY + 2);
+            out.writeByte(1);
+            out.writeByte(MsgPack.MIN_FIX_MAP + 2);
+            out.writeByte(MsgPack.MIN_FIX_STR + 4);
+            out.writeBytes(""bean"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 7);
+            out.writeBytes(""Hello:9"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 11);
+            out.writeBytes(""description"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 5);
+            out.writeBytes(""Weird"");
+        }
+        byte[] expected = baos.toByteArray();
+
+        JodaConvertWrapper wrapper = new JodaConvertWrapper();
+        JodaConvertBean bean = new JodaConvertBean(""Hello:9"");
+        wrapper.setBean(bean);
+        wrapper.setDescription(""Weird"");
+        byte[] bytes = JodaBeanSer.COMPACT.binWriter().write(wrapper, false);
+        assertTrue(Arrays.equals(bytes, expected));
+        Bean parsed = JodaBeanSer.COMPACT.binReader().read(bytes, JodaConvertWrapper.class);
+        BeanAssert.assertBeanEquals(wrapper, parsed);
+    }"
+131,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/bin/TestSerializeBin.java,complex,testng,junit,"    public void test_readWriteJodaConvertBean() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (DataOutputStream out = new DataOutputStream(baos)) {
+            out.writeByte(MsgPack.MIN_FIX_ARRAY + 2);
+            out.writeByte(1);
+            out.writeByte(MsgPack.MIN_FIX_MAP + 2);
+            out.writeByte(MsgPack.MIN_FIX_STR + 4);
+            out.writeBytes(""base"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 5);
+            out.writeBytes(""Hello"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 5);
+            out.writeBytes(""extra"");
+            out.writeByte(9);
+        }
+        byte[] expected = baos.toByteArray();
+
+        JodaConvertBean bean = new JodaConvertBean(""Hello:9"");
+        byte[] bytes = JodaBeanSer.COMPACT.binWriter().write(bean, false);
+        assertEquals(bytes, expected);
+        Bean parsed = JodaBeanSer.COMPACT.binReader().read(bytes, JodaConvertBean.class);
+        BeanAssert.assertBeanEquals(bean, parsed);
+    }","    @Test
+    public void test_readWriteJodaConvertBean() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (DataOutputStream out = new DataOutputStream(baos)) {
+            out.writeByte(MsgPack.MIN_FIX_ARRAY + 2);
+            out.writeByte(1);
+            out.writeByte(MsgPack.MIN_FIX_MAP + 2);
+            out.writeByte(MsgPack.MIN_FIX_STR + 4);
+            out.writeBytes(""base"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 5);
+            out.writeBytes(""Hello"");
+            out.writeByte(MsgPack.MIN_FIX_STR + 5);
+            out.writeBytes(""extra"");
+            out.writeByte(9);
+        }
+        byte[] expected = baos.toByteArray();
+
+        JodaConvertBean bean = new JodaConvertBean(""Hello:9"");
+        byte[] bytes = JodaBeanSer.COMPACT.binWriter().write(bean, false);
+        assertTrue(Arrays.equals(bytes, expected));
+        Bean parsed = JodaBeanSer.COMPACT.binReader().read(bytes, JodaConvertBean.class);
+        BeanAssert.assertBeanEquals(bean, parsed);
+    }"
+132,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"   @Test(dataProvider = ""string"")
+
+    public void test_parseString(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '""'));
+        assertEquals(input.parseString(), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_string"")
+    public void test_parseString(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '""'));
+        assertEquals(input.parseString(), expected);
+    }"
+133,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_parseString_endOfFile(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        input.parseString();
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_string"")
+    public void test_parseString_endOfFile(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        input.parseString();
+    }"
+134,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"")
+
+    public void test_acceptString(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader('""' + text + '""'));
+        assertEquals(input.acceptString(), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_string"")
+    public void test_acceptString(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader('""' + text + '""'));
+        assertEquals(input.acceptString(), expected);
+    }"
+135,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"")
+
+    public void test_acceptString_whitespace(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader("" \t\r\n \"""" + text + '""'));
+        assertEquals(input.acceptString(), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_string"")
+    public void test_acceptString_whitespace(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader("" \t\r\n \"""" + text + '""'));
+        assertEquals(input.acceptString(), expected);
+    }"
+136,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"")
+
+    public void test_acceptString_pushback(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '""'));
+        input.pushBack('""');
+        assertEquals(input.acceptString(), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_string"")
+    public void test_acceptString_pushback(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '""'));
+        input.pushBack('""');
+        assertEquals(input.acceptString(), expected);
+    }"
+137,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""stringBad"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_parseString_bad(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '""'));
+        input.parseString();
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_stringBad"")
+    public void test_parseString_bad(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '""'));
+        input.parseString();
+    }"
+138,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""stringBad"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_acceptString_bad(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader('""' + text + '""'));
+        input.acceptString();
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_stringBad"")
+    public void test_acceptString_bad(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader('""' + text + '""'));
+        input.acceptString();
+    }"
+139,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""stringBad"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_acceptString_bad_whitespace(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader("" \t\r\n \"""" + text + '""'));
+        input.acceptString();
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_stringBad"")
+    public void test_acceptString_bad_whitespace(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader("" \t\r\n \"""" + text + '""'));
+        input.acceptString();
+    }"
+140,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"")
+
+    public void test_parseObjectKey(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"":""));
+        assertEquals(input.parseObjectKey(), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_string"")
+    public void test_parseObjectKey(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"":""));
+        assertEquals(input.parseObjectKey(), expected);
+    }"
+141,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"")
+
+    public void test_parseObjectKey_whitspace(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"" \t\n\r:""));
+        assertEquals(input.parseObjectKey(), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_string"")
+    public void test_parseObjectKey_whitspace(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"" \t\n\r:""));
+        assertEquals(input.parseObjectKey(), expected);
+    }"
+142,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"")
+
+    public void test_acceptObjectKey(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"":""));
+        assertEquals(input.acceptObjectKey(JsonEvent.STRING), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_string"")
+    public void test_acceptObjectKey(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"":""));
+        assertEquals(input.acceptObjectKey(JsonEvent.STRING), expected);
+    }"
+143,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"")
+
+    public void test_acceptObjectKey_whitspace(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"" \t\n\r:""));
+        assertEquals(input.acceptObjectKey(JsonEvent.STRING), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_string"")
+    public void test_acceptObjectKey_whitspace(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"" \t\n\r:""));
+        assertEquals(input.acceptObjectKey(JsonEvent.STRING), expected);
+    }"
+144,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""string"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_acceptObjectKey_notString(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"":""));
+        assertEquals(input.acceptObjectKey(JsonEvent.OBJECT), expected);
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_string"")
+    public void test_acceptObjectKey_notString(String text, String expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ""\"":""));
+        assertEquals(input.acceptObjectKey(JsonEvent.OBJECT), expected);
+    }"
+145,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @DataProvider(name = ""numberIntegral"")
+    Object[][] data_numberIntegral() {
+        return new Object[][] {
+            {""0"", 0L},
+            {""1"", 1L},
+            {""9"", 9L},
+            {""10"", 10L},
+            {""19"", 19L},
+            {""123456789"", 123456789L},
+            {""1234567890123456789"", 1234567890123456789L},
+            {""-0"", 0L},
+            {""-1"", -1L},
+            {""-9"", -9L},
+            {""-10"", -10L},
+            {""-19"", -19L},
+            {""-123456789"", -123456789L},
+            {""-1234567890123456789"", -1234567890123456789L},
+        };
+    }","    @DataProvider
+    public static Object[][] data_numberIntegral() {
+        return new Object[][] {
+            {""0"", 0L},
+            {""1"", 1L},
+            {""9"", 9L},
+            {""10"", 10L},
+            {""19"", 19L},
+            {""123456789"", 123456789L},
+            {""1234567890123456789"", 1234567890123456789L},
+            {""-0"", 0L},
+            {""-1"", -1L},
+            {""-9"", -9L},
+            {""-10"", -10L},
+            {""-19"", -19L},
+            {""-123456789"", -123456789L},
+            {""-1234567890123456789"", -1234567890123456789L},
+        };
+    }"
+146,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""numberIntegral"")
+
+    public void test_parseNumberIntegral(String text, long expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '}'));
+        assertEquals(input.readEvent(), JsonEvent.NUMBER_INTEGRAL);
+        assertEquals(input.parseNumberIntegral(), expected);
+        assertEquals(input.readEvent(), JsonEvent.OBJECT_END);
+    }","    @Test
+    @UseDataProvider(value = ""data_numberIntegral"")
+    public void test_parseNumberIntegral(String text, long expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '}'));
+        assertEquals(input.readEvent(), JsonEvent.NUMBER_INTEGRAL);
+        assertEquals(input.parseNumberIntegral(), expected);
+        assertEquals(input.readEvent(), JsonEvent.OBJECT_END);
+    }"
+147,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""numberIntegral"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_parseNumberIntegral_endOfFile(String text, long expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        input.readEvent();
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_numberIntegral"")
+    public void test_parseNumberIntegral_endOfFile(String text, long expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        input.readEvent();
+    }"
+148,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""numberFloating"")
+
+    public void test_parseNumberFloating(String text, double expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '}'));
+        assertEquals(input.readEvent(), JsonEvent.NUMBER_FLOATING);
+        assertEquals(input.parseNumberFloating(), expected, 0.00001d);
+        assertEquals(input.readEvent(), JsonEvent.OBJECT_END);
+    }","    @Test
+    @UseDataProvider(value = ""data_numberFloating"")
+    public void test_parseNumberFloating(String text, double expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '}'));
+        assertEquals(input.readEvent(), JsonEvent.NUMBER_FLOATING);
+        assertEquals(input.parseNumberFloating(), expected, 0.00001d);
+        assertEquals(input.readEvent(), JsonEvent.OBJECT_END);
+    }"
+149,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""numberFloating"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_parseNumberFloating_endOfFile(String text, double expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        input.readEvent();
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_numberFloating"")
+    public void test_parseNumberFloating_endOfFile(String text, double expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        input.readEvent();
+    }"
+150,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""numberBad"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_parseNumberFloating_bad(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '}'));
+        input.readEvent();
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_numberBad"")
+    public void test_parseNumberFloating_bad(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + '}'));
+        input.readEvent();
+    }"
+151,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""event"")
+
+    public void test_readEvent(String text, JsonEvent expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        assertEquals(input.readEvent(), expected);
+    }","    @Test
+    @UseDataProvider(value = ""data_event"")
+    public void test_readEvent(String text, JsonEvent expected) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        assertEquals(input.readEvent(), expected);
+    }"
+152,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""eventBad"", expectedExceptions = IllegalArgumentException.class)
+
+    public void test_readEvent_bad(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        input.readEvent();
+    }","    @Test(expected = IllegalArgumentException.class)
+    @UseDataProvider(value = ""data_eventBad"")
+    public void test_readEvent_bad(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text));
+        input.readEvent();
+    }"
+153,https://github.com/JodaOrg/joda-beans/commit/bd90444f589284a387c9bbfd48af0bae266fb0d4,joda-beans,bd90444f589284a387c9bbfd48af0bae266fb0d4,src/test/java/org/joda/beans/ser/json/TestJsonInput.java,complex,testng,junit,"    @Test(dataProvider = ""skip"")
+
+    public void test_skip(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ','));
+        input.skipData();
+        assertEquals(input.readEvent(), JsonEvent.COMMA);
+    }","    @Test
+    @UseDataProvider(value = ""data_skip"")
+    public void test_skip(String text) throws IOException {
+        JsonInput input = new JsonInput(new StringReader(text + ','));
+        input.skipData();
+        assertEquals(input.readEvent(), JsonEvent.COMMA);
+    }"
+154,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @SuppressWarnings(""deprecation"")
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_immutable_clear() {
+        createNonEmpty().clear();
+    }","    @SuppressWarnings(""deprecation"")
+    @Test(expected = UnsupportedOperationException.class)
+    public void test_immutable_clear() {
+        createNonEmpty().clear();
+    }"
+155,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @SuppressWarnings(""deprecation"")
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_immutable_put() {
+        createNonEmpty().put(0, 0, ""Hello"");
+    }","    @SuppressWarnings(""deprecation"")
+    @Test(expected = UnsupportedOperationException.class)
+    public void test_immutable_put() {
+        createNonEmpty().put(0, 0, ""Hello"");
+    }"
+156,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @SuppressWarnings(""deprecation"")
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_immutable_putAll() {
+        createNonEmpty().putAll(ImmutableGrid.<String>of());
+    }","    @SuppressWarnings(""deprecation"")
+    @Test(expected = UnsupportedOperationException.class)
+    public void test_immutable_putAll() {
+        createNonEmpty().putAll(ImmutableGrid.<String>of());
+    }"
+157,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @SuppressWarnings(""deprecation"")
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_immutable_remove() {
+        createNonEmpty().remove(0, 0);
+    }","    @SuppressWarnings(""deprecation"")
+    @Test(expected = UnsupportedOperationException.class)
+    public void test_immutable_remove() {
+        createNonEmpty().remove(0, 0);
+    }"
+158,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_cells_add() {
+        ImmutableGrid<String> test = createNonEmpty();
+        Iterator<Cell<String>> it = test.cells().iterator();
+        it.next();
+        it.remove();
+    }","    @Test(expected = UnsupportedOperationException.class)
+    public void test_cells_add() {
+        ImmutableGrid<String> test = createNonEmpty();
+        Iterator<Cell<String>> it = test.cells().iterator();
+        it.next();
+        it.remove();
+    }"
+159,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_cells_remove() {
+        createNonEmpty().cells().add(ImmutableCell.of(0, 0, ""Rejected""));
+    }","    @Test(expected = UnsupportedOperationException.class)
+    public void test_cells_remove() {
+        createNonEmpty().cells().add(ImmutableCell.of(0, 0, ""Rejected""));
+    }"
+160,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_cells_clear() {
+        createNonEmpty().cells().clear();
+    }","    @Test(expected = UnsupportedOperationException.class)
+    public void test_cells_clear() {
+        createNonEmpty().cells().clear();
+    }"
+161,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_rows_clear() {
+        createNonEmpty().rows().clear();
+    }","    @Test(expected = UnsupportedOperationException.class)
+    public void test_rows_clear() {
+        createNonEmpty().rows().clear();
+    }"
+162,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/AbstractTestImmutableGrid.java,simple,testng,junit,"    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_columns_clear() {
+        createNonEmpty().rows().clear();
+    }","    @Test(expected = UnsupportedOperationException.class)
+    public void test_columns_clear() {
+        createNonEmpty().rows().clear();
+    }"
+163,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseGrid.java,simple,testng,junit,"    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void test_create_array2D_null() {
+        DenseGrid.create((String[][]) null);
+    }","    @Test(expected = IllegalArgumentException.class)
+    public void test_create_array2D_null() {
+        DenseGrid.create((String[][]) null);
+    }"
+164,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseGrid.java,simple,testng,junit,"    public void test_rowCount_columnCount() {
+        Grid<String> test = create3x3();
+        test.put(0, 0, ""Hello"");
+        test.put(0, 1, ""World"");
+        assertEquals(test.rowCount(), 3);
+        assertEquals(test.columnCount(), 3);
+    }","    @Test
+    public void test_rowCount_columnCount() {
+        Grid<String> test = create3x3();
+        test.put(0, 0, ""Hello"");
+        test.put(0, 1, ""World"");
+        assertEquals(3, test.rowCount());
+        assertEquals(3, test.columnCount());
+    }"
+165,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseGrid.java,simple,testng,junit,"    public void test_rowCount_columnCount_empty() {
+        Grid<String> test = create3x3();
+        assertEquals(test.rowCount(), 3);
+        assertEquals(test.columnCount(), 3);
+    }","    @Test
+    public void test_rowCount_columnCount_empty() {
+        Grid<String> test = create3x3();
+        assertEquals(3, test.rowCount());
+        assertEquals(3, test.columnCount());
+    }"
+166,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseGrid.java,simple,testng,junit,"    @Test(expectedExceptions = IndexOutOfBoundsException.class)
+    public void test_put_rowTooBig() {
+        DenseGrid<String> test = DenseGrid.create(2, 2);
+        test.put(3, 1, ""Hello"");
+    }","    @Test(expected = IndexOutOfBoundsException.class)
+    public void test_put_rowTooBig() {
+        DenseGrid<String> test = DenseGrid.create(2, 2);
+        test.put(3, 1, ""Hello"");
+    }"
+167,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseGrid.java,simple,testng,junit,"    @Test(expectedExceptions = IndexOutOfBoundsException.class)
+    public void test_put_columnTooBig() {
+        DenseGrid<String> test = DenseGrid.create(2, 2);
+        test.put(1, 3, ""Hello"");
+    }","    @Test(expected = IndexOutOfBoundsException.class)
+    public void test_put_columnTooBig() {
+        DenseGrid<String> test = DenseGrid.create(2, 2);
+        test.put(1, 3, ""Hello"");
+    }"
+168,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseImmutableGrid.java,complex,testng,junit,"    public void test_factory_copyOf_Grid_fromDense() {
+        DenseGrid<String> hash = DenseGrid.create(2, 2);
+        hash.put(0, 0, ""Hello"");
+        hash.put(1, 0, ""World"");
+        ImmutableGrid<String> test = ImmutableGrid.copyOf(hash);
+        assertEquals(test.rowCount(), 2);
+        assertEquals(test.columnCount(), 2);
+        checkGrid(test, 0, 0, ""Hello"", 1, 0, ""World"");
+        assertEquals(test.toString(), ""[2x2:(0,0)=Hello, (1,0)=World]"");
+    }","    @Test
+    public void test_factory_copyOf_Grid_fromDense() {
+        DenseGrid<String> hash = DenseGrid.create(2, 2);
+        hash.put(0, 0, ""Hello"");
+        hash.put(1, 0, ""World"");
+        ImmutableGrid<String> test = ImmutableGrid.copyOf(hash);
+        assertEquals(2, test.rowCount());
+        assertEquals(2, test.columnCount());
+        checkGrid(test, 0, 0, ""Hello"", 1, 0, ""World"");
+        assertEquals(""[2x2:(0,0)=Hello, (1,0)=World]"", test.toString());
+    }"
+169,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseImmutableGrid.java,complex,testng,junit,"    public void test_factory_copyOf_Grid_fromSparse() {
+        SparseGrid<String> hash = SparseGrid.create(2, 2);
+        hash.put(0, 0, ""Hello"");
+        hash.put(0, 1, ""World"");
+        ImmutableGrid<String> test = ImmutableGrid.copyOf(hash);
+        assertEquals(test.rowCount(), 2);
+        assertEquals(test.columnCount(), 2);
+        checkGrid(test, 0, 0, ""Hello"", 0, 1, ""World"");
+        assertEquals(test.toString(), ""[2x2:(0,0)=Hello, (0,1)=World]"");
+    }","    @Test
+    public void test_factory_copyOf_Grid_fromSparse() {
+        SparseGrid<String> hash = SparseGrid.create(2, 2);
+        hash.put(0, 0, ""Hello"");
+        hash.put(0, 1, ""World"");
+        ImmutableGrid<String> test = ImmutableGrid.copyOf(hash);
+        assertEquals(2, test.rowCount());
+        assertEquals(2, test.columnCount());
+        checkGrid(test, 0, 0, ""Hello"", 0, 1, ""World"");
+        assertEquals(""[2x2:(0,0)=Hello, (0,1)=World]"", test.toString());
+    }"
+170,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseImmutableGrid.java,complex,testng,junit,"    public void test_containsValue_Object() {
+        SparseGrid<String> hash = SparseGrid.create(2, 2);
+        hash.put(0, 0, ""Hello"");
+        hash.put(0, 1, ""World"");
+        ImmutableGrid<String> test = ImmutableGrid.copyOf(hash);
+        assertEquals(test.containsValue(""Hello""), true);
+        assertEquals(test.containsValue(""World""), true);
+        assertEquals(test.containsValue(""Spicy""), false);
+        assertEquals(test.containsValue(""""), false);
+        assertEquals(test.containsValue(null), false);
+        assertEquals(test.containsValue(Integer.valueOf(6)), false);
+    }","    @Test
+    public void test_containsValue_Object() {
+        SparseGrid<String> hash = SparseGrid.create(2, 2);
+        hash.put(0, 0, ""Hello"");
+        hash.put(0, 1, ""World"");
+        ImmutableGrid<String> test = ImmutableGrid.copyOf(hash);
+        assertEquals(true, test.containsValue(""Hello""));
+        assertEquals(true, test.containsValue(""World""));
+        assertEquals(false, test.containsValue(""Spicy""));
+        assertEquals(false, test.containsValue(""""));
+        assertEquals(false, test.containsValue(null));
+        assertEquals(false, test.containsValue(Integer.valueOf(6)));
+    }"
+171,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestDenseImmutableGrid.java,complex,testng,junit,"    @SuppressWarnings(""unlikely-arg-type"")
+
+    public void test_equalsHashCode() {
+        SparseGrid<String> hash = SparseGrid.create(2, 2);
+        hash.put(0, 0, ""Hello"");
+        hash.put(0, 1, ""World"");
+        ImmutableGrid<String> test = ImmutableGrid.copyOf(hash);
+        assertEquals(test.equals(test), true);
+        assertEquals(test.equals(ImmutableGrid.copyOf(hash)), true);
+        assertEquals(test.equals(hash), true);
+        assertEquals(test.equals(null), false);
+        assertEquals(test.equals(""""), false);
+
+        assertEquals(test.hashCode(), 2 ^ Integer.rotateLeft(2, 16) ^ test.cells().hashCode());
+    }","    @SuppressWarnings(""unlikely-arg-type"")
+    @Test
+    public void test_equalsHashCode() {
+        SparseGrid<String> hash = SparseGrid.create(2, 2);
+        hash.put(0, 0, ""Hello"");
+        hash.put(0, 1, ""World"");
+        ImmutableGrid<String> test = ImmutableGrid.copyOf(hash);
+        assertEquals(true, test.equals(test));
+        assertEquals(true, test.equals(ImmutableGrid.copyOf(hash)));
+        assertEquals(true, test.equals(hash));
+        assertEquals(false, test.equals(null));
+        assertEquals(false, test.equals(""""));
+
+        assertEquals(2 ^ Integer.rotateLeft(2, 16) ^ test.cells().hashCode(), test.hashCode());
+    }"
+172,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestEmptyGrid.java,complex,testng,junit,"    public void test_factory() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        assertEquals(test.rowCount(), 0);
+        assertEquals(test.columnCount(), 0);
+        checkGrid(test);
+        assertEquals(test.toString(), ""[0x0:]"");
+    }","    @Test
+    public void test_factory() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        assertEquals(0, test.rowCount());
+        assertEquals(0, test.columnCount());
+        checkGrid(test);
+        assertEquals(""[0x0:]"", test.toString());
+    }"
+173,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestEmptyGrid.java,complex,testng,junit,"    public void test_containsValue_Object() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        assertEquals(test.containsValue(""Hello""), false);
+        assertEquals(test.containsValue(""""), false);
+        assertEquals(test.containsValue(null), false);
+        assertEquals(test.containsValue(Integer.valueOf(6)), false);
+    }","    @Test
+    public void test_containsValue_Object() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        assertEquals(false, test.containsValue(""Hello""));
+        assertEquals(false, test.containsValue(""""));
+        assertEquals(false, test.containsValue(null));
+        assertEquals(false, test.containsValue(Integer.valueOf(6)));
+    }"
+174,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestEmptyGrid.java,complex,testng,junit,"    @SuppressWarnings(""unlikely-arg-type"")
+
+    public void test_equalsHashCode_0x0() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        assertEquals(test.equals(test), true);
+        assertEquals(test.equals(ImmutableGrid.of()), true);
+        assertEquals(test.equals(SparseGrid.create(0, 0)), true);
+        assertEquals(test.equals(SparseGrid.create(1, 1)), false);
+        assertEquals(test.equals(DenseGrid.create(0, 0)), true);
+        assertEquals(test.equals(DenseGrid.create(1, 1)), false);
+        assertEquals(test.equals(null), false);
+        assertEquals(test.equals(""""), false);
+
+        assertEquals(test.hashCode(), test.cells().hashCode());
+    }","    @SuppressWarnings(""unlikely-arg-type"")
+    @Test
+    public void test_equalsHashCode_0x0() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        assertEquals(true, test.equals(test));
+        assertEquals(true, test.equals(ImmutableGrid.of()));
+        assertEquals(true, test.equals(SparseGrid.create(0, 0)));
+        assertEquals(false, test.equals(SparseGrid.create(1, 1)));
+        assertEquals(true, test.equals(DenseGrid.create(0, 0)));
+        assertEquals(false, test.equals(DenseGrid.create(1, 1)));
+        assertEquals(false, test.equals(null));
+        assertEquals(false, test.equals(""""));
+
+        assertEquals(test.cells().hashCode(), test.hashCode());
+    }"
+175,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestEmptyGrid.java,complex,testng,junit,"    @SuppressWarnings(""unlikely-arg-type"")
+
+    public void test_equalsHashCode_1x2() {
+        ImmutableGrid<String> test = ImmutableGrid.of(1, 2);
+        assertEquals(test.equals(test), true);
+        assertEquals(test.equals(ImmutableGrid.of(1, 2)), true);
+        assertEquals(test.equals(SparseGrid.create(1, 2)), true);
+        assertEquals(test.equals(SparseGrid.create(1, 1)), false);
+        assertEquals(test.equals(DenseGrid.create(1, 2)), true);
+        assertEquals(test.equals(DenseGrid.create(1, 1)), false);
+        assertEquals(test.equals(null), false);
+        assertEquals(test.equals(""""), false);
+
+        assertEquals(test.hashCode(), 1 ^ Integer.rotateLeft(2, 16) ^ test.cells().hashCode());
+    }","    @SuppressWarnings(""unlikely-arg-type"")
+    @Test
+    public void test_equalsHashCode_1x2() {
+        ImmutableGrid<String> test = ImmutableGrid.of(1, 2);
+        assertEquals(true, test.equals(test));
+        assertEquals(true, test.equals(ImmutableGrid.of(1, 2)));
+        assertEquals(true, test.equals(SparseGrid.create(1, 2)));
+        assertEquals(false, test.equals(SparseGrid.create(1, 1)));
+        assertEquals(true, test.equals(DenseGrid.create(1, 2)));
+        assertEquals(false, test.equals(DenseGrid.create(1, 1)));
+        assertEquals(false, test.equals(null));
+        assertEquals(false, test.equals(""""));
+
+        assertEquals(1 ^ Integer.rotateLeft(2, 16) ^ test.cells().hashCode(), test.hashCode());
+    }"
+176,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestEmptyGrid.java,simple,testng,junit,"    @SuppressWarnings(""deprecation"")
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_immutable_clear() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        test.clear();
+    }","    @SuppressWarnings(""deprecation"")
+    @Test(expected = UnsupportedOperationException.class)
+    public void test_immutable_clear() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        test.clear();
+    }"
+177,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestEmptyGrid.java,simple,testng,junit,"    @SuppressWarnings(""deprecation"")
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_immutable_put() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        test.put(0, 0, ""Hello"");
+    }","    @SuppressWarnings(""deprecation"")
+    @Test(expected = UnsupportedOperationException.class)
+    public void test_immutable_put() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        test.put(0, 0, ""Hello"");
+    }"
+178,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestEmptyGrid.java,simple,testng,junit,"    @SuppressWarnings(""deprecation"")
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_immutable_putAll() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        test.putAll(ImmutableGrid.<String>of());
+    }","    @SuppressWarnings(""deprecation"")
+    @Test(expected = UnsupportedOperationException.class)
+    public void test_immutable_putAll() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        test.putAll(ImmutableGrid.<String>of());
+    }"
+179,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestEmptyGrid.java,simple,testng,junit,"    @SuppressWarnings(""deprecation"")
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void test_immutable_remove() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        test.remove(0, 0);
+    }","    @SuppressWarnings(""deprecation"")
+    @Test(expected = UnsupportedOperationException.class)
+    public void test_immutable_remove() {
+        ImmutableGrid<String> test = ImmutableGrid.of();
+        test.remove(0, 0);
+    }"
+180,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,complex,testng,junit,"    public void test_of() {
+        Cell<String> test = ImmutableCell.of(1, 2, ""Hello"");
+        assertEquals(test.getRow(), 1);
+        assertEquals(test.getColumn(), 2);
+        assertEquals(test.getValue(), ""Hello"");
+        assertEquals(test.toString(), ""(1,2)=Hello"");
+    }","    @Test
+    public void test_of() {
+        Cell<String> test = ImmutableCell.of(1, 2, ""Hello"");
+        assertEquals(1, test.getRow());
+        assertEquals(2, test.getColumn());
+        assertEquals(""Hello"", test.getValue());
+        assertEquals(""(1,2)=Hello"", test.toString());
+    }"
+181,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,simple,testng,junit,"    @Test(expectedExceptions = IndexOutOfBoundsException.class)
+    public void test_of_negativeRow() {
+        ImmutableCell.of(-1, 2, ""Hello"");
+    }","    @Test(expected = IndexOutOfBoundsException.class)
+    public void test_of_negativeRow() {
+        ImmutableCell.of(-1, 2, ""Hello"");
+    }"
+182,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,simple,testng,junit,"    @Test(expectedExceptions = IndexOutOfBoundsException.class)
+    public void test_of_negativeColumn() {
+        ImmutableCell.of(1, -2, ""Hello"");
+    }","    @Test(expected = IndexOutOfBoundsException.class)
+    public void test_of_negativeColumn() {
+        ImmutableCell.of(1, -2, ""Hello"");
+    }"
+183,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,simple,testng,junit,"    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void test_of_nullValue() {
+        ImmutableCell.of(1, 2, null);
+    }","    @Test(expected = IllegalArgumentException.class)
+    public void test_of_nullValue() {
+        ImmutableCell.of(1, 2, null);
+    }"
+184,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,complex,testng,junit,"    public void test_copyOf() {
+        Cell<String> base = new MockCell(1, 2, ""Hello"");
+        Cell<String> test = ImmutableCell.copyOf(base);
+        assertEquals(test.getRow(), 1);
+        assertEquals(test.getColumn(), 2);
+        assertEquals(test.getValue(), ""Hello"");
+        assertEquals(test.toString(), ""(1,2)=Hello"");
+    }","    @Test
+    public void test_copyOf() {
+        Cell<String> base = new MockCell(1, 2, ""Hello"");
+        Cell<String> test = ImmutableCell.copyOf(base);
+        assertEquals(1, test.getRow());
+        assertEquals(2, test.getColumn());
+        assertEquals(""Hello"", test.getValue());
+        assertEquals(""(1,2)=Hello"", test.toString());
+    }"
+185,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,simple,testng,junit,"    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void test_copyOf_nullCell() {
+        ImmutableCell.copyOf(null);
+    }","    @Test(expected = IllegalArgumentException.class)
+    public void test_copyOf_nullCell() {
+        ImmutableCell.copyOf(null);
+    }"
+186,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,simple,testng,junit,"    @Test(expectedExceptions = IndexOutOfBoundsException.class)
+    public void test_copyOf_negativeRow() {
+        ImmutableCell.copyOf(new MockCell(-1, 2, null));
+    }","    @Test(expected = IndexOutOfBoundsException.class)
+    public void test_copyOf_negativeRow() {
+        ImmutableCell.copyOf(new MockCell(-1, 2, null));
+    }"
+187,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,simple,testng,junit,"    @Test(expectedExceptions = IndexOutOfBoundsException.class)
+    public void test_copyOf_negativeColumn() {
+        ImmutableCell.copyOf(new MockCell(1, -2, null));
+    }","    @Test(expected = IndexOutOfBoundsException.class)
+    public void test_copyOf_negativeColumn() {
+        ImmutableCell.copyOf(new MockCell(1, -2, null));
+    }"
+188,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,simple,testng,junit,"    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void test_copyOf_nullValue() {
+        ImmutableCell.copyOf(new MockCell(1, 2, null));
+    }","    @Test(expected = IllegalArgumentException.class)
+    public void test_copyOf_nullValue() {
+        ImmutableCell.copyOf(new MockCell(1, 2, null));
+    }"
+189,https://github.com/JodaOrg/joda-collect/commit/17376429aa0cd6793ec3e4e290ac1550819ff53e,joda-collect,17376429aa0cd6793ec3e4e290ac1550819ff53e,src/test/java/org/joda/collect/grid/TestImmutableCell.java,complex,testng,junit,"    public void test_equalsHashCode() {
+        Cell<String> test = ImmutableCell.of(1, 2, ""Hello"");
+        assertEquals(test.equals(test), true);
+        assertEquals(test.equals(ImmutableCell.of(1, 2, ""Hello"")), true);
+        assertEquals(test.equals(ImmutableCell.of(0, 2, ""Hello"")), false);
+        assertEquals(test.equals(ImmutableCell.of(1, 3, ""Hello"")), false);
+        assertEquals(test.equals(ImmutableCell.of(1, 2, ""Hell"")), false);
+        assertEquals(test.equals(null), false);
+        assertEquals(test.equals(""""), false);
+
+        assertEquals(test.hashCode(), ""Hello"".hashCode() ^ 1 ^ Integer.rotateLeft(2, 16));
+    }","    @Test
+    public void test_equalsHashCode() {
+        Cell<String> test = ImmutableCell.of(1, 2, ""Hello"");
+        assertEquals(true, test.equals(test));
+        assertEquals(true, test.equals(ImmutableCell.of(1, 2, ""Hello"")));
+        assertEquals(false, test.equals(ImmutableCell.of(0, 2, ""Hello"")));
+        assertEquals(false, test.equals(ImmutableCell.of(1, 3, ""Hello"")));
+        assertEquals(false, test.equals(ImmutableCell.of(1, 2, ""Hell"")));
+        assertEquals(false, test.equals(null));
+        assertEquals(false, test.equals(""""));
+
+        assertEquals(""Hello"".hashCode() ^ 1 ^ Integer.rotateLeft(2, 16), test.hashCode());
+    }"
+190,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/RequestFrameCodecTest.java,simple,testng,junit,"@BeforeMethod
+  public void setup() {
+    primitiveCodec = Mockito.spy(new MockPrimitiveCodec());
+    expectedAllocations = new ArrayList<>();
+  }","@Before
+  public void setup() {
+    primitiveCodec = Mockito.spy(new MockPrimitiveCodec());
+    expectedAllocations = new ArrayList<>();
+  }"
+191,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/RequestFrameCodecTest.java,simple,testng,junit,"@Test(dataProvider = ""requestParameters"")
+
+  public void should_encode_request_frame(
+      int protocolVersion,
+      Compressor<MockBinaryString> compressor,
+      boolean tracing,
+      Map<String, ByteBuffer> customPayload) {
+
+    FrameCodec<MockBinaryString> frameCodec =
+        new FrameCodec<>(
+            primitiveCodec,
+            compressor,
+            (FrameCodec.CodecGroup)
+                registry -> registry.addEncoder(new MockOptionsCodec(protocolVersion)));
+
+    Frame frame =
+        Frame.forRequest(protocolVersion, STREAM_ID, tracing, customPayload, Options.INSTANCE);
+    MockBinaryString actual = frameCodec.encode(frame);
+    MockBinaryString expected =
+        mockRequestPayload(protocolVersion, compressor, tracing, customPayload, false);
+
+    assertThat(actual).isEqualTo(expected);
+    for (Integer size : expectedAllocations) {
+      Mockito.verify(primitiveCodec).allocate(size);
+    }
+  }","  @Test
+  @UseDataProvider(""requestParameters"")
+  public void should_encode_request_frame(
+      int protocolVersion,
+      Compressor<MockBinaryString> compressor,
+      boolean tracing,
+      Map<String, ByteBuffer> customPayload) {
+
+    FrameCodec<MockBinaryString> frameCodec =
+        new FrameCodec<>(
+            primitiveCodec,
+            compressor,
+            (FrameCodec.CodecGroup)
+                registry -> registry.addEncoder(new MockOptionsCodec(protocolVersion)));
+
+    Frame frame =
+        Frame.forRequest(protocolVersion, STREAM_ID, tracing, customPayload, Options.INSTANCE);
+    MockBinaryString actual = frameCodec.encode(frame);
+    MockBinaryString expected =
+        mockRequestPayload(protocolVersion, compressor, tracing, customPayload, false);
+
+    assertThat(actual).isEqualTo(expected);
+    for (Integer size : expectedAllocations) {
+      Mockito.verify(primitiveCodec).allocate(size);
+    }
+  }"
+192,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/RequestFrameCodecTest.java,simple,testng,junit,"@DataProvider(name = ""requestParameters"")
+  public static Object[][] getRequestParameters() {
+    // before v4: no payload
+    Object[][] v3Parameters =
+        TestDataProviders.combine(
+            TestDataProviders.protocolV3OrBelow(),
+            TestDataProviders.fromList(Compressor.none(), new MockCompressor()),
+            TestDataProviders.fromList(false, true), // tracing
+            TestDataProviders.fromList(Frame.NO_PAYLOAD));
+
+    // v4+
+    Object[][] v4Parameters =
+        TestDataProviders.combine(
+            TestDataProviders.protocolV4OrAbove(),
+            TestDataProviders.fromList(Compressor.none(), new MockCompressor()),
+            TestDataProviders.fromList(false, true),
+            TestDataProviders.fromList(Frame.NO_PAYLOAD, SOME_PAYLOAD));
+
+    Object[][] all = new Object[v3Parameters.length + v4Parameters.length][];
+    System.arraycopy(v3Parameters, 0, all, 0, v3Parameters.length);
+    System.arraycopy(v4Parameters, 0, all, v3Parameters.length, v4Parameters.length);
+    return all;
+  }","  @DataProvider
+  public static Object[][] requestParameters() {
+    // before v4: no payload
+    Object[][] v3Parameters =
+        TestDataProviders.combine(
+            TestDataProviders.protocolV3OrBelow(),
+            TestDataProviders.fromList(Compressor.none(), new MockCompressor()),
+            TestDataProviders.fromList(false, true), // tracing
+            TestDataProviders.fromList(Frame.NO_PAYLOAD));
+
+    // v4+
+    Object[][] v4Parameters =
+        TestDataProviders.combine(
+            TestDataProviders.protocolV4OrAbove(),
+            TestDataProviders.fromList(Compressor.none(), new MockCompressor()),
+            TestDataProviders.fromList(false, true),
+            TestDataProviders.fromList(Frame.NO_PAYLOAD, SOME_PAYLOAD));
+
+    Object[][] all = new Object[v3Parameters.length + v4Parameters.length][];
+    System.arraycopy(v3Parameters, 0, all, 0, v3Parameters.length);
+    System.arraycopy(v4Parameters, 0, all, v3Parameters.length, v4Parameters.length);
+    return all;
+  }"
+193,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/RequestFrameCodecTest.java,simple,testng,junit,"  @Test(dataProvider = ""requestParameters"")
+
+  public void should_decode_request_frame(
+      int protocolVersion,
+      Compressor<MockBinaryString> compressor,
+      boolean tracing,
+      Map<String, ByteBuffer> customPayload) {
+
+    FrameCodec<MockBinaryString> frameCodec =
+        new FrameCodec<>(
+            primitiveCodec,
+            compressor,
+            (FrameCodec.CodecGroup)
+                registry -> registry.addDecoder(new MockOptionsCodec(protocolVersion)));
+
+    MockBinaryString encoded =
+        mockRequestPayload(protocolVersion, compressor, tracing, customPayload, true);
+    Frame frame = frameCodec.decode(encoded);
+
+    assertThat(frame.protocolVersion).isEqualTo(protocolVersion);
+    assertThat(frame.beta).isEqualTo(frame.protocolVersion == ProtocolConstants.Version.BETA);
+    assertThat(frame.streamId).isEqualTo(STREAM_ID);
+    assertThat(frame.tracing).isEqualTo(tracing);
+    assertThat(frame.tracingId).isNull(); // always for requests
+    assertThat(frame.customPayload).isEqualTo(customPayload);
+    assertThat(frame.message).isEqualTo(Options.INSTANCE);
+  }","  @Test
+  @UseDataProvider(""requestParameters"")
+  public void should_decode_request_frame(
+      int protocolVersion,
+      Compressor<MockBinaryString> compressor,
+      boolean tracing,
+      Map<String, ByteBuffer> customPayload) {
+
+    FrameCodec<MockBinaryString> frameCodec =
+        new FrameCodec<>(
+            primitiveCodec,
+            compressor,
+            (FrameCodec.CodecGroup)
+                registry -> registry.addDecoder(new MockOptionsCodec(protocolVersion)));
+
+    MockBinaryString encoded =
+        mockRequestPayload(protocolVersion, compressor, tracing, customPayload, true);
+    Frame frame = frameCodec.decode(encoded);
+
+    assertThat(frame.protocolVersion).isEqualTo(protocolVersion);
+    assertThat(frame.beta).isEqualTo(frame.protocolVersion == ProtocolConstants.Version.BETA);
+    assertThat(frame.streamId).isEqualTo(STREAM_ID);
+    assertThat(frame.tracing).isEqualTo(tracing);
+    assertThat(frame.tracingId).isNull(); // always for requests
+    assertThat(frame.customPayload).isEqualTo(customPayload);
+    assertThat(frame.message).isEqualTo(Options.INSTANCE);
+  }"
+194,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/ResponseFrameCodecTest.java,simple,testng,junit,"  @BeforeMethod
+  public void setup() {
+    primitiveCodec = Mockito.spy(new MockPrimitiveCodec());
+    expectedAllocations = new ArrayList<>();
+  }","  @Before
+  public void setup() {
+    primitiveCodec = Mockito.spy(new MockPrimitiveCodec());
+    expectedAllocations = new ArrayList<>();
+  }"
+195,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/ResponseFrameCodecTest.java,simple,testng,junit,"  @Test(dataProvider = ""responseParameters"")
+
+  public void should_decode_response_frame(
+      int protocolVersion,
+      int streamId,
+      Compressor<MockBinaryString> compressor,
+      boolean tracing,
+      Map<String, ByteBuffer> customPayload,
+      List<String> warnings) {
+
+    FrameCodec<MockBinaryString> frameCodec =
+        new FrameCodec<>(
+            primitiveCodec,
+            compressor,
+            (FrameCodec.CodecGroup)
+                registry -> registry.addDecoder(new MockReadyCodec(protocolVersion)));
+
+    MockBinaryString encoded =
+        mockResponsePayload(
+            protocolVersion, streamId, compressor, tracing, customPayload, warnings, true);
+    Frame frame = frameCodec.decode(encoded);
+
+    assertThat(frame.protocolVersion).isEqualTo(protocolVersion);
+    assertThat(frame.streamId).isEqualTo(streamId);
+    assertThat(frame.tracing).isEqualTo(tracing);
+    assertThat(frame.tracingId).isEqualTo(tracing ? TRACING_ID : null);
+    assertThat(frame.customPayload).isEqualTo(customPayload);
+    assertThat(frame.warnings).isEqualTo(warnings);
+    assertThat(frame.message).isInstanceOf(Ready.class);
+  }","  @Test
+  @UseDataProvider(""responseParameters"")
+  public void should_decode_response_frame(
+      int protocolVersion,
+      int streamId,
+      Compressor<MockBinaryString> compressor,
+      boolean tracing,
+      Map<String, ByteBuffer> customPayload,
+      List<String> warnings) {
+
+    FrameCodec<MockBinaryString> frameCodec =
+        new FrameCodec<>(
+            primitiveCodec,
+            compressor,
+            (FrameCodec.CodecGroup)
+                registry -> registry.addDecoder(new MockReadyCodec(protocolVersion)));
+
+    MockBinaryString encoded =
+        mockResponsePayload(
+            protocolVersion, streamId, compressor, tracing, customPayload, warnings, true);
+    Frame frame = frameCodec.decode(encoded);
+
+    assertThat(frame.protocolVersion).isEqualTo(protocolVersion);
+    assertThat(frame.streamId).isEqualTo(streamId);
+    assertThat(frame.tracing).isEqualTo(tracing);
+    assertThat(frame.tracingId).isEqualTo(tracing ? TRACING_ID : null);
+    assertThat(frame.customPayload).isEqualTo(customPayload);
+    assertThat(frame.warnings).isEqualTo(warnings);
+    assertThat(frame.message).isInstanceOf(Ready.class);
+  }"
+196,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/TestDataProviders.java,simple,testng,junit,"  @DataProvider(name = ""protocolV3OrAbove"")
+  public static Object[][] protocolV3OrAbove() {
+    return protocolVersions(3, null);
+  }","  @DataProvider
+  public static Object[][] protocolV3OrAbove() {
+    return protocolVersions(3, null);
+  }"
+197,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/TestDataProviders.java,simple,testng,junit,"  @DataProvider(name = ""protocolV3OrBelow"")
+  public static Object[][] protocolV3OrBelow() {
+    return protocolVersions(null, 3);
+  }","  @DataProvider
+  public static Object[][] protocolV3OrBelow() {
+    return protocolVersions(null, 3);
+  }"
+198,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/TestDataProviders.java,simple,testng,junit,"  @DataProvider(name = ""protocolV4OrAbove"")
+  public static Object[][] protocolV4OrAbove() {
+    return protocolVersions(4, null);
+  }","  @DataProvider
+  public static Object[][] protocolV4OrAbove() {
+    return protocolVersions(4, null);
+  }"
+199,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/util/IntMapTest.java,simple,testng,junit,"  @Test(expectedExceptions = IllegalArgumentException.class)
+  public void should_not_allow_negative_keys() {
+    IntMap.builder().put(-1, ""a"");
+  }","  @Test(expected = IllegalArgumentException.class)
+  public void should_not_allow_negative_keys() {
+    IntMap.builder().put(-1, ""a"");
+  }"
+200,https://github.com/datastax/native-protocol/commit/4ceed9585a1158e6a579540a2808c3ce96b7729f,native-protocol,4ceed9585a1158e6a579540a2808c3ce96b7729f,src/test/java/com/datastax/oss/protocol/internal/util/IntMapTest.java,simple,testng,junit,"  @Test(expectedExceptions = IllegalArgumentException.class)
+  public void should_fail_if_key_already_exists() {
+    IntMap.builder().put(1, ""foo"").put(1, ""bar"");
+  }","  @Test(expected = IllegalArgumentException.class)
+  public void should_fail_if_key_already_exists() {
+    IntMap.builder().put(1, ""foo"").put(1, ""bar"");
+  }"

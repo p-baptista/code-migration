@@ -51,7 +51,7 @@ def _create_task_from_args(args) -> MigrationTask:
     return MigrationTask(
         task_id=task_id,
         language=args.LANGUAGE_NAME,
-        source_lib=args.OLD_LIB_NAME,
+        legacy_lib=args.OLD_LIB_NAME,
         target_lib=args.NEW_LIB_NAME,
         repo_name=repo_name,
         code_before=code_before,
@@ -104,7 +104,7 @@ def main():
             task_json.write_text(json.dumps({
                 "task_id": task.task_id,
                 "language": task.language,
-                "source_lib": task.source_lib,
+                "legacy_lib": task.legacy_lib,
                 "target_lib": task.target_lib,
                 "repo_name": task.repo_name,
                 "code_before": task.code_before,

@@ -48,7 +48,7 @@ code-migration pipeline \
 The tasks CSV should have the following columns:
 
 ```csv
-task_id,language,source_lib,target_lib,repo_name,migration_type,code_before,code_after
+task_id,language,legacy_lib,target_lib,repo_name,migration_type,code_before,code_after
 task_001,python,boto,boto3,my-repo,library_migration,"import boto
 conn = boto.connect_s3()","import boto3
 s3 = boto3.client('s3')"
@@ -59,7 +59,7 @@ r = request.urlopen('https://api.example.com')"
 
 **Required columns:**
 - `task_id` - Unique identifier for the task
-- `source_lib` - Legacy library name
+- `legacy_lib` - Legacy library name
 - `target_lib` - Target library name
 - `code_before` - Source code to migrate
 
@@ -72,8 +72,8 @@ r = request.urlopen('https://api.example.com')"
 ### JSONL Format (Alternative)
 
 ```jsonl
-{"task_id": "task_001", "language": "python", "source_lib": "boto", "target_lib": "boto3", "repo_name": "my-repo", "code_before": "import boto\nconn = boto.connect_s3()"}
-{"task_id": "task_002", "language": "python", "source_lib": "requests", "target_lib": "urllib", "repo_name": "another-repo", "code_before": "import requests\nr = requests.get('https://api.example.com')"}
+{"task_id": "task_001", "language": "python", "legacy_lib": "boto", "target_lib": "boto3", "repo_name": "my-repo", "code_before": "import boto\nconn = boto.connect_s3()"}
+{"task_id": "task_002", "language": "python", "legacy_lib": "requests", "target_lib": "urllib", "repo_name": "another-repo", "code_before": "import requests\nr = requests.get('https://api.example.com')"}
 ```
 
 ## Command Reference
@@ -94,7 +94,7 @@ code-migration run \
 {
   "task_id": "task_001",
   "language": "python",
-  "source_lib": "boto",
+  "legacy_lib": "boto",
   "target_lib": "boto3",
   "repo_name": "my-repo",
   "code_before": "import boto\nconn = boto.connect_s3()"
@@ -294,7 +294,7 @@ df = pd.read_csv('legacy.csv')
 df_new = pd.DataFrame({
     'task_id': df['repo'] + '_' + df['commit'],
     'language': 'python',
-    'source_lib': df['rmv_lib'],
+    'legacy_lib': df['rmv_lib'],
     'target_lib': df['add_lib'],
     'repo_name': df['repo'],
     'migration_type': df['type'],
@@ -334,7 +334,7 @@ artifacts/<run_id>/
 If scoring fails with "missing code_after", ensure your tasks CSV includes the `code_after` column:
 
 ```csv
-task_id,source_lib,target_lib,code_before,code_after
+task_id,legacy_lib,target_lib,code_before,code_after
 task_001,boto,boto3,"import boto","import boto3"
 ```
 

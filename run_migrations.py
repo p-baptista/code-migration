@@ -25,7 +25,7 @@ def _convert_legacy_csv_to_new_format(csv_path: str, output_csv: Path) -> None:
     """
     Convert legacy CSV format to new format.
     Legacy: legacy_lib, target_lib, repo_name, code_before, id, etc.
-    New: task_id, language, source_lib, target_lib, repo_name, code_before, etc.
+    New: task_id, language, legacy_lib, target_lib, repo_name, code_before, etc.
     """
     with open(csv_path, mode='r', newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -33,7 +33,7 @@ def _convert_legacy_csv_to_new_format(csv_path: str, output_csv: Path) -> None:
         for row in reader:
             # Map old column names to new ones
             task_id = row.get('id', f"task_{len(tasks) + 1}")
-            source_lib = row.get('legacy_lib', row.get('rmv_lib', ''))
+            legacy_lib = row.get('legacy_lib', row.get('rmv_lib', ''))
             target_lib = row.get('target_lib', row.get('add_lib', ''))
             repo_name = row.get('repo_name', row.get('repo', ''))
             code_before = row.get('code_before', row.get('before', ''))
@@ -43,7 +43,7 @@ def _convert_legacy_csv_to_new_format(csv_path: str, output_csv: Path) -> None:
             tasks.append(MigrationTask(
                 task_id=str(task_id),
                 language="python",  # Default for legacy
-                source_lib=source_lib,
+                legacy_lib=legacy_lib,
                 target_lib=target_lib,
                 repo_name=repo_name,
                 code_before=code_before,

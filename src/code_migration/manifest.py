@@ -11,7 +11,7 @@ from typing import Iterable
 class MigrationTask:
     task_id: str
     language: str
-    source_lib: str
+    legacy_lib: str
     target_lib: str
     repo_name: str
     code_before: str
@@ -39,7 +39,7 @@ def load_tasks(path: str | Path) -> list[MigrationTask]:
                 MigrationTask(
                     task_id=row["task_id"],
                     language=row.get("language", "python"),
-                    source_lib=row["source_lib"],
+                    legacy_lib=row["legacy_lib"],
                     target_lib=row["target_lib"],
                     repo_name=row.get("repo_name", ""),
                     code_before=row["code_before"],
@@ -56,7 +56,7 @@ def write_tasks_csv(path: str | Path, tasks: Iterable[MigrationTask]) -> None:
     fieldnames = [
         "task_id",
         "language",
-        "source_lib",
+        "legacy_lib",
         "target_lib",
         "repo_name",
         "migration_type",

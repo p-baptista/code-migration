@@ -1,0 +1,3353 @@
+id,repo_name,commit_code,file_name,type,legacy_lib,target_lib,code_before,code_after
+1,18F/cg-compliance,ed026433089496e8bb6480f4c340451c00e52b28,BDD/steps/policies.py,complex,urllib,requests,"from behave import given, then
+from urllib import request
+
+import datetime
+
+
+@given('the github link - {url}')
+def step_impl(context, url):
+    context.url = url
+
+
+@then('the policy has been updated within the last {days} days')
+def step_impl(context, days):
+    res = request.urlopen(context.url)
+    last_modified = datetime.datetime.strptime(
+        res.getheader(name='Last-Modified'), ""%a, %d %b %Y %H:%M:%S %Z"")
+    x_days_ago = datetime.datetime.now() - datetime.timedelta(days=int(days))
+    assert last_modified > x_days_ago","from behave import given, then
+import requests
+
+import datetime
+
+
+@given('the github link - {url}')
+def step_impl(context, url):
+    context.url = url
+
+
+@then('the policy has been updated within the last {days} days')
+def step_impl(context, days):
+    res = requests.get(context.url)
+    last_modified = datetime.datetime.strptime(
+        res.headers.get('Last-Modified'), ""%a, %d %b %Y %H:%M:%S %Z"")
+    x_days_ago = datetime.datetime.now() - datetime.timedelta(days=int(days))
+    assert last_modified > x_days_ago"
+2,5agado/conversation-analyzer,8989fba9ea32a8b7afc9a28d7814d876db05ebd9,src/util/conversationScraper.py,complex,urllib,requests,"
+        req = urllib.request.Request(url, requestData, headers)
+        with urllib.request.urlopen(req) as response:
+            with gzip.GzipFile(fileobj=response) as uncompressed:
+                decompressedFile = uncompressed.read()
+        end = time.time()
+        logging.info(""Retrieved in {0:.2f}s"".format(end-start))
+
+        #Remove additional leading characters
+        msgsData = decompressedFile.decode(""utf-8"")[9:]
+        return  msgsData","        response = requests.post(url, data=requestData, headers=headers)
+
+
+
+        end = time.time()
+        logging.info(""Retrieved in {0:.2f}s"".format(end-start))
+
+        #Remove additional leading characters
+        msgsData = response.text[9:]
+        return  msgsData"
+3,6uhrmittag/taskbutler,853f9b986c73e8e8eb48e79e675f58c21b2c0ca4,todoist-progressbar.py,complex,urllib,requests,"request = urllib.request.Request(config.update_url)
+try:
+    urllib.request.urlopen(request)
+
+    update_releaseinforaw = urllib.request.urlopen(config.update_url).read()
+    json = json.loads(update_releaseinforaw.decode('utf-8'))
+
+    if not config.version == json[0]['tag_name']:
+        print(""\n#########\n"")
+        print(""Your version is not up-to-date!"")
+        print(""Your version  :"", config.version)
+        print(""Latest version: "", json[0]['tag_name'])
+        print(""See latest version at: "", json[0]['html_url'])
+        print(""\n#########"")
+
+except urllib.error.URLError as e:
+    print(""Error while checking for updates: "", e.reason)
+except urllib.error.HTTPError as e:
+    print(""Error while checking for updates: "", e.code)","try:
+    r = requests.get(config.update_url)
+    r.raise_for_status()
+    release_info_json = r.json()
+
+
+    if not config.version == release_info_json[0]['tag_name']:
+        print(""\n#########\n"")
+        print(""Your version is not up-to-date!"")
+        print(""Your version  :"", config.version)
+        print(""Latest version: "", release_info_json[0]['tag_name'])
+        print(""See latest version at: "", release_info_json[0]['html_url'])
+        print(""\n#########"")
+
+except requests.exceptions.ConnectionError as e:
+    print(""Error while checking for updates (Connection error): "", e)
+except requests.exceptions.HTTPError as e:
+    print(""Error while checking for updates (HTTP error): "", e)
+except requests.exceptions.RequestException  as e:
+    print(""Error while checking for updates: "", e)"
+4,AtomicConductor/conductor_client,a972f6615a60c5dd8285c679071504a112ece551,conductor/lib/api_client.py,complex,urllib,requests,"def make_request(self, uri_path=""/"", headers=None, params=None, data=None, verb=None):
+        '''
+        verb: PUT, POST, GET, DELETE, HEAD
+        '''
+
+        # TODO: set Content Type to json if data arg
+        if not headers:
+            headers = {'Content-Type':'application/json'}
+        logger.debug('headers are: %s', headers)
+
+
+        # Construct URL
+        conductor_url = urlparse.urljoin(CONFIG['url'], uri_path)
+        logger.debug('conductor_url: %s', conductor_url)
+        if params:
+            conductor_url += '?'
+            conductor_url += urllib.urlencode(params)
+        logger.debug('conductor_url is %s', conductor_url)
+
+        req = urllib2.Request(conductor_url, headers=headers, data=data)
+        if verb:
+            req.get_method = lambda: verb
+        logger.debug('request is %s', req)
+
+        logger.debug('trying to connect to app')
+        handler = common.retry(lambda: urllib2.urlopen(req))
+        response_string = handler.read()
+        response_code = handler.getcode()
+        logger.debug('response_code: %s', response_code)
+        logger.debug('response_string is: %s', response_string)
+        return response_string, response_code","    def make_request(self, uri_path=""/"", headers=None, params=None, data=None, verb=None):
+        '''
+        verb: PUT, POST, GET, DELETE, HEAD
+        '''
+
+        # TODO: set Content Type to json if data arg
+        if not headers:
+            headers = {'Content-Type':'application/json'}
+        logger.debug('headers are: %s', headers)
+
+
+        # Construct URL
+        conductor_url = urlparse.urljoin(CONFIG['url'], uri_path)
+        logger.debug('conductor_url: %s', conductor_url)
+
+        if not verb:
+            if data:
+                verb = 'POST'
+            else:
+                verb = 'GET'
+
+        auth = CONFIG['conductor_token']
+
+        response = common.retry(
+            lambda:
+            getattr(requests, verb.lower())(
+                conductor_url,
+                auth=HTTPBasicAuth(CONFIG['conductor_token'], 'unused'),
+                headers=headers,
+                params=params,
+                data=data)
+        )
+
+
+        logger.debug('response.status_code: %s', response.status_code)
+        logger.debug('response.text is: %s', response.text)
+        return response.text, response.status_code"
+5,Behappy123/market-maker,295a5e79521abf981e9f6ea9a88b3d53c233cc1a,bitmex.py,simple,urllib,requests,"import urllib, urllib2, urlparse","import requests
+import urlparse"
+6,Behappy123/market-maker,295a5e79521abf981e9f6ea9a88b3d53c233cc1a,bitmex.py,complex,urllib,requests,"try:
+            response = urllib2.urlopen(request, timeout=timeout)
+        except urllib2.HTTPError, e:
+
+
+
+
+
+
+
+
+
+
+","try:
+            data = None
+            if postdict:
+                data = json.dumps(postdict)
+            req = requests.Request(verb, url, 
+                data=data,
+                params=query,
+                headers=headers)
+            prepped = self.session.prepare_request(req)
+            response = self.session.send(prepped, timeout=timeout)
+            # Make non-200s throw
+            response.raise_for_status()
+
+        except requests.exceptions.HTTPError, e:"
+7,Behappy123/market-maker,295a5e79521abf981e9f6ea9a88b3d53c233cc1a,bitmex.py,complex,urllib,requests,"else:
+                print ""Unhandled Error:"", e
+                print ""Endpoint was: %s %s"" % (verb, api)
+                exit(1)
+        except urllib2.URLError, e:
+            print ""Unable to contact the BitMEX API (URLError). Please check the URL. Retrying. "" + \","            else:
+                print ""Unhandled Error:"", e
+                print ""Endpoint was: %s %s"" % (verb, api)
+                exit(1)
+
+        except requests.exceptions.Timeout, e:
+            # Timeout, re-run this request
+            print ""Timed out, retrying...""
+            return self._curl_bitmex(api, query, postdict, timeout, verb)
+
+        except requests.exceptions.ConnectionError, e:
+            print ""Unable to contact the BitMEX API (ConnectionError). Please check the URL. Retrying. "" + \"
+8,BenjV/autosub-bootstrapbill,413d927a26d69fac90209cf08efe7ff2c6a84380,autosub/notify/plexmediaserver.py,simple,urllib,requests,"import urllib
+import urllib2",import requests
+9,BenjV/autosub-bootstrapbill,413d927a26d69fac90209cf08efe7ff2c6a84380,autosub/notify/plexmediaserver.py,simple,urllib,requests,"try:
+            xml_sections = ET.parse(urllib.urlopen(url))
+        except IOError, e:
+            log.error(""Plex Media Server: Error while trying to contact: %s"" % e)
+            return False","        try:
+            xml_sections = ET.parse(requests.get(url))
+        except IOError, e:
+            log.error(""plexmediaserver: Error while trying to contact: %s"" % e)
+            return False"
+10,BenjV/autosub-bootstrapbill,413d927a26d69fac90209cf08efe7ff2c6a84380,autosub/notify/plexmediaserver.py,simple,urllib,requests,"response = urllib2.urlopen(request)
+
+            auth_tree = ET.fromstring(response.read())","            response = requests.post(""https://plex.tv/users/sign_in.xml"", headers=headers);
+
+            auth_tree = ET.fromstring(response.text)"
+11,BenjV/autosub-bootstrapbill,413d927a26d69fac90209cf08efe7ff2c6a84380,autosub/notify/plexmediaserver.py,simple,urllib,requests,"            response = urllib2.urlopen('%s/%s?X-Plex-Token=%s' % (
+                ""%s:%s"" % (plexserverhost, plexserverport),
+                'library/sections',
+                plexservertoken
+            ))","            response = requests.get('%s/%s?X-Plex-Token=%s' % (
+                ""%s:%s"" % (plexserverhost, plexserverport),
+                'library/sections',
+                plexservertoken
+            ))"
+12,BenjV/autosub-bootstrapbill,413d927a26d69fac90209cf08efe7ff2c6a84380,autosub/notify/plexmediaserver.py,simple,urllib,requests,"  for s in sections:
+                if s.get('type') == ""show"":
+                    try:
+                        urllib2.urlopen('%s/%s?X-Plex-Token=%s' % (
+                            ""%s:%s"" % (plexserverhost, plexserverport),
+                            ""library/sections/%s/refresh"" % (s.get('key')),
+                            plexservertoken
+                        ))
+                        log.info(""Plex Media Server: TV Shows library (%s) is currently updating."" % s.get('title'))
+                        return True
+                    except Exception, e:
+                        log.error(""Plex Media Server: Error updating library section: %s"" % e)
+                        return False
+
+            return True","for s in sections:
+                if s.get('type') == ""show"":
+                    try:
+                        requests.get('%s/%s?X-Plex-Token=%s' % (
+                            ""%s:%s"" % (plexserverhost, plexserverport),
+                            ""library/sections/%s/refresh"" % (s.get('key')),
+                            plexservertoken
+                        ))
+                        log.info(""plexmediaserver: TV Shows library (%s) is currently updating."" % s.get('title'))
+                        return True
+                    except Exception, e:
+                        log.error(""plexmediaserver: Error updating library section: %s"" % e)
+                        return False
+
+            return True"
+13,Chadsr/NordVPN-NetworkManager,b7e5afa847bb212a02ac624f13d592a81f23a41b,nordnm/nordapi.py,complex,urllib,requests,"from urllib import error, request 
+def get_server_list(sort_by_load=False):
+    try:
+        resp = request.urlopen(API_ADDR + '/server', timeout=TIMEOUT)
+        server_list = json.load(resp)
+
+        if sort_by_load:
+            return sorted(server_list, key=itemgetter('load'))
+        else:
+            return server_list
+    except (error.URLError) or Exception as ex:
+        logger.error(ex)
+        return None","import requests
+def get_server_list(sort_by_load=False):
+    try:
+        resp = requests.get(API_ADDR + '/server', timeout=TIMEOUT)
+        server_list = resp.json()
+
+        if sort_by_load:
+            return sorted(server_list, key=itemgetter('load'))
+        else:
+            return server_list
+    except Exception as ex:
+        logger.error(ex)
+        return None"
+14,Chadsr/NordVPN-NetworkManager,b7e5afa847bb212a02ac624f13d592a81f23a41b,nordnm/nordapi.py,simple,urllib,requests,"def get_nameservers():
+    try:
+        resp = request.urlopen(API_ADDR + '/dns/smart', timeout=TIMEOUT).read()
+        return resp
+    except (error.URLError) or Exception as ex:
+        logger.error(ex)
+        return None","def get_nameservers():
+    try:
+        resp = requests.get(API_ADDR + '/dns/smart', timeout=TIMEOUT)
+        return resp.json()
+    except Exception as ex:
+        logger.error(ex)
+        return None"
+15,Chadsr/NordVPN-NetworkManager,b7e5afa847bb212a02ac624f13d592a81f23a41b,nordnm/nordapi.py,simple,urllib,requests,"def get_configs():
+    try:
+        resp = request.urlopen(API_ADDR + '/files/zipv2', timeout=TIMEOUT)
+        return resp
+    except (error.URLError) or Exception as ex:
+        logger.error(ex)
+        return None","def get_configs():
+    try:
+        resp = requests.get(API_ADDR + '/files/zipv2', timeout=TIMEOUT)
+        return resp.content
+    except Exception as ex:
+        logger.error(ex)
+        return None"
+16,Clinical-Genomics/scout,c96dca5ec69583fa9edf2f7ec246f62669e5cbdd,scout/utils/scout_requests.py,simple,urllib,requests,"import urllib.request
+import xml.etree.ElementTree as ET
+from socket import timeout
+from urllib.error import HTTPError, URLError",import requests
+17,Clinical-Genomics/scout,c96dca5ec69583fa9edf2f7ec246f62669e5cbdd,scout/utils/scout_requests.py,complex,urllib,requests,"    try:
+        LOG.info(""Requesting %s"", url)
+        response = urllib.request.urlopen(url, timeout=20)
+        if url.endswith("".gz""):
+            LOG.info(""Decompress zipped file"")
+            data = gzip.decompress(response.read())  # a `bytes` object
+        else:
+            data = response.read()  # a `bytes` object
+        decoded_data = data.decode(""utf-8"")
+    except HTTPError as err:
+        LOG.warning(""Something went wrong, perhaps the api key is not valid?"")
+        raise err
+    except URLError as err:
+        LOG.warning(""Something went wrong, are you connected to internet?"")
+        raise err
+    except timeout:
+        LOG.error(""socket timed out - URL %s"", url)
+        raise ValueError
+
+    if ""Error"" in decoded_data:
+        raise URLError(""Seems like url {} does not exist"".format(url))
+
+    return decoded_data","    try:
+        LOG.info(""Requesting %s"", url)
+        response = requests.get(url, timeout=20)
+        if response.status_code != 200:
+            response.raise_for_status()
+        LOG.info(""Encoded to %s"", response.encoding)
+    except requests.exceptions.HTTPError as err:
+
+        LOG.warning(""Something went wrong, perhaps the api key is not valid?"")
+        raise err
+    except requests.exceptions.MissingSchema as err:
+        LOG.warning(""Something went wrong, perhaps url is invalid?"")
+        raise err
+    except requests.exceptions.Timeout as err:
+        LOG.error(""socket timed out - URL %s"", url)
+        raise err
+
+    return response"
+18,Clinical-Genomics/scout,c96dca5ec69583fa9edf2f7ec246f62669e5cbdd,scout/utils/scout_requests.py,simple,urllib,requests," try:
+        exac_lines = fetch_resource(url)
+    except URLError:
+        LOG.info(""Failed to fetch exac constraint scores file from ftp server"")"," try:
+        exac_lines = fetch_resource(url)
+    except requests.exceptions.HTTPError:
+        LOG.info(""Failed to fetch exac constraint scores file from ftp server"")"
+19,Clinical-Genomics/scout,c96dca5ec69583fa9edf2f7ec246f62669e5cbdd,scout/utils/scout_requests.py,complex,urllib,requests,"try:
+        resp = urllib.request.urlopen(base_url.format(refseq_acc))
+        xml_response = ET.parse(resp)
+        version = xml_response.find(""IdList"").find(""Id"").text or version
+
+    except HTTPError:
+        LOG.warning(""Something went wrong, perhaps the refseq accession is not valid?"")
+    except URLError:
+        LOG.warning(""Something went wrong, are you connected to internet?"")
+    except AttributeError:
+        LOG.warning(""refseq accession not found"")","    try:
+        resp = get_request(base_url.format(refseq_acc))
+        tree = ElementTree.fromstring(resp.content)
+        version = tree.find(""IdList"").find(""Id"").text or version
+
+    except (
+        requests.exceptions.HTTPError,
+        requests.exceptions.MissingSchema,
+        AttributeError,
+    ):
+        LOG.warning(""refseq accession not found"")"
+20,Clinical-Genomics/scout,c96dca5ec69583fa9edf2f7ec246f62669e5cbdd,tests/utils/test_requests.py,complex,urllib,requests,"def test_get_request(mocker, refseq_response):
+
+    """"""Test functions that accepts an url and returns decoded data from it""""""
+
+    # test function with url that exists
+    url = ""http://www.github.com""
+    mocker.patch.object(scout_requests.urllib.request, ""urlopen"")
+    with tempfile.TemporaryFile() as temp:
+        temp.write(refseq_response)
+        temp.seek(0)
+        scout_requests.urllib.request.urlopen.return_value = temp
+        decoded_resp = get_request(url)","def test_get_request():
+    """"""Test functions that accepts an url and returns decoded data from it""""""
+
+    # GIVEN an URL
+    url = ""http://www.github.com""
+    responses.add(
+        responses.GET, url, status=200,
+    )
+
+    # WHEN requesting
+    response = scout_requests.get_request(url)
+    # THEN assert that the reponse is correct
+    assert response.status_code == 200"
+21,CorruptComputer/ProtonDB-Tags,805cf641626b89b4df5d3d621fb151d1d12089c5,ProtonDB-to-Steam-Library.py,complex,urllib,requests,"def is_native(app_id):
+    # Wait 1 second before continuing, as Steam only allows 10 requests per 10 seconds, otherwise you get rate limited for a few minutes.
+    time.sleep(1)
+
+    try:
+        # Thanks to u/FurbyOnSteroid for finding this! https://www.reddit.com/r/linux_gaming/comments/bxqsvs/protondb_to_steam_library_tool/eqal68r/
+        req = urllib.request.urlopen(""https://store.steampowered.com/api/appdetails?appids="" + app_id + ""&filters=platforms"")
+        data = req.read()
+        enc = req.info().get_content_charset('utf-8')
+        steam_api_result = json.loads(str(data.decode(enc)))
+
+        # If steam can't find the game it will be False
+        if steam_api_result[app_id][""success""] in [""True"", ""true"", True]:
+            return (steam_api_result[app_id][""data""][""platforms""][""linux""] in [""True"", ""true"", True])
+
+        return False
+    except urllib.error.HTTPError:
+        print(""Error pulling info from Steam API for "" + app_id + "" (you're probably being rate-limited)"")
+        return False","def is_native(app_id):
+    # Wait 1 second before continuing, as Steam only allows 10 requests per 10 seconds, otherwise you get rate limited for a few minutes.
+    time.sleep(1)
+
+    # Thanks to u/FurbyOnSteroid for finding this! https://www.reddit.com/r/linux_gaming/comments/bxqsvs/protondb_to_steam_library_tool/eqal68r/
+    r = requests.get(""https://store.steampowered.com/api/appdetails?appids={}&filters=platforms"".format(app_id))
+    if r.status_code != 200:
+        print(""Error pulling info from Steam API for {}. You're probably being rate-limited"".format(app_id))
+        return False
+
+
+    steam_api_result = r.json()
+
+    # If steam can't find the game it will be False
+    if steam_api_result[app_id][""success""] in [""True"", ""true"", True]:
+        return (steam_api_result[app_id][""data""][""platforms""][""linux""] in [""True"", ""true"", True])
+
+    return False"
+22,DMOJ/online-judge,72d419d08df7602cc2df40ad22ad6ac9cc394f50,judge/utils/mathoid.py,complex,urllib,requests,"try:
+            request = urllib.request.urlopen(self.mathoid_url, urlencode({
+                'q': reescape.sub(lambda m: '\\' + m.group(0), formula).encode('utf-8'),
+                'type': 'tex' if formula.startswith('\displaystyle') else 'inline-tex'
+            }))
+        except urllib.error.HTTPError as e:
+            if e.code == 400:
+                logger.error('Mathoid failed to render: %s\n%s', formula, e.read())
+            else:
+                logger.exception('Failed to connect to mathoid for: %s' % formula)
+
+
+            return
+        except Exception:
+            logger.exception('Failed to connect to mathoid for: %s' % formula)
+            return"," try:
+            response = requests.post(self.mathoid_url, data={
+                'q': reescape.sub(lambda m: '\\' + m.group(0), formula).encode('utf-8'),
+                'type': 'tex' if formula.startswith('\displaystyle') else 'inline-tex'
+            })
+            response.raise_for_status()
+            data = response.json()
+        except requests.ConnectionError:
+            logger.exception('Failed to connect to mathoid for: %s', formula)
+            return
+        except requests.HTTPError as e:
+            logger.error('Mathoid failed to render: %s\n%s', formula, e.response.text)
+            return
+        except Exception:
+            logger.exception('Failed to connect to mathoid for: %s', formula)
+            return"
+23,DuckBoss/JJMumbleBot,e9fc6b5aeb4aa09b82ca0e0d302ff4c61b0ced1a,JJMumbleBot/plugins/extensions/youtube/utility/youtube_helper.py,complex,urllib,requests,"def get_vid_list(search):
+    url = ""https://www.youtube.com/results?search_query="" + search.replace("" "", ""+"")
+    req = urllib.request.Request(url)
+    with urllib.request.urlopen(req) as response:
+        html = response.read()
+    soup = BeautifulSoup(html, 'html.parser')
+    all_searches = soup.findAll(attrs={'class': 'yt-uix-tile-link'})
+    search_results_list = []","def get_vid_list(search):
+    url = ""https://www.youtube.com/results?search_query="" + search.replace("" "", ""+"")
+    req = requests.get(url)
+    html = req.text
+
+    soup = BeautifulSoup(html, 'html.parser')
+    all_searches = soup.findAll(attrs={'class': 'yt-uix-tile-link'})
+    search_results_list = []"
+24,Grazfather/BlackHatPython,6b85f63cfed95b21736639f399fcfa957efe27ad,Chapter5/joomla_killer.py,simple,urllib,requests,"def web_bruter(self):
+        while not self.password_q.empty() and not self.found:
+            brute = self.password_q.get().rstrip()
+            jar = cookielib.FileCookieJar(""cookies"")
+            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(jar))
+
+            response = opener.open(target_url)
+
+            page = response.read()
+
+            print ""Trying: %s : %s (%d left)"" % (self.username, brute, self.password_q.qsize())","def web_bruter(self):
+        while not self.password_q.empty() and not self.found:
+            brute = self.password_q.get().rstrip()
+
+
+
+            response = requests.get(target_url)
+
+            page = response.text
+
+            print ""Trying: %s : %s (%d left)"" % (self.username, brute, self.password_q.qsize())"
+25,HDI-Project/ATM,5379902c34dce9a45faf48bbf977395cb0bc3395,atm/utilities.py,complex,urllib,requests,"global public_ip
+    if public_ip is None:
+        try:
+            response = urllib.request.urlopen(PUBLIC_IP_URL, timeout=2)
+            data = str(response.read().strip())
+            # pull an ip-looking set of numbers from the response
+            match = re.search('\d+\.\d+\.\d+\.\d+', data)
+            if match:
+                public_ip = match.group()
+        except Exception as e:  # any exception, doesn't matter what
+            logger.error('could not get public IP: %s' % e)
+            public_ip = 'localhost'","    global public_ip
+    if public_ip is None:
+        try:
+            public_ip = requests.get(PUBLIC_IP_URL).json()['ip']
+
+
+
+
+
+        except Exception as e:  # any exception, doesn't matter what
+            logger.error('could not get public IP: %s' % e)
+            public_ip = 'localhost'"
+26,HDI-Project/ATM,5379902c34dce9a45faf48bbf977395cb0bc3395,atm/utilities.py,simple,urllib,requests,"logger.debug('downloading data from %s...' % url)
+    f = urllib.request.urlopen(url)
+    data = f.read()
+    with open(path, 'wb') as outfile:
+        outfile.write(data)
+    logger.info('file saved at %s' % path)"," logger.debug('downloading data from %s...' % url)
+    data = requests.get(url).text
+
+    with open(path, 'wb') as outfile:
+        outfile.write(data)
+    logger.info('file saved at %s' % path)"
+27,HXLStandard/libhxl-python,6927750f4bb33efc3f7b6b2e0b28c69af2c310e0,hxl/io.py,simple,urllib,requests,"if re.match(r'^(?:https?|ftp)://', origin):
+        if sys.version_info < (3,):
+            return urllib2.urlopen(origin)
+        else:
+            return urllib.request.urlopen(origin)","    if re.match(r'^(?:https?|ftp)://', origin):
+        response = requests.get(origin, stream=True)
+        return response.raw"
+28,HXLStandard/libhxl-python,6927750f4bb33efc3f7b6b2e0b28c69af2c310e0,setup.py,simple,urllib,requests," install_requires=['shapely', 'python-dateutil', 'xlrd'],","      install_requires=['shapely', 'python-dateutil', 'xlrd', 'requests'],"
+29,JohnMaguire/Cardinal,ce0e2bf11fd4cb2b9da6c30e0a306e6d263cb994,plugins/github/plugin.py,simple,urllib,requests,"from urllib import request
+from urllib import error as urllib_error",import requests
+30,JohnMaguire/Cardinal,ce0e2bf11fd4cb2b9da6c30e0a306e6d263cb994,plugins/github/plugin.py,simple,urllib,requests,"except urllib_error.HTTPError:
+            cardinal.sendMsg(channel,
+                             ""Couldn't find %s#%d"" % (repo, int(query)))","except requests.exceptions.HTTPError:
+            cardinal.sendMsg(channel,
+                             ""Couldn't find %s#%d"" % (repo, int(query)))"
+31,JohnMaguire/Cardinal,ce0e2bf11fd4cb2b9da6c30e0a306e6d263cb994,plugins/github/plugin.py,simple,urllib,requests,"try:
+            if len(groups) == 3:
+                self._show_issue(cardinal,
+                                 channel,
+                                 '%s/%s' % (groups[0], groups[1]),
+                                 int(groups[2]))
+            elif len(groups) == 2:
+                self._show_repo(cardinal,
+                                channel,
+                                '%s/%s' % (groups[0], groups[1]))
+        except urllib_error.HTTPError:
+            raise EventRejectedMessage","try:
+            if len(groups) == 3:
+                yield self._show_issue(cardinal,
+                                       channel,
+                                       '%s/%s' % (groups[0], groups[1]),
+                                       int(groups[2]))
+            elif len(groups) == 2:
+                yield self._show_repo(cardinal,
+                                      channel,
+                                      '%s/%s' % (groups[0], groups[1]))
+        except requests.exceptions.HTTPError:
+            raise EventRejectedMessage"
+32,JohnMaguire/Cardinal,ce0e2bf11fd4cb2b9da6c30e0a306e6d263cb994,plugins/github/plugin.py,complex,urllib,requests,"def _form_request(self, endpoint, params={}):
+        # Make request to specified endpoint and return JSON decoded result
+        uh = urllib.request.urlopen(""https://api.github.com/"" +
+                             endpoint + ""?"" +
+                             urllib.parse.urlencode(params))
+
+        return json.load(uh)","    @defer.inlineCallbacks
+    def _form_request(self, endpoint, params=None):
+        if params is None:
+            params = {}
+
+        r = yield deferToThread(requests.get, ""https://api.github.com/"" + endpoint,
+                                params=params)
+        r.raise_for_status()
+
+        return r.json()"
+33,JohnMaguire/Cardinal,ce0e2bf11fd4cb2b9da6c30e0a306e6d263cb994,plugins/lastfm/plugin.py,complex,urllib,requests," try:
+            uh = request.urlopen(
+                ""http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks""
+                ""&user=%s&api_key=%s&limit=1&format=json"" %
+                (username, self.api_key)
+            )
+            content = json.load(uh)
+        except Exception as e:
+            # Handle 404 (i.e. user not exists) separately
+            if isinstance(e, urllib_error.HTTPError) and e.code == 404:
+                cardinal.sendMsg(
+                        channel,
+                        ""Last.fm user '{}' does not exist"".format(username))
+                return","        try:
+            r = yield deferToThread(
+                requests.get,
+                ""http://ws.audioscrobbler.com/2.0/"",
+                params={
+                    ""method"": ""user.getrecenttracks"",
+                    ""user"": username,
+                    ""api_key"": self.api_key,
+                    ""limit"": 1,
+                    ""format"": ""json"",
+                }
+            )
+            if r.status_code == 404:
+
+                cardinal.sendMsg(
+                        channel,
+                        ""Last.fm user '{}' does not exist"".format(username))
+                return"
+34,JohnMaguire/Cardinal,ce0e2bf11fd4cb2b9da6c30e0a306e6d263cb994,plugins/urbandict/plugin.py,simple,urllib,requests," try:
+            url = URBANDICT_API_PREFIX
+            data = requests.get(url, params={'term': word}).json()","        try:
+            url = URBANDICT_API_PREFIX
+            r = yield deferToThread(requests.get, url, params={'term': word})"
+35,JohnMaguire/Cardinal,ce0e2bf11fd4cb2b9da6c30e0a306e6d263cb994,plugins/wikipedia/plugin.py,simple,urllib,requests," try:
+            uh = request.urlopen(url)
+            url = uh.url
+            soup = BeautifulSoup(uh, features=""html.parser"")
+        except Exception as e:","        try:
+            r = yield deferToThread(requests.get, url)
+            url = r.url
+            soup = BeautifulSoup(r.text, features=""html.parser"")
+        except Exception:"
+36,KilledMufasa/AmputatorBot,5b194a1d9dddc00c927992e595392c18622d5e99,mentions_bot.py,simple,urllib,requests,"from urllib.request import urlopen
+import urllib.request","from random import choice
+import requests"
+37,KilledMufasa/AmputatorBot,5b194a1d9dddc00c927992e595392c18622d5e99,mentions_bot.py,simple,urllib,requests,content = urlopen(mentions_urls[x]),"req = requests.get(mentions_urls[x],headers=random_headers())"
+38,KilledMufasa/AmputatorBot,5b194a1d9dddc00c927992e595392c18622d5e99,submissions_bot.py,complex,urllib,requests,"try:
+                                        # Fetch submitted amp page
+                                        submission_content = urllib.request.urlopen(req)
+                                        print(""\nNow scanning the submitted Amp link: "" + submission.url + ""\n"")
+                                        submission_content = urlopen(submission.url)
+
+                                        # Make the received data readable
+                                        print(""Making a soup...\n"")
+                                        soup = BeautifulSoup(submission_content, features= ""lxml"")
+                                        print(""Making a readable soup...\n"")
+                                        soup.prettify()","try:
+                                        # Fetch submitted amp page
+
+                                        print(""\nNow scanning the submitted Amp link: "" + submission.url + ""\n"")
+                                        req = requests.get(submission.url,headers=random_headers())
+
+                                        # Make the received data readable
+                                        print(""Making a soup...\n"")
+                                        soup = BeautifulSoup(req.text, features= ""lxml"")
+                                        print(""Making a readable soup...\n"")
+                                        soup.prettify()"
+39,Koed00/django-whoshere,749308d2f10508967c4ca4003dacc3a5a2e04af5,django_whoshere/apps.py,simple,urllib,requests," try:
+        response = urllib.urlopen('https://www.telize.com/geoip/{}'.format(ip))
+    except URLError:
+        location = {'city': 'error', 'country': 'error'}
+    else:
+        data = json.loads(response.read())
+        location = {'city': data.get('city', 'unknown'), 'country': data.get('country', 'unknown')}
+        cache.set(key, location, TIMEOUT)
+    return location","    try:
+        request = requests.get('https://www.telize.com/geoip/{}'.format(ip))
+    except requests.exceptions.RequestException:
+        location = {'city': 'error', 'country': 'error'}
+    else:
+        data = request.json()
+        location = {'city': data.get('city', 'unknown'), 'country': data.get('country', 'unknown')}
+        cache.set(key, location, TIMEOUT)
+    return location"
+40,Koed00/django-whoshere,749308d2f10508967c4ca4003dacc3a5a2e04af5,setup.py,simple,urllib,requests,"install_requires=['django>=1.7'],","install_requires=['django>=1.7', 'requests'],"
+41,Linaro/lava,b037a86607eec04cf8169d9d7c434cc332329699,lava_scheduler_app/models.py,complex,urllib,requests," else:
+                callback_data = urlencode(callback_data).encode(""utf-8"")
+                headers['Content-Type'] = 'application/x-www-form-urlencoded'
+
+        if self.url:
+            try:
+                logger.info(""Sending request to callback url %s"" % self.url)
+                request = Request(self.url, callback_data, headers)
+                urlopen(request)
+
+            except Exception as ex:
+                logger.warning(""Problem sending request to %s: %s"" % (
+                    self.url, ex))","  else:
+                ret = requests.post(self.url, data=data, headers=headers)
+            ret.raise_for_status()
+
+        except Exception as ex:
+            logger.warning(""Problem sending request to %s: %s"" % (
+                self.url, ex))"
+42,MTG/freesound,8080e9500abdc1b7be7c7a76ef01b4a7524e24f8,monitor/views.py,complex,urllib,requests,"def queries_stats_ajax(request):
+    req = urllib2.Request(""http://mtg-logserver.s.upf.edu/graylog/api/search/universal/relative/terms?query=%2A&range=1209600&filter=streams%3A531051bee4b0f1248696785a&field=query"")
+    base64string = base64.b64encode('%s:%s' % (settings.GRAYLOG_USERNAME,
+        settings.GRAYLOG_PASSWORD))
+    req.add_header(""Authorization"", ""Basic %s"" % base64string)
+    return JsonResponse(json.load(urllib2.urlopen(req)))","def queries_stats_ajax(request):
+    params = {
+        'query': ':',
+        'range': 14 * 60 * 60 * 24,
+        'filter': 'streams:531051bee4b0f1248696785a',
+        'field': 'query'
+    }
+    req = requests.get('http://mtg-logserver.s.upf.edu/graylog/api/search/universal/relative/terms',
+            auth=(settings.GRAYLOG_USERNAME, settings.GRAYLOG_PASSWORD), params=params)
+    return JsonResponse(req.json())"
+43,MTG/freesound,8080e9500abdc1b7be7c7a76ef01b4a7524e24f8,monitor/views.py,complex,urllib,requests,"@login_required
+def api_usage_stats_ajax(request):
+    query = urllib.urlencode({
+        'query': 'api_client_username:%s' % (request.user.username),
+        'range': '604800',
+        'filter': 'streams:530f2ec5e4b0f124869546d0',
+        'interval': 'day'
+    })
+    req = urllib2.Request(""http://mtg-logserver.s.upf.edu/graylog/api/search/universal/relative/histogram?%s"" % (query))
+    base64string = base64.b64encode('%s:%s' % (settings.GRAYLOG_USERNAME,
+        settings.GRAYLOG_PASSWORD))
+    req.add_header(""Authorization"", ""Basic %s"" % base64string)
+    return JsonResponse(json.load(urllib2.urlopen(req)))","@login_required
+def api_usage_stats_ajax(request, client_id):
+    params = {
+        'query': 'api_client_id:%s' % (client_id),
+        'range': 14 * 60 * 60 * 24,
+        'filter': 'streams:530f2ec5e4b0f124869546d0',
+        'interval': 'day'
+    }
+    req = requests.get('http://mtg-logserver.s.upf.edu/graylog/api/search/universal/relative/histogram',
+            auth=(settings.GRAYLOG_USERNAME, settings.GRAYLOG_PASSWORD), params=params)
+    try:
+        return JsonResponse(req.json())
+    except requests.HTTPError:
+        return JsonResponse({'error': 'Error at collecting usage stats'})"
+44,Microsoft/agogosml,fd5d48383b14704fbccd73a2063bcdef5ede600d,sample_app/main.py,complex,urllib,requests," encoded_data = urllib.parse.urlencode(data).encode('utf-8')
+    req = urllib.request.Request(OUTPUT_URL, encoded_data)
+    response = urllib.request.urlopen(req)
+    logging.info('Response received from output writer')
+    # TO DO: Design retry policy based on BL. For now, print result
+    print(response.read().decode('utf-8'))","request = requests.post(OUTPUT_URL, data=str(data))
+    if request.status_code != 200:
+        logging.error(
+            ""Error with a request {} and message not sent was {}"".format(
+                request.status_code, data))
+    else:
+        logging.info(""{} Response received from output writer"".format(
+            request.status_code))"
+45,Nervengift/kvvliveapi,4a256ab05c7809d086bc12e3235b6e0e41793f32,kvvliveapi/KVV.py,simple,urllib,requests,"def _query(path, params={}):
+    params[""key""] = API_KEY
+    url = API_BASE + path + ""?"" + urlencode(params)
+    req = _urllib.Request(url)
+
+    #try:
+    handle = _urllib.urlopen(req)
+    #except IOError as e:
+    #    if hasattr(e, ""code""):
+    #        if e.code != 403:
+    #            print(""We got another error"")
+    #            print(e.code)
+    #        else:
+    #            print(e.headers)
+    #            print(e.headers[""www-authenticate""])
+    #    return None; #TODO: Schoenere Fehlerbehandlung
+
+    return json.loads(handle.read().decode(""utf8""))","def _query(path, params={}):
+    params[""key""] = API_KEY
+    response = requests.get(""{}{}"".format(API_BASE, path), params=params)
+    return response.json()"
+46,Nervengift/kvvliveapi,4a256ab05c7809d086bc12e3235b6e0e41793f32,setup.py,simple,urllib,requests, install_requires=['docopt'],"install_requires=['docopt', requests]"
+47,Nettacker/Nettacker,e09cda0967872260e1065cd8f444118790091a6e,core/update.py,simple,urllib,requests,"def _update(__version__, __code_name__, language):
+    from core.compatible import version
+    if version() is 2:
+        from urllib import urlopen
+    if version() is 3:
+        from urllib.request import urlopen
+    try:
+        data = urlopen(url).read()
+        if version() is 3:
+            data = data.decode(""utf-8"")
+        if __version__ + ' ' + __code_name__ == data.rsplit('\n')[0]:","def _update(__version__, __code_name__, language):
+
+
+
+
+
+    try:
+        data = requests.get(url, headers={""User-Agent"" : ""OWASP Nettacker""}).content
+        if version() is 3:
+            data = data.decode(""utf-8"")
+        if __version__ + ' ' + __code_name__ == data.rsplit('\n')[0]:"
+48,Nettacker/Nettacker,e09cda0967872260e1065cd8f444118790091a6e,core/update.py,simple,urllib,requests,"def _check(__version__, __code_name__, language):
+    from core.compatible import version
+    if version() is 2:
+        from urllib import urlopen
+    if version() is 3:
+        from urllib.request import urlopen
+    try:
+        data = urlopen(url).read()","def _check(__version__, __code_name__, language):
+
+    try:
+        data = requests.get(url, headers={""User-Agent"": ""OWASP Nettacker""}).content"
+49,OCHA-DAP/hdx-ckan,56b9cdea509d453dccac68cc12bf3cea079c4cad,ckan/lib/captcha.py,simple,urllib,requests," params = urllib.urlencode(dict(secret=recaptcha_private_key,
+                                   remoteip=client_ip_address,
+                                   response=recaptcha_response_field.encode('utf8')))
+    f = urllib2.urlopen(recaptcha_server_name, params)
+    data = json.load(f)
+    f.close()"," params = dict(
+        secret=recaptcha_private_key,
+        remoteip=client_ip_address,
+        response=recaptcha_response_field.encode('utf8')
+    )
+    response = requests.get(recaptcha_server_name, params)
+    data = response.json()"
+50,OCHA-DAP/hdx-ckan,56b9cdea509d453dccac68cc12bf3cea079c4cad,ckan/lib/search/__init__.py,simple,urllib,requests," req = urllib2.Request(url=url)
+    if http_auth:
+        req.add_header('Authorization', http_auth)
+
+
+
+
+    return urllib2.urlopen(req)"," if http_auth:
+        response = requests.get(
+            url, headers={'Authorization': http_auth})
+    else:
+        response = requests.get(url)
+
+    return response"
+51,OCHA-DAP/hdx-ckan,56b9cdea509d453dccac68cc12bf3cea079c4cad,ckan/lib/search/__init__.py,simple,urllib,requests,"try:
+            # Try Managed Schema
+            res = _get_schema_from_solr(SOLR_SCHEMA_FILE_OFFSET_MANAGED)
+        except urllib2.HTTPError:
+
+            # Fallback to Manually Edited schema.xml
+            res = _get_schema_from_solr(SOLR_SCHEMA_FILE_OFFSET_CLASSIC)
+
+    else:
+        url = 'file://%s' % schema_file
+        res = urllib2.urlopen(url)
+
+    tree = xml.dom.minidom.parseString(res.read())"," try:
+            # Try Managed Schema
+            res = _get_schema_from_solr(SOLR_SCHEMA_FILE_OFFSET_MANAGED)
+            res.raise_for_status()
+        except requests.HTTPError:
+            # Fallback to Manually Edited schema.xml
+            res = _get_schema_from_solr(SOLR_SCHEMA_FILE_OFFSET_CLASSIC)
+        schema_content = res.text
+    else:
+        with open(schema_file, 'rb') as f:
+            schema_content = f.read()
+
+    tree = xml.dom.minidom.parseString(schema_content)"
+52,OCHA-DAP/hdx-ckan,56b9cdea509d453dccac68cc12bf3cea079c4cad,ckan/model/license.py,simple,urllib,requests,"def load_licenses(self, license_url):
+        try:
+            response = urllib2.urlopen(license_url)
+            response_body = response.read()
+        except Exception as inst:
+            msg = ""Couldn't connect to licenses service %r: %s"" % (license_url, inst)"," def load_licenses(self, license_url):
+        try:
+            response = requests.get(license_url)
+            license_data = response.json()
+        except requests.RequestException as e:
+            msg = ""Couldn't get the licenses file {}: {}"".format(license_url, e)
+            raise Exception(msg)
+        except ValueError as e:
+            msg = ""Couldn't parse the licenses file {}: {}"".format(license_url, e)"
+53,PSLmodels/Tax-Calculator,8edbd7d8322c2974c192ceb767061e428b025fcc,taxcalc/calculator.py,simple,urllib,requests,"elif reform.startswith('http'):
+                txt = urllib.request.urlopen(reform).read().decode()","elif reform.startswith('http'):
+                req = requests.get(reform)
+                req.raise_for_status()
+                txt = req.text"
+54,PSLmodels/Tax-Calculator,8edbd7d8322c2974c192ceb767061e428b025fcc,taxcalc/calculator.py,simple,urllib,requests,                txt = urllib.request.urlopen(assump).read().decode(),"                req = requests.get(assump)
+                req.raise_for_status()
+                txt = req.text"
+55,PSLmodels/Tax-Calculator,8edbd7d8322c2974c192ceb767061e428b025fcc,taxcalc/tests/test_calculator.py,simple,urllib,requests, with pytest.raises(urllib.request.URLError):,    with pytest.raises(requests.exceptions.ConnectionError):
+56,Pitt-CSC/PittAPI,81dba02bc4757d3ad75b4f64f30d20c21ac6c1f5,pittAPI.py,simple,urllib,requests,"try:
+    # Python 3
+    from urllib.request import urlopen
+except ImportError:
+    # Python 2
+    from urllib2 import urlopen","import requests
+
+s = requests.session()"
+57,Pitt-CSC/PittAPI,81dba02bc4757d3ad75b4f64f30d20c21ac6c1f5,pittAPI.py,simple,urllib,requests,"def _retrieve_from_url(url):
+        page = urlopen(url)
+        soup = BeautifulSoup(page.read(), 'html.parser')
+        courses = soup.findAll(""tr"", {""class"": ""odd""})
+        courses_even = soup.findAll(""tr"", {""class"": ""even""})
+        courses.extend(courses_even)"," def _retrieve_from_url(url):
+        page = s.get(url)
+        soup = BeautifulSoup(page.text, 'html.parser')
+        courses = soup.findAll(""tr"", {""class"": ""odd""})
+        courses_even = soup.findAll(""tr"", {""class"": ""even""})
+        courses.extend(courses_even)"
+58,Pitt-CSC/PittAPI,81dba02bc4757d3ad75b4f64f30d20c21ac6c1f5,pittAPI.py,simple,urllib,requests,"        page = urlopen(url)
+        soup = BeautifulSoup(page.read(), 'html.parser')"," page = s.get(url)
+        soup = BeautifulSoup(page.text, 'html.parser')"
+59,Pitt-CSC/PittAPI,81dba02bc4757d3ad75b4f64f30d20c21ac6c1f5,pittAPI.py,simple,urllib,requests,"if personurl.lower().startswith(""https://"") and hasattr(ssl, '_create_unverified_context'):
+                    ct = ssl._create_unverified_context()
+                    f = urlopen(personurl, context=ct)
+                else:
+                    f = urlopen(personurl)","                if personurl.lower().startswith(""https://"") and hasattr(ssl, '_create_unverified_context'):
+                    ct = ssl._create_unverified_context()
+                    f = s.get(personurl, context=ct)
+                else:
+                    f = s.get(personurl)"
+60,PsychoinformaticsLab/pliers,f345b457001b862bb13cba32bb8e40ad3f4d8398,featurex/datasets/text.py,simple,urllib,requests," urllib.urlretrieve(url, _file)","url = 'http://www.example.com/image.jpg'
+    r = requests.get(url)
+    with open(_file, 'wb') as f:
+        f.write(r.content)"
+61,PsychoinformaticsLab/pliers,f345b457001b862bb13cba32bb8e40ad3f4d8398,featurex/datasets/text.py,complex,urllib,requests,"def test_dicts(self):
+        """"""
+        Check that all text dictionaries download successfully.
+        """"""
+        datasets = _load_datasets()
+        for dataset in datasets.keys():
+            try:
+                data = fetch_dictionary(dataset, save=False)
+            except:
+                print(""Dataset failed: {0}"".format(dataset))
+                data = None
+                
+                # Determine cause of error.
+                try:
+                    urllib2.urlopen(datasets[dataset][""url""])
+                except urllib2.HTTPError, e:
+                    print(""HTTP Error: {0}"".format(e.code))
+                except urllib2.URLError, e:
+                    print(""URL Error: {0}"".format(e.args))
+            self.assertIsInstance(data, DataFrame)","    def test_dicts_exist_at_url_and_initialize(self):
+        """"""
+        Check that all text dictionaries download successfully.
+        """"""
+        datasets = _load_datasets()
+        for name, dataset in datasets.items():
+            r = requests.head(dataset['url'])
+            assert r.status_code == requests.codes.ok"
+62,PsychoinformaticsLab/pliers,f345b457001b862bb13cba32bb8e40ad3f4d8398,featurex/datasets/text.py,simple,urllib,requests,"install_requires=['numpy', 'scipy', 'pandas', 'six', 'python-magic'],","   install_requires=['numpy', 'scipy', 'pandas', 'six', 'python-magic', 'requests'],"
+63,RIPE-NCC/ripe-atlas-cousteau,462d1a4464ae2bb09a859fd9a1720de430d011d9,ripe/atlas/cousteau/request.py,complex,urllib,requests," def post(self):
+        """"""
+        Makes the HTTP POST to the url sending post_data.
+        """"""
+        self.build_url()
+        self._construct_post_data()
+        post_data = json.dumps(self.post_data)
+        req = urllib2.Request(self.url)
+        req.add_header('Content-Type', 'application/json')
+        req.add_header('Accept', 'application/json')
+        req.add_header('User-Agent', self.http_agent)
+        try:
+            response = urllib2.urlopen(req, post_data)
+        except urllib2.HTTPError as exc:
+            log = {
+                ""HTTP_MSG"": ""HTTP ERROR %d: %s"" % (exc.code, exc.msg),
+                ""ADDITIONAL_MSG"": exc.read()
+            }
+            return False, log
+
+        return True, json.load(response)","def post(self):
+        """"""
+        Makes the HTTP POST to the url sending post_data.
+        """"""
+
+        self._construct_post_data()
+
+        post_args = {""json"": self.post_data}
+        self.http_method_args.update(post_args)
+
+        return self.http_method(""POST"")"
+64,RIPE-NCC/ripe-atlas-cousteau,462d1a4464ae2bb09a859fd9a1720de430d011d9,ripe/atlas/cousteau/request.py,complex,urllib,requests," def delete(self):
+        """"""
+        Makes the HTTP DELETE to the url.
+        """"""
+        self.build_url()
+        req = urllib2.Request(self.url)
+        req.add_header('Content-Type', 'application/json')
+        req.add_header('Accept', 'application/json')
+        req.add_header('User-Agent', self.http_agent)
+        req.get_method = lambda: 'DELETE'
+        try:
+            response = urllib2.urlopen(req)
+        except urllib2.HTTPError as exc:
+            log = {
+                ""HTTP_MSG"": ""HTTP ERROR %d: %s"" % (exc.code, exc.msg),
+                ""ADDITIONAL_MSG"": exc.read()
+            }
+            return False, log
+
+        return True, response","def delete(self):
+        """"""
+        Makes the HTTP DELETE to the url.
+        """"""
+        return self.http_method(""DELETE"")"
+65,RomelTorres/alpha_vantage,1280ac545923dcefde7656408b96f22b97a91530,alpha_vantage/alphavantage.py,simple,urllib,requests," if sys.version_info.major == 3:
+            response = urllib.request.urlopen(url)
+        else:
+            response = urllib.urlopen(url)
+        url_response = response.read()",response = requests.get(url)
+66,RomelTorres/alpha_vantage,1280ac545923dcefde7656408b96f22b97a91530,alpha_vantage/alphavantage.py,simple,urllib,requests,csv_response = csv.reader(url_response.splitlines()), csv_response = csv.reader(response.text.splitlines())
+67,SamSchott/maestral,89dd92b40e1b86b809cd90998287d642d3e08355,maestral/utils/updates.py,complex,urllib,requests,"try:
+        if hasattr(ssl, '_create_unverified_context'):
+            context = ssl._create_unverified_context()
+            page = urlopen(API_URL, context=context)
+        else:
+            page = urlopen(API_URL)
+
+
+        try:
+            data = page.read()
+
+            if not isinstance(data, str):
+                data = data.decode()
+            data = json.loads(data)
+
+            releases = [item['tag_name'].replace('v', '') for item in data]
+            release_notes = ['### ' + item['tag_name'] + '\n\n' + item['body']
+                             for item in data]
+
+            try:
+                current_release_index = releases.index(current_version)
+            except ValueError:
+                # if current release cannot be found online, just
+                # show release notes from newest release w/o history
+                current_release_index = 1
+
+            update_release_notes = release_notes[0:current_release_index]
+            update_release_notes = '\n'.join(update_release_notes)
+
+            new_version = get_newer_version(current_version, releases)
+        except Exception:
+            error_msg = 'Unable to retrieve information.'
+    except HTTPError:
+        error_msg = 'Unable to retrieve information.'
+    except URLError:
+        error_msg = ('Unable to connect to the internet. '
+                     'Please make sure the connection is working properly.')
+    except Exception:","        try:
+            current_release_index = releases.index(current_version)
+        except ValueError:
+            # if current release cannot be found online, just
+            # show release notes from newest release w/o history
+            current_release_index = 1
+
+        update_release_notes = release_notes[0:current_release_index]
+        update_release_notes = '\n'.join(update_release_notes)
+
+        new_version = get_newer_version(current_version, releases)
+
+    except requests.exceptions.HTTPError:
+
+        error_msg = 'Unable to retrieve information.'
+    except CONNECTION_ERRORS:
+        error_msg = ('Unable to connect to the internet. '
+                     'Please make sure the connection is working properly.')
+    except Exception:"
+68,SickChill/SickChill,d26debfac4c47d6980777ab0ce27b2c1cf3a83b6,sickbeard/notifiers/prowl.py,simple,urllib,requests,from urllib import urlencode,from requests.compat import urlencode
+69,SickGear/SickGear,b371c835439dac5182d04cc39df914d24175f9f4,sickbeard/notifiers/kodi.py,complex,urllib,requests," def _send_to_kodi(self, command, host=None, username=None, password=None):
+
+        # fill in omitted parameters
+        if not username:
+            username = sickbeard.KODI_USERNAME
+        if not password:
+            password = sickbeard.KODI_PASSWORD
+
+        if not host:
+            logger.log(u'KODI: No host specified, check your settings', logger.ERROR)
+            return False
+
+        command = command.encode('utf-8')
+        logger.log(u'KODI: JSON command: ' + command, logger.DEBUG)
+
+        url = 'http://%s/jsonrpc' % (host)
+        try:
+            req = urllib2.Request(url, command)
+            req.add_header('Content-type', 'application/json')
+            # if we have a password, use authentication
+            if password:
+                base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+                authheader = 'Basic %s' % base64string
+                req.add_header('Authorization', authheader)
+                logger.log(u'KODI: Contacting (with auth header) via url: ' + fixStupidEncodings(url), logger.DEBUG)
+            else:
+                logger.log(u'KODI: Contacting via url: ' + fixStupidEncodings(url), logger.DEBUG)
+
+            try:
+                response = urllib2.urlopen(req)
+            except urllib2.URLError as e:
+                logger.log(u'KODI: Warning: Couldn\'t contact Kodi at ' + host + '- ' + ex(e), logger.WARNING)
+                return False
+
+
+
+
+
+            # parse the json result
+            try:
+                result = json.load(response)
+                response.close()
+                logger.log(u'KODI: JSON response: ' + str(result), logger.DEBUG)
+                return result  # need to return response for parsing
+            except ValueError as e:
+                logger.log(u'KODI: Unable to decode JSON response: ' + response, logger.WARNING)
+                return False
+
+        except IOError as e:
+            logger.log(u'KODI: Warning: Couldn\'t contact Kodi at ' + host + ' - ' + ex(e), logger.WARNING)
+
+
+
+
+
+
+
+
+
+            return False"," def _send_to_kodi(self, command, host=None, username=None, password=None):
+
+        # fill in omitted parameters
+        if not username:
+            username = sickbeard.KODI_USERNAME
+        if not password:
+            password = sickbeard.KODI_PASSWORD
+
+        if not host:
+            logger.log(u'KODI: No host specified, check your settings', logger.ERROR)
+            return False
+
+        data = json.dumps(command)
+        logger.log(u'KODI: JSON command: %s' % data, logger.DEBUG)
+
+        url = 'http://%s/jsonrpc' % host
+
+
+
+
+
+
+
+
+
+
+
+
+        headers = {'Content-type': 'application/json'}
+        # if we have a password, use authentication
+        if password:
+            base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+            authheader = 'Basic %s' % base64string
+            headers['Authorization'] = authheader
+            logger.log(u'KODI: Contacting (with auth header) via url: %s' % fixStupidEncodings(url), logger.DEBUG)
+        else:
+            logger.log(u'KODI: Contacting via url: %s' % fixStupidEncodings(url), logger.DEBUG)
+
+        try:
+            response = requests.post(url, data=data, headers=headers)
+        except Exception as e:
+            logger.log(u'KODI: Warning: Couldn\'t contact Kodi at %s - %s' % (host, ex(e)), logger.WARNING)
+            return False
+
+
+
+
+
+        if response.status_code == 401:
+            logger.log(u'KODI: Invalid login credentials', logger.ERROR)
+            return False
+
+        # parse the json result
+        try:
+            result = response.json()
+            logger.log(u'KODI: JSON response: %s' % result, logger.DEBUG)
+            return result  # need to return response for parsing
+        except ValueError as e:
+            logger.log(u'KODI: Unable to decode JSON response: %s' % response.text, logger.WARNING)
+            return False"
+70,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,simple,urllib,requests,"except urllib2.HTTPError, err:
+            if err.code == 400:
+                raise self.BadParams()
+            raise"," except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 400:
+                raise self.BadParams()
+            raise"
+71,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,simple,urllib,requests,"except urllib2.HTTPError, err:
+            if err.code == 400:
+                raise self.BadParams()
+            raise","        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 400:
+                raise self.BadParams()
+            raise"
+72,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,complex,urllib,requests,"def create_policy(self, policy_info):
+        try:
+            return self.client.post_json('devicepolicies/', policy_info)
+        except urllib2.HTTPError, err:
+            if err.code == 400:
+                raise self.BadParams()
+            elif err.code == 409:
+                data = json.loads(err.read())
+                if 'inherits_from' in data['conflicts']:
+                    raise self.BadPolicy()
+            raise","    def create_policy(self, policy_info):
+        try:
+            return self.client.post_json('devicepolicies/', policy_info)
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 400:
+                raise self.BadParams()
+            elif err.response.status_code == 409:
+                data = err.response.json()
+                if 'inherits_from' in data['conflicts']:
+                    raise self.BadPolicy()
+            raise"
+73,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,simple,urllib,requests,"def get_policy(self, policy_id):
+        try:
+            return self.client.get_json('devicepolicies/%d' % (policy_id,))
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            raise","    def get_policy(self, policy_id):
+        try:
+            return self.client.get_json('devicepolicies/%d' % (policy_id,))
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            raise"
+74,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,complex,urllib,requests,"def edit_policy(self, policy_id, policy_info):
+        try:
+            self.client.post_json('devicepolicies/%d' % (policy_id,), policy_info)
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            elif err.code == 400:
+                raise self.BadParams()
+            elif err.code == 409:
+                data = json.loads(err.read())
+                if 'inherits_from' in data['conflicts']:
+                    raise self.BadPolicy()
+            raise"," def edit_policy(self, policy_id, policy_info):
+        try:
+            self.client.post_json('devicepolicies/%d' % (policy_id,), policy_info)
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            elif err.response.status_code == 400:
+                raise self.BadParams()
+            elif err.response.status_code == 409:
+                data = err.response.json()
+                if 'inherits_from' in data['conflicts']:
+                    raise self.BadPolicy()
+            raise"
+75,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,complex,urllib,requests," def delete_policy(self, policy_id):
+        try:
+            self.client.delete('devicepolicies/%d' % (policy_id,))
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            elif err.code == 409:
+                data = json.loads(err.read())
+                if 'policy_id' in data['conflicts']:
+                    raise self.PolicyInUse()
+            raise"," def delete_policy(self, policy_id):
+        try:
+            self.client.delete('devicepolicies/%d' % (policy_id,))
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            elif err.response.status_code == 409:
+                data = err.response.json()
+                if 'policy_id' in data['conflicts']:
+                    raise self.PolicyInUse()
+            raise"
+76,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,complex,urllib,requests," try:
+            resp = self.client.post_json_raw_response(
+                'groups/', group_info)
+        except urllib2.HTTPError, err:
+            if err.code == 400:
+                raise self.BadParams()
+            elif err.code == 409:
+                data = json.loads(err.read())
+                if 'name' in data['conflicts']:
+                    raise self.DuplicateGroupName()
+                elif 'plan_id' in data['conflicts']:
+                    raise self.BadPlan()
+            raise","try:
+            resp = self.client.post_json_raw_response(
+                'groups/', group_info)
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 400:
+                raise self.BadParams()
+            elif err.response.status_code == 409:
+                data = err.response.json()
+                if 'name' in data['conflicts']:
+                    raise self.DuplicateGroupName()
+                elif 'plan_id' in data['conflicts']:
+                    raise self.BadPlan()
+            raise"
+77,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,complex,urllib,requests," def get_group(self, group_id):
+        try:
+            return self.client.get_json('groups/%d' % (group_id,))
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            raise"," def get_group(self, group_id):
+        try:
+            return self.client.get_json('groups/%d' % (group_id,))
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            raise"
+78,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,complex,urllib,requests," def edit_group(self, group_id, group_info):
+        try:
+            self.client.post_json('groups/%d' % (group_id,), group_info)
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            elif err.code == 400:
+                raise self.BadParams()
+            elif err.code == 409:
+                data = json.loads(err.read())
+                if 'name' in data['conflicts']:
+                    raise self.DuplicateGroupName()"," def edit_group(self, group_id, group_info):
+        try:
+            self.client.post_json('groups/%d' % (group_id,), group_info)
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            elif err.response.status_code == 400:
+                raise self.BadParams()
+            elif err.response.status_code == 409:
+                data = err.response.json()
+                if 'name' in data['conflicts']:
+                    raise self.DuplicateGroupName()"
+79,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,simple,urllib,requests," except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            raise"," except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            raise"
+80,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,complex,urllib,requests," def create_user(self, user_info):
+        try:
+            return self.client.post_json('users/', user_info)
+        except urllib2.HTTPError, err:
+            if err.code == 400:
+                raise self.BadParams()
+            if err.code == 402:
+                raise self.PaymentRequired()
+            elif err.code == 409:
+                data = json.loads(err.read())
+                if 'username' in data['conflicts']:
+                    raise self.DuplicateUsername()","def create_user(self, user_info):
+        try:
+            return self.client.post_json('users/', user_info)
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 400:
+                raise self.BadParams()
+            if err.response.status_code == 402:
+                raise self.PaymentRequired()
+            elif err.response.status_code == 409:
+                data = err.response.json()
+                if 'username' in data['conflicts']:
+                    raise self.DuplicateUsername()"
+81,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,simple,urllib,requests," try:
+            return self.client.get_json(
+                'users/%s' % (username_or_email,))
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            raise","  try:
+            return self.client.get_json(
+                'users/%s' % (username_or_email,))
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            raise"
+82,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,simple,urllib,requests," def list_devices(self, username_or_email):
+        try:
+            return self.client.get_json(
+                'users/%s/devices' % (username_or_email,))
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            raise","  def list_devices(self, username_or_email):
+        try:
+            return self.client.get_json(
+                'users/%s/devices' % (username_or_email,))
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            raise"
+83,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,simple,urllib,requests,"def get_share(self, username_or_email, room_key):
+        try:
+            return self.client.get_json(
+                'users/%s/shares/%s' % (username_or_email, room_key))
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            raise"," def get_share(self, username_or_email, room_key):
+        try:
+            return self.client.get_json(
+                'users/%s/shares/%s' % (username_or_email, room_key))
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            raise"
+84,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/accounts_api.py,complex,urllib,requests,"def edit_user(self, username_or_email, user_info):
+        try:
+            self.client.post_json(
+                'users/%s' % (username_or_email,), user_info)
+        except urllib2.HTTPError, err:
+            if err.code == 404:
+                raise self.NotFound()
+            elif err.code == 400:
+                raise self.BadParams()
+            elif err.code == 402:
+                raise self.QuotaExceeded()
+            elif err.code == 409:
+                data = json.loads(err.read())
+                if 'email' in data['conflicts']:
+                    raise self.DuplicateEmail()"," def edit_user(self, username_or_email, user_info):
+        try:
+            self.client.post_json(
+                'users/%s' % (username_or_email,), user_info)
+        except requests.exceptions.HTTPError, err:
+            if err.response.status_code == 404:
+                raise self.NotFound()
+            elif err.response.status_code == 400:
+                raise self.BadParams()
+            elif err.response.status_code == 402:
+                raise self.QuotaExceeded()
+            elif err.response.status_code == 409:
+                data = err.response.json()
+                if 'email' in data['conflicts']:
+                    raise self.DuplicateEmail()"
+85,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/api_client.py,simple,urllib,requests," def post_json_raw_response(self, path, data, headers=None):
+        return self.post(path, json.dumps(data), headers)","def post_json_raw_response(self, path, data, headers=None):
+        r = requests.post(
+            self._path(path), auth=(self.username, self.password), headers=headers, json=data)
+        r.raise_for_status()
+        return r"
+86,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/api_client.py,simple,urllib,requests,"    def delete(self, path, headers=None):
+        return self.open(path, headers=headers, method='DELETE')"," def delete(self, path, headers=None):
+        r = requests.delete(
+            self._path(path), headers=headers, auth=(self.username, self.password))
+        r.raise_for_status()
+        return r"
+87,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/billing_api.py,simple,urllib,requests,"def fetch_coupon(self, coupon_code):
+        try:
+            resp = self.client.post('coupon', {'coupon': coupon_code})
+        except urllib2.HTTPError, err:
+            self.logger.info(err.read())
+            raise"," def fetch_coupon(self, coupon_code):
+        try:
+            resp = self.client.post('coupon', {'coupon': coupon_code})
+        except requests.exceptions.HTTPError, err:
+            self.logger.info(err.read())
+            raise"
+88,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/billing_api.py,simple,urllib,requests,"        except urllib2.HTTPError, err:
+            self.logger.info(err.read())
+            raise"," except requests.exceptions.HTTPError, err:
+            self.logger.info(err.read())
+            raise"
+89,SpiderOak/netkes,d68d0de5f44dc93ec04e0a105c592d038f890f8d,netkes/account_mgr/billing_api.py,simple,urllib,requests," def billing_info(self):
+        try:
+            return self.client.get_json('billing_info')
+        except urllib2.HTTPError, err:
+            self.logger.info(err.read())
+            raise"," def billing_info(self):
+        try:
+            return self.client.get_json('billing_info')
+        except requests.exceptions.HTTPError, err:
+            self.logger.info(err.read())
+            raise"
+90,StackStorm/st2contrib,6a32852fdbd750e8727c9a0b34e1e47844850375,packs/victorops/actions/open_incident.py,complex,urllib,requests,"def run(self, severity, entity, message=None):
+    prms = {
+    ""message_type"": severity,
+    ""timestamp"": int(time.time()),
+    ""entity_id"":entity,
+    ""state_message"":message
+    }
+    post_data = json.dumps(prms).encode()
+    data = urllib.urlopen(self.url, post_data)"," def run(self, severity, entity, message=None):
+        prms = {
+                ""message_type"": severity,
+                ""timestamp"": int(time.time()),
+                ""entity_id"": entity,
+                ""state_message"": message}
+        post_data = json.dumps(prms)
+        data = requests.post(self.url, post_data)"
+91,Syncplay/syncplay,e712f39f3fdd4457001e525ddae9dcd36096142f,syncplay/client.py,complex,urllib,requests,"def checkForUpdate(self, userInitiated):
+        try:
+            import urllib, syncplay, sys, messages, json
+            params = urllib.urlencode({'version': syncplay.version, 'milestone': syncplay.milestone, 'release_number': syncplay.release_number,
+                                   'language': messages.messages[""CURRENT""], 'platform': sys.platform, 'userInitiated': userInitiated})
+
+            f = urllib.urlopen(constants.SYNCPLAY_UPDATE_URL.format(params))
+            response = f.read()","def checkForUpdate(self, userInitiated):
+        try:
+            import syncplay, sys, messages, urllib, json
+            params = urllib.urlencode({'version': syncplay.version, 'milestone': syncplay.milestone, 'release_number': syncplay.release_number, 'language': messages.messages[""CURRENT""], 'platform': sys.platform, 'userInitiated': userInitiated})
+            if isMacOS():
+                import requests
+                response = requests.get(constants.SYNCPLAY_UPDATE_URL.format(params))
+                response = response.text
+            else:
+                f = urllib.urlopen(constants.SYNCPLAY_UPDATE_URL.format(params))
+                response = f.read()   "
+92,Syncplay/syncplay,e712f39f3fdd4457001e525ddae9dcd36096142f,syncplay/utils.py,complex,urllib,requests,"def getListOfPublicServers():
+    try:
+        import urllib, syncplay, sys, messages, json
+        params = urllib.urlencode({'version': syncplay.version, 'milestone': syncplay.milestone, 'release_number': syncplay.release_number,
+                                   'language': messages.messages[""CURRENT""]})
+        f = urllib.urlopen(constants.SYNCPLAY_PUBLIC_SERVER_LIST_URL.format(params))
+        response = f.read()","def getListOfPublicServers():
+    try:
+        import syncplay, sys, messages, urllib
+        params = urllib.urlencode({'version': syncplay.version, 'milestone': syncplay.milestone, 'release_number': syncplay.release_number, 'language': messages.messages[""CURRENT""]})
+        if isMacOS():
+            import requests
+            response = requests.get(constants.SYNCPLAY_PUBLIC_SERVER_LIST_URL.format(params))
+            response = response.text
+        else:
+            f = urllib.urlopen(constants.SYNCPLAY_PUBLIC_SERVER_LIST_URL.format(params))
+            response = f.read()  "
+93,UltrosBot/Ultros,87c4d15e25cc5467bb6ae60fb7d03244c752292d,system/metrics.py,complex,urllib,requests," def post(self, url, data):
+        data = json.dumps(data)
+        self.log.debug(""Posting data: %s"" % data)
+
+        data = urllib.urlencode({""data"": data})
+        req = urllib2.Request(
+            url, data, {'Content-Type': 'application/json'}
+        )
+
+        result = urllib2.urlopen(req).read()
+        self.log.debug(""Result: %s"" % result)
+        return result
+
+    def get(self, url):
+        return urllib2.urlopen(url).read()","    def post(self, url, data):
+        data = {""data"": json.dumps(data)}
+        self.log.debug(""Posting data: %s"" % data)
+
+        req = requests.post(
+            url, data, headers={'Content-Type': 'application/json'}
+
+        )
+
+        result = req.text
+        self.log.debug(""Result: %s"" % result)
+        return result
+
+    def get(self, url):
+        return requests.get(url).text"
+94,Yinzo/SmartQQBot,c05e1da59980ee1159561a7e517071a02b8ef713,src/setup.py,simple,urllib,requests,"install_requires = (
+    ""Pillow""
+
+)","install_requires = (
+    ""Pillow"",
+    ""requests>=2.0.0""
+)"
+95,Yinzo/SmartQQBot,c05e1da59980ee1159561a7e517071a02b8ef713,src/smart_qq_bot/http_client.py,complex,urllib,requests,"@staticmethod
+    def get_timestamp():
+        return str(int(time.time()*1000))
+
+    def get(self, url, refer=None):
+        try:
+            req = urllib2.Request(url)
+            req.add_header('Referer', refer or SMART_QQ_REFER)
+            tmp_req = self._opener.open(req)
+            self._cookie.save(COOKIE_FILE, ignore_discard=True,ignore_expires=True)
+            return tmp_req.read()
+        except urllib2.HTTPError, e:
+            return e.read()","@staticmethod
+    def get_timestamp():
+        return str(int(time.time()*1000))
+
+    def get(self, url, refer=None):
+        try:
+            resp = self.session.get(
+                url,
+                headers=self._get_headers({'Referer': refer or SMART_QQ_REFER}),
+            )
+        except (excps.ConnectTimeout, excps.HTTPError):
+            error_msg = ""Failed to send finish request to `{0}`"".format(
+                url
+            )
+            logger.exception(error_msg)
+            return error_msg
+        else:
+            self._cookies.save(COOKIE_FILE, ignore_discard=True, ignore_expires=True)
+            return resp.text"
+96,Yinzo/SmartQQBot,c05e1da59980ee1159561a7e517071a02b8ef713,src/smart_qq_bot/http_client.py,complex,urllib,requests,"def post(self, url, data, refer=None):
+        try:
+            req = urllib2.Request(url, urllib.urlencode(data))
+            req.add_header('Referer', refer or SMART_QQ_REFER)
+            try:
+                tmp_req = self._opener.open(req, timeout=180)
+            except BadStatusLine:
+                raise ServerResponseEmpty(""Server response error, check the network connections: %s"" % url)
+            self._cookie.save(COOKIE_FILE, ignore_discard=True, ignore_expires=True)
+            return tmp_req.read()
+        except urllib2.HTTPError, e:
+            return e.read()","def post(self, url, data, refer=None):
+        try:
+            resp = self.session.post(
+                url,
+                data,
+                headers=self._get_headers({'Referer': refer or SMART_QQ_REFER}),
+            )
+        except Exception:
+            error_msg = ""Failed to send request to `{0}`"".format(
+                url
+            )
+            logger.exception(error_msg)
+            return error_msg
+        else:
+            self._cookies.save(COOKIE_FILE, ignore_discard=True, ignore_expires=True)
+            return resp.text"
+97,airbnb/streamalert,eac5698f031cbe71289dc94ac7286cbebcbbf876,stream_alert/alert_processor/output_base.py,complex,urllib,requests,"def _request_helper(url, data, headers=None, verify=True):
+        """"""URL request helper to send a payload to an endpoint
+
+        Args:
+            url (str): Endpoint for this request
+            data (str): Payload to send with this request
+            headers (dict): Dictionary containing request-specific header parameters
+
+            verify (bool): Whether or not SSL should be used for this request
+        Returns:
+            file handle: Contains the http response to be read
+        """"""
+        try:
+            context = None
+            if not verify:
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+
+            http_headers = headers or {}
+
+            # Omitting data means a GET request should occur, not POST
+            if not data:
+                request = urllib2.Request(url, headers=http_headers)
+            else:
+                request = urllib2.Request(url, data=data, headers=http_headers)
+            resp = urllib2.urlopen(request, context=context)
+            return resp
+        except urllib2.HTTPError as err:
+            raise OutputRequestFailure('Failed to send to {} - [{}]'.format(err.url, err.code))","def _get_request(url, params=None, headers=None, verify=True):
+        """"""Method to return the json loaded response for this GET request
+
+        Args:
+            url (str): Endpoint for this request
+
+            headers (dict): Dictionary containing request-specific header parameters
+            params (dict): Payload to send with this request
+            verify (bool): Whether or not SSL should be used for this request
+        Returns:
+            dict: Contains the http response object
+        """"""
+        return requests.get(url, headers=headers, params=params, verify=verify)"
+98,airbnb/streamalert,eac5698f031cbe71289dc94ac7286cbebcbbf876,tests/unit/stream_alert_alert_processor/test_main.py,simple,urllib,requests,@patch('urllib2.urlopen'),@patch('requests.get')
+99,airbnb/streamalert,eac5698f031cbe71289dc94ac7286cbebcbbf876,tests/unit/stream_alert_alert_processor/test_output_base.py,complex,urllib,requests,"@patch('urllib2.urlopen')
+    def test_check_http_response(self, mock_getcode):
+        """"""StreamOutputBase Check HTTP Response""""""
+        # Test with a good response code
+        mock_getcode.getcode.return_value = 200
+        result = self.__dispatcher._check_http_response(mock_getcode)
+        assert_equal(result, True)
+
+        # Test with a bad response code
+        mock_getcode.getcode.return_value = 440
+        result = self.__dispatcher._check_http_response(mock_getcode)
+        assert_equal(result, False)","    @patch('requests.Response')
+    def test_check_http_response(self, mock_response):
+        """"""StreamOutputBase Check HTTP Response""""""
+        # Test with a good response code
+        mock_response.status_code = 200
+        result = self.__dispatcher._check_http_response(mock_response)
+        assert_equal(result, True)
+
+        # Test with a bad response code
+        mock_response.status_code = 440
+        result = self.__dispatcher._check_http_response(mock_response)
+        assert_equal(result, False)"
+100,akamhy/waybackpy,60ee8b95a872ef8987908163e85284aeec582435,waybackpy/wrapper.py,complex,urllib,requests,"def _get_response(req):
+    """"""Get response for the supplied request.""""""
+
+    try:
+        response = urlopen(req)  # nosec
+    except Exception:
+        try:
+            response = urlopen(req)  # nosec
+        except Exception as e:
+            exc = WaybackError(""Error while retrieving %s"" % req.full_url)
+            exc.__cause__ = e","def _get_response(endpoint, params=None, headers=None):
+    """"""Get response for the supplied request.""""""
+
+    try:
+        response = requests.get(endpoint, params=params, headers=headers)
+    except Exception:
+        try:
+            response = requests.get(endpoint, params=params, headers=headers)  # nosec
+        except Exception as e:
+            exc = WaybackError(""Error while retrieving %s"" % req.full_url)
+            exc.__cause__ = e"
+101,akamhy/waybackpy,60ee8b95a872ef8987908163e85284aeec582435,waybackpy/wrapper.py,complex,urllib,requests,"def _JSON(self):
+        request_url = ""https://archive.org/wayback/available?url=%s"" % (
+            self._clean_url(),
+        )
+
+        hdr = {""User-Agent"": ""%s"" % self.user_agent}
+        req = Request(request_url, headers=hdr)  # nosec
+        response = _get_response(req)
+        data_string = response.read().decode(""UTF-8"")
+        data = json.loads(data_string)
+
+        return data"," def _JSON(self):
+        endpoint = ""https://archive.org/wayback/available""
+        headers = {""User-Agent"": ""%s"" % self.user_agent}
+        payload = {""url"": ""%s"" % self._clean_url()}
+        response = _get_response(endpoint, params=payload, headers=headers)
+        return response.json()"
+102,alexmojaki/birdseye,afff063fc3de2522e63cc385dabe7865a459a772,tests/test_interface.py,simple,urllib,requests,"def tearDown(self):
+        self.assertEqual(urlopen(Request('http://localhost:5000/kill', '')).read(),
+                         'Server shutting down...')","def tearDown(self):
+        self.assertEqual(requests.post('http://localhost:5000/kill').text,
+                         'Server shutting down...')"
+103,armadillica/flamenco,26a19197d936638163d0e122fede9abeb61fbf31,brender/dashboard/__init__.py,complex,urllib,requests," if post_params:
+        params = urllib.urlencode(post_params)
+        f = urllib.urlopen('http://' + ip_address + method, params)
+
+    else:
+        f = urllib.urlopen('http://' + ip_address + method)
+
+
+    print('message sent, reply follows:')
+    return f.read()"," if post_params:
+        #params = urllib.urlencode(post_params)
+        #f = urllib.urlopen('http://' + ip_address + method, params)
+        r = requests.post('http://' + ip_address + method, data=post_params)
+    else:
+        #f = urllib.urlopen('http://' + ip_address + method)
+        r = requests.get('http://' + ip_address + method)
+
+    #print('message sent, reply follows:')
+    #return f.read()
+    return r.json()"
+104,armadillica/flamenco,26a19197d936638163d0e122fede9abeb61fbf31,brender/dashboard/controllers/workers.py,simple,urllib,requests," params = urllib.urlencode({'id': worker_ids,
+                               'status': worker_status,
+                               'config': worker_config})
+    urllib.urlopen(""http://"" + BRENDER_SERVER + ""/workers/edit"", params)"," params = {'id': worker_ids,
+                'status': worker_status,
+                'config': worker_config}
+    http_request(BRENDER_SERVER, '/workers/edit', params)"
+105,astropy/pyvo,9c25b281293eff01c451b1daeb5c876001a3ecb2,pyvo/dal/query.py,simple,urllib,requests,"from urllib2 import urlopen, URLError, HTTPError
+from urllib import quote_plus",import requests
+106,astropy/pyvo,9c25b281293eff01c451b1daeb5c876001a3ecb2,pyvo/dal/query.py,simple,urllib,requests," if isinstance(exc, HTTPError):","        if isinstance(exc, requests.exceptions.RequestException):"
+107,at4260/inbestment,0149d4ee8393406303d974310b805fdb38f96e70,utils.py,simple,urllib,requests,"def load_ticker_data(ticker_url_list, session):
+	beginning = time.time()
+	for ticker_url in ticker_url_list:	
+		u = urllib.urlopen(ticker_url)
+		print ""@@@"", time.time() - beginning
+		data = u.read()
+		print ""###"", time.time() - beginning
+		newdata = json.loads(data)","def load_ticker_data(ticker_url_list, session):
+
+	for ticker_url in ticker_url_list:	
+		u = requests.get(ticker_url)
+		data = u.text
+
+
+		newdata = json.loads(data)"
+108,aurelg/feedspora,f0a44c53f032610bdcd09514f868d59418543344,src/feedspora/feedspora_runner.py,complex,urllib,requests," except FileNotFoundError:
+            logging.info(""File not found."")
+            logging.info(""Trying to read %s as a URL."", feed_url)
+            req = urllib.request.Request(
+                url=feed_url,
+                data=b'None',
+                method='GET',
+                headers={'User-Agent': self._ua})
+            feed_content = urllib.request.urlopen(req).read()
+        logging.info(""Feed read."")"," except FileNotFoundError:
+            logging.info(""File not found."")
+            logging.info(""Trying to read %s as a URL."", feed_url)
+            response = requests.get(feed_url, headers={'User-Agent': self._ua})
+
+            if not response.ok:
+                raise Exception(feed_content)
+            feed_content = response.text
+
+        logging.info(""Feed read."")"
+109,aurelg/feedspora,f0a44c53f032610bdcd09514f868d59418543344,src/feedspora/feedspora_runner.py,complex,urllib,requests," try:
+            soup = self.retrieve_feed_soup(feed_url)
+        except (urllib.error.HTTPError, ValueError, OSError,
+                urllib.error.URLError) as error:
+            logging.error(""Error while reading feed at %s: %s"", feed_url,
+                          format(error))"," try:
+            soup = self.retrieve_feed_soup(feed_url)
+        except (requests.exceptions.ConnectionError, ValueError,
+                OSError) as error:
+            logging.error(
+                ""Error while reading feed at %s: %s"",
+                feed_url,
+                format(error),
+                exc_info=True)"
+110,avwx-rest/AVWX-Engine,1e7ebbf7b3f229d0869ce78d6e288e2520363385,Utils/AutoTester.py,simple,urllib,requests,"def checkPast2Weeks(station):
+        try:
+                if sys.version_info[0] == 2:
+                        response = urllib2.urlopen('http://www.aviationweather.gov/metar/data?ids='+station+'&format=raw&date=0&hours=336')
+                        html = response.read()
+                elif sys.version_info[0] == 3:
+                        response = urlopen('http://www.aviationweather.gov/metar/data?ids='+station+'&format=raw&date=0&hours=336')
+                        html = response.read().decode('utf-8')","def checkPast2Weeks(station):
+	try:
+		url = 'http://www.aviationweather.gov/metar/data?ids='+station+'&format=raw&date=0&hours=336'
+		html = requests.get(url).text"
+111,avwx-rest/AVWX-Engine,1e7ebbf7b3f229d0869ce78d6e288e2520363385,avwx.py,simple,urllib,requests,"def getMETAR(station):
+	try:
+		if sys.version_info[0] == 2:
+			response = urllib2.urlopen('http://www.aviationweather.gov/metar/data?ids='+station+'&format=raw&date=0&hours=0')
+			html = response.read()
+		elif sys.version_info[0] == 3:
+			response = urlopen('http://www.aviationweather.gov/metar/data?ids='+station+'&format=raw&date=0&hours=0')
+			html = response.read().decode('utf-8')","def getMETAR(station):
+	try:
+		url = 'http://www.aviationweather.gov/metar/data?ids='+station+'&format=raw&date=0&hours=0'
+		html = requests.get(url).text"
+112,avwx-rest/AVWX-Engine,1e7ebbf7b3f229d0869ce78d6e288e2520363385,avwx.py,simple,urllib,requests,"def getTAF(station):
+	try:
+		if sys.version_info[0] == 2:
+			response = urllib2.urlopen('http://www.aviationweather.gov/taf/data?ids=' + station + '&format=raw&submit=Get+TAF+data')
+			html = response.read()
+		elif sys.version_info[0] == 3:
+			response = urlopen('http://www.aviationweather.gov/taf/data?ids=' + station + '&format=raw&submit=Get+TAF+data')
+			html = response.read().decode('utf-8')","def getTAF(station):
+	try:
+		url = 'http://www.aviationweather.gov/taf/data?ids=' + station + '&format=raw&submit=Get+TAF+data'
+		html = requests.get(url).text"
+113,banbanchs/pan-baidu-download,7bfc0d3d45b47198193d4171fca26e8e6325136b,command/login.py,simple,urllib,requests,"        self.cj = cookielib.LWPCookieJar(cookie_filename)
+        self.opener = urllib2.build_opener(
+            urllib2.HTTPRedirectHandler(),
+            urllib2.HTTPHandler(),
+            urllib2.HTTPCookieProcessor(self.cj)
+        )",self.session = Session()
+114,banbanchs/pan-baidu-download,7bfc0d3d45b47198193d4171fca26e8e6325136b,command/login.py,simple,urllib,requests,"  def _get_baidu_uid(self):
+        """"""Get BAIDUID.""""""
+        self.opener.open('http://www.baidu.com')
+        for cookie in self.cj:
+            if cookie.name == 'BAIDUID':
+                self.baiduid = cookie.value
+        log_message = {'type': 'baidu uid', 'method': 'GET'}
+        logger.debug(self.baiduid, extra=log_message)","  def _get_baidu_uid(self):
+        """"""Get BAIDUID.""""""
+        self.session.get('http://www.baidu.com')
+        self.baiduid = self.session.cookies.get('BAIDUID')
+
+
+        log_message = {'type': 'baidu uid', 'method': 'GET'}
+        logger.debug(self.baiduid, extra=log_message)"
+115,banbanchs/pan-baidu-download,7bfc0d3d45b47198193d4171fca26e8e6325136b,command/login.py,simple,urllib,requests," def _get_token(self):
+        """"""Get bdstoken.""""""
+        r = self.opener.open(self._token_url)
+        s = r.read()
+        try:
+            self.token = re.search(""login_token='(\w+)';"", s).group(1)"," def _get_token(self):
+        """"""Get bdstoken.""""""
+        r = self.session.get(self._token_url)
+        s = r.text
+        try:
+            self.token = re.search(""login_token='(\w+)';"", s).group(1)"
+116,braiden/python-ant-downloader,8291c453890ea25c0b5a5d41f7335b42db978064,antd/connect.py,complex,urllib,requests,"    def login(self):
+        if self.logged_in: return
+        if self.login_invalid: raise InvalidLogin()
+        # get session cookies
+        _log.debug(""Fetching cookies from Garmin Connect."")
+        self.opener.open(""http://connect.garmin.com/signin"")
+        # build the login string
+        login_dict = {
+            ""login"": ""login"",
+            ""login:loginUsernameField"": self.username,
+            ""login:password"": self.password,
+            ""login:signInButton"": ""Sign In"",
+            ""javax.faces.ViewState"": ""j_id1"",
+        }
+        login_str = urllib.urlencode(login_dict)
+        # post login credentials
+        _log.debug(""Posting login credentials to Garmin Connect. username=%s"", self.username)
+        self.opener.open(""https://connect.garmin.com/signin"", login_str)
+        # verify we're logged in
+        _log.debug(""Checking if login was successful."")
+        reply = self.opener.open(""http://connect.garmin.com/user/username"")
+        username = json.loads(reply.read())[""username""]
+        if username == """":
+            self.login_invalid = True
+            raise InvalidLogin()
+        elif username != self.username:
+            _log.warning(""Username mismatch, probably OK, if upload fails check user/pass. %s != %s"" % (username, self.username))","def login(self):
+        if self.logged_in: return
+        if self.login_invalid: raise InvalidLogin()
+        
+        # Use a session, removes the need to manage cookies ourselves
+        self.rsession = requests.Session()
+        
+        _log.debug(""Checking to see what style of login to use for Garmin Connect."")
+        #Login code taken almost directly from https://github.com/cpfair/tapiriik/
+        self._rate_limit()
+        gcPreResp = self.rsession.get(""http://connect.garmin.com/"", allow_redirects=False)
+        # New site gets this redirect, old one does not
+        if gcPreResp.status_code == 200:
+            _log.debug(""Using old login style"")
+            params = {""login"": ""login"", ""login:loginUsernameField"": self.username, ""login:password"": self.password, ""login:signInButton"": ""Sign In"", ""javax.faces.ViewState"": ""j_id1""}
+            auth_retries = 3 # Did I mention Garmin Connect is silly?
+            for retries in range(auth_retries):
+                self._rate_limit()
+                resp = self.rsession.post(""https://connect.garmin.com/signin"", data=params, allow_redirects=False, cookies=gcPreResp.cookies)
+                if resp.status_code >= 500 and resp.status_code < 600:
+                    raise APIException(""Remote API failure"")
+                if resp.status_code != 302:  # yep
+                    if ""errorMessage"" in self.get_response_text(resp):
+                        if retries < auth_retries - 1:
+                            time.sleep(1)
+                            continue
+                        else:
+                            login_invalid = True
+                            raise APIException(""Invalid login"", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))"
+117,bvanheu/pytoutv,b8372496f000675dbf20e811ce1b1fadf89e68ac,toutv/client.py,complex,urllib,requests," def get_episode_playlist_url(self, episode):
+        url = toutv.config.TOUTV_PLAYLIST_URL_TMPL.format(episode.PID)
+        headers = {'User-Agent': toutv.config.USER_AGENT}
+        req = urllib.request.Request(url, None, headers)
+        json_string = urllib.request.urlopen(req).read().decode('utf-8')
+        response = json.loads(json_string)
+
+
+        if response['errorCode']:
+            raise RuntimeError(response['message'])
+
+        return response['url']","def get_episode_playlist_url(self, episode):
+        url = toutv.config.TOUTV_PLAYLIST_URL
+        headers = {
+            'User-Agent': toutv.config.USER_AGENT
+        }
+        params = dict(toutv.config.TOUTV_PLAYLIST_PARAMS)
+        params['idMedia'] = episode.PID
+
+        r = requests.get(url, params=params, headers=headers)
+        response_obj = r.json()
+
+        if response_obj['errorCode']:
+            raise RuntimeError(response_obj['message'])
+
+        return response_obj['url']"
+118,bvanheu/pytoutv,b8372496f000675dbf20e811ce1b1fadf89e68ac,toutv/transport.py,simple,urllib,requests,"import urllib.request
+import urllib.parse
+import urllib.error",import requests
+119,bvanheu/pytoutv,b8372496f000675dbf20e811ce1b1fadf89e68ac,toutv/transport.py,complex,urllib,requests,"    def _do_query(self, method, parameters={}):
+        parameters_str = urllib.parse.urlencode(parameters)
+        url = ''.join([
+            toutv.config.TOUTV_JSON_URL,
+            method,
+            '?',
+        parameters_str])
+        headers = {'User-Agent': toutv.config.USER_AGENT}
+        request = urllib.request.Request(url, None, headers)
+        json_string = urllib.request.urlopen(request).read().decode('utf-8')
+        json_decoded = self.json_decoder.decode(json_string)
+        return json_decoded['d']"," def _do_query(self, endpoint, params={}):
+        url = '{}{}'.format(toutv.config.TOUTV_JSON_URL, endpoint)
+        headers = {
+            'User-Agent': toutv.config.USER_AGENT
+        }
+
+        r = requests.get(url, params=params, headers=headers)
+        response_obj = r.json()
+
+        return response_obj['d']"
+120,callahantiff/PheKnowLator,77a902e5ca8426ef17ee454f13952c260127aa3f,scripts/python/ncbo_rest_api.py,simple,urllib,requests," try:
+        # to ease rate limiting sleep for random amount of time between 10-60 seconds
+        opener = urllib.request.build_opener()
+
+    except HTTPError:
+        # pause for 1 minutes and try again
+        time.sleep(30)
+        opener = urllib.request.build_opener()","    response = requests.get(url, headers={'Authorization': 'apikey token=' + api_key})
+
+
+
+    if response.status_code == 500:
+        # to ease rate limiting sleep for random amount of time between 10-60 seconds
+        time.sleep(30)
+        response = requests.get(url, headers={'Authorization': 'apikey token=' + api_key})"
+121,cancan101/xbmc-coursera,91a8ce94f7d988ce84dd0fc3587a0387d275c7de,course_utils.py,simple,urllib,requests,"def get_page(href, opener, data=None):
+    req = urllib2.Request(href, data=data)
+    try:
+        return opener.open(req).read()
+    except HTTPError:
+        return None","def get_page(href, json=False, **kwargs):
+    res = requests.get(href, **kwargs)
+    if not res.ok:
+        res.raise_for_status()
+    return res.content if not json else res.json()"
+122,cancan101/xbmc-coursera,91a8ce94f7d988ce84dd0fc3587a0387d275c7de,coursera_login.py,complex,urllib,requests,"def login(username, password):
+    cj = cookielib.CookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    #req = urllib2.Request('https://www.coursera.org/account/signin')
+    #req.add_header('Host',""www.coursera.org"")
+    #opener.open(req)
+
+    csrftoken = makeCSRFToken()
+
+    #print ""%s=%s"" % (CSRFT_TOKEN_COOKIE_NAME, csrftoken)
+
+    c = cookielib.Cookie(None, CSRFT_TOKEN_COOKIE_NAME, csrftoken, None, None,
+                         """", None, None, ""/"", None, True, None, None, None,
+                         None, None, None)
+    cj.set_cookie(c)
+
+    req = makeLoginRequest(username, password, csrftoken)
+    response = opener.open(req)
+    logIn_resp = response.read()
+
+    #print logIn_resp_dict
+
+    cj.clear("""", ""/"", CSRFT_TOKEN_COOKIE_NAME)
+
+
+    #cj.clear(""www.coursera.org"", ""/"", ""maestro_login"")
+    #cj.clear(""www.coursera.org"", ""/"", ""sessionid"")
+
+
+    return saveCJ(cj)","def login(username, password):
+    csrftoken = makeCSRFToken()
+    headers = {
+        'Referer': 'https://www.coursera.org/account/signin',
+        'Host': ""accounts.coursera.org"",
+        'X-CSRFToken': csrftoken,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Origin': 'https://accounts.coursera.org',
+        'Cookie': 'csrftoken=%s' % csrftoken,
+    }
+    data = dict(email=username, password=password, webrequest='true')
+    res = requests.post(LOGIN_URL, data=data, headers=headers)
+    assert res.ok, ""Could not login: %s"" % res.content
+    return res.cookies.get_dict()"
+123,caseymrm/drivesink,c8c1050fdfe56a088593e6ed41746247260b1217,drivesink.py,simple,urllib,requests,"import urllib
+import urllib2","import requests
+import requests_toolbelt"
+124,caseymrm/drivesink,c8c1050fdfe56a088593e6ed41746247260b1217,drivesink.py,complex,urllib,requests," def fetch_metadata(self, path, data=None):
+        return self._fetch(path % self._config()[""metadataUrl""], data)
+
+    def _fetch(self, url, data=None, refresh=True):
+        try:
+            headers = {
+                ""Authorization"": ""Bearer %s"" % self._config()[""access_token""],
+            }
+            if data:
+                req_data = json.dumps(data)
+            else:
+                req_data = None
+            req = urllib2.Request(url, req_data, headers)
+            return json.loads(urllib2.urlopen(req).read())
+        except urllib2.HTTPError, e:
+            if e.code == 401 and refresh:
+                # Have to proxy to get the client id and secret
+                refresh = urllib.urlencode({
+                    ""refresh_token"": self._config()[""refresh_token""],
+                })
+                req = urllib2.Request(""%s/refresh"" % self.drivesink, refresh)
+                new_config = json.loads(urllib2.urlopen(req).read())
+                self.config.update(new_config)
+                with open(self._config_file(), 'w') as f:
+                    f.write(json.dumps(self.config, sort_keys=True, indent=4))
+                return self._fetch(url, data, refresh=False)
+            else:
+                logging.error(e.read())
+                raise","def request_metadata(self, path, json_data=None, **kwargs):
+        args = {}
+        if json_data:
+            args[""method""] = ""post""
+            args[""data""] = json.dumps(json_data)
+        else:
+            args[""method""] = ""get""
+
+        args.update(kwargs)
+
+        return self._request(
+            path % self._config()[""metadataUrl""], **args)
+
+    def request_content(self, path, **kwargs):
+        return self._request(
+            path % self._config()[""contentUrl""], **kwargs)
+
+    def _request(self, url, refresh=True, **kwargs):
+        headers = {
+            ""Authorization"": ""Bearer %s"" % self._config()[""access_token""],
+        }
+        headers.update(kwargs.pop(""headers"", {}))
+        req = requests.request(url=url, headers=headers, **kwargs)
+        if req.status_code == 401 and refresh:
+            # Have to proxy to get the client id and secret
+            req = requests.post(""%s/refresh"" % self.args.drivesink, data={
+                ""refresh_token"": self._config()[""refresh_token""],
+            })
+            req.raise_for_status()
+            new_config = req.json()
+            self.config.update(new_config)
+            with open(self._config_file(), 'w') as f:
+                f.write(json.dumps(self.config, sort_keys=True, indent=4))
+            return self._request(url, refresh=False, **kwargs)
+        req.raise_for_status()
+        return req.json()"
+125,ckan/ckanext-harvest,6b6458f2eadd4eb022f5dd5d76993e9abbd39e7b,ckanext/harvest/harvesters/ckanharvester.py,simple,urllib,requests,"import urllib
+import urllib2","import requests
+from requests.exceptions import HTTPError
+from requests.exceptions import InvalidURL"
+126,ckan/ckanext-harvest,6b6458f2eadd4eb022f5dd5d76993e9abbd39e7b,ckanext/harvest/harvesters/ckanharvester.py,complex,urllib,requests,"try:
+            http_response = urllib2.urlopen(http_request)
+        except urllib2.HTTPError, e:
+            if e.getcode() == 404:
+                raise ContentNotFoundError('HTTP error: %s' % e.code)
+            else:
+                raise ContentFetchError('HTTP error: %s' % e.code)
+        except urllib2.URLError, e:
+            raise ContentFetchError('URL error: %s' % e.reason)
+        except httplib.HTTPException, e:
+            raise ContentFetchError('HTTP Exception: %s' % e)
+        except socket.error, e:
+            raise ContentFetchError('HTTP socket error: %s' % e)
+        except Exception, e:
+            raise ContentFetchError('HTTP general exception: %s' % e)
+        return http_response.read()","        try:
+            http_request = requests.get(url, headers=headers)
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise ContentNotFoundError('HTTP error: %s' % e.code)
+            else:
+                raise ContentFetchError('HTTP error: %s' % e.code)
+        except InvalidURL as e:
+            raise ContentFetchError('URL error: %s' % e.reason)
+        except httplib.HTTPException as e:
+            raise ContentFetchError('HTTP Exception: %s' % e)
+        except socket.error as e:
+            raise ContentFetchError('HTTP socket error: %s' % e)
+        except Exception as e:
+            raise ContentFetchError('HTTP general exception: %s' % e)
+        return http_request.text"
+127,cloudify-cosmo/cloudify-cli,7a56c5357a2c3ef10ef3f7fe546f6b9dc5c1aace,cloudify_cli/utils.py,complex,urllib,requests," if not destination:
+        fd, destination = tempfile.mkstemp()
+        os.close(fd)
+    logger = get_logger()
+    logger.info('Downloading {0} to {1}...'.format(url, destination))
+    final_url = urllib.urlopen(url).geturl()
+
+
+    if final_url != url:
+        logger.debug('Redirected to {0}'.format(final_url))
+    f = urllib.URLopener()
+    try:
+        f.retrieve(final_url, destination)
+
+
+    except IOError as ex:
+        raise CloudifyCliError(
+            'Failed to download {0}. ({1})'.format(url, str(ex)))
+
+    return destination
+","if not destination:
+        fd, destination = tempfile.mkstemp()
+        os.close(fd)
+    logger = get_logger()
+    logger.info('Downloading {0} to {1}...'.format(url, destination))
+
+    try:
+        response = requests.get(url, stream=True)
+    except requests.exceptions.RequestException as ex:
+        raise CloudifyCliError(
+            'Failed to download {0}. ({1})'.format(url, str(ex)))
+
+    final_url = response.url
+    if final_url != url:
+        logger.debug('Redirected to {0}'.format(final_url))
+
+    try:
+        with open(destination, 'wb') as destination_file:
+            for chunk in response.iter_content(CHUNK_SIZE):
+                destination_file.write(chunk)
+    except IOError as ex:
+        raise CloudifyCliError(
+            'Failed to download {0}. ({1})'.format(url, str(ex)))
+
+    return destination"
+128,collinsmuriuki/flask-movie-app,290859c10d3d69134bfc30949b76ad148f507217,app/request.py,complex,urllib,requests," get_movies_url = base_url.format(category, api_key)
+    with urllib.request.urlopen(get_movies_url) as url:
+        get_movies_data = url.read()
+        get_movies_response = json.loads(get_movies_data)
+
+        movie_results = None
+
+        if get_movies_response['results']:
+            movie_results_list = get_movies_response['results']
+            movie_results = process_results(movie_results_list)
+
+    return movie_results"," get_movies_url = base_url.format(category, api_key)
+    get_movies_response = requests.get(get_movies_url).json()
+    
+    if get_movies_response['results']:
+        movie_results_list = get_movies_response['results']
+        movie_results = process_results(movie_results_list)
+
+
+
+
+
+    return movie_results"
+129,collinsmuriuki/flask-movie-app,290859c10d3d69134bfc30949b76ad148f507217,app/request.py,complex,urllib,requests,"def get_movie(id):
+    get_movie_details_url = base_url.format(id, api_key)
+    with urllib.request.urlopen(get_movie_details_url) as url:
+        movie_details_data = url.read()
+        movie_details_response = json.loads(movie_details_data)
+
+        movie_object = None
+        if movie_details_response:
+            id = movie_details_response.get('id')
+            title = movie_details_response.get('original_title')
+            overview = movie_details_response.get('overview')
+            poster = movie_details_response.get('poster_path')
+            vote_average = movie_details_response.get('vote_average')
+            vote_count = movie_details_response.get('vote_count')
+
+            movie_object = Movie(id, title, overview, poster, vote_average, vote_count)
+
+    return movie_object
+","def get_movie(id):
+    get_movie_details_url = base_url.format(id, api_key)
+    movie_details_response = requests.get(get_movie_details_url).json()
+
+    if movie_details_response:
+        id = movie_details_response.get('id')
+        title = movie_details_response.get('original_title')
+        overview = movie_details_response.get('overview')
+        poster = movie_details_response.get('poster_path')
+        vote_average = movie_details_response.get('vote_average')
+        vote_count = movie_details_response.get('vote_count')
+
+        movie_object = Movie(id, title, overview, poster, vote_average, vote_count)
+
+    return movie_object"
+130,collinsmuriuki/flask-movie-app,290859c10d3d69134bfc30949b76ad148f507217,app/request.py,complex,urllib,requests,"def search_movie(movie_name):
+    search_movie_url = 'https://api.themoviedb.org/3/search/movie?api_key={}&query={}'.format(api_key, movie_name)
+    with urllib.request.urlopen(search_movie_url) as url:
+        search_movie_data = url.read()
+        search_movie_response = json.loads(search_movie_data)
+
+        search_movie_results = None
+
+        if search_movie_response['results']:
+            search_movie_list = search_movie_response['results']
+            search_movie_results = process_results(search_movie_list)
+
+    return search_movie_results","def search_movie(movie_name):
+    search_movie_url = 'https://api.themoviedb.org/3/search/movie?api_key={}&query={}'.format(api_key, movie_name)
+    search_movie_response = requests.get(search_movie_url).json()
+
+
+
+
+
+    if search_movie_response['results']:
+        search_movie_list = search_movie_response['results']
+        search_movie_results = process_results(search_movie_list)
+
+    return search_movie_results"
+131,conix-security/BTG,ffd739cb34268f954ae0357ed1e39e181ec7552d,modules/virustotal.py,complex,urllib,requests," parameters = {""resource"": self.ioc,
+                      ""apikey"": self.key,
+                      ""allinfo"": 1}
+        data = urllib.urlencode(parameters)
+        req = urllib2.Request(self.url, data)
+        response = urllib2.urlopen(req)
+        if response.getcode() == 200 :
+            response_content = response.read()
+            try:
+                import simplejson
+                json_content = simplejson.loads(response_content)
+            except :
+                mod.display(self.module_name, self.ioc, ""ERROR"", ""Virustotal json decode fail. Blacklisted/Bad API key? (Sleep 10sec)."")
+                sleep(randint(5, 10))
+            try:
+                if json_content[""positives""]:
+                    mod.display(self.module_name,
+                                self.ioc,
+                                ""FOUND"",
+                                ""Score: %s/%s | %s""%(json_content[""positives""],
+                                                     json_content[""total""],
+                                                     json_content[""permalink""]))
+            except:
+                pass
+        else :
+            mod.display(self.module_name, self.ioc, ""ERROR"", ""VirusTotal returned ""+ str(response.getcode()))","parameters = {""resource"": self.ioc,
+                      ""apikey"": self.key,
+                      ""allinfo"": 1}
+        while True:
+            req = post(
+                        self.url,
+                        headers=self.config[""user_agent""],
+                        proxies=self.config[""proxy_host""],
+                        timeout=self.config[""requests_timeout""],
+                        data = parameters
+                    )
+            if req.status_code == 200 :
+                response_content = req.text
+                try:
+                    json_content = json.loads(response_content)
+                    break
+                except :
+                    mod.display(self.module_name, self.ioc, ""WARNING"", ""Virustotal json decode fail. Blacklisted/Bad API key? (Sleep 10sec)."")
+                    sleep(randint(5, 10))
+            else :
+                mod.display(self.module_name, self.ioc, ""ERROR"", ""VirusTotal returned ""+ str(response.getcode()))
+                return
+        try:
+            if json_content[""positives""]:
+                mod.display(self.module_name,
+                            self.ioc,
+                            ""FOUND"",
+                            ""Score: %s/%s | %s""%(json_content[""positives""],
+                                                 json_content[""total""],
+                                                 json_content[""permalink""]))
+        except:
+            pass"
+132,conix-security/BTG,ffd739cb34268f954ae0357ed1e39e181ec7552d,modules/virustotal.py,complex,urllib,requests,"def searchURL(self):
+        self.url = ""http://www.virustotal.com/vtapi/v2/url/report""
+        parameters = {""resource"": self.ioc,
+                      ""apikey"": self.key}
+        data = urllib.urlencode(parameters)
+        req = urllib2.Request(self.url, data)
+        while True:
+
+
+
+
+
+
+
+            try:
+                response = urllib2.urlopen(req).read()
+                json_content = loads(response)
+                break
+            except:
+                mod.display(self.module_name,
+                            self.ioc,
+                            ""INFO"",
+                            ""Virustotal json decode fail. Blacklisted/Bad API key? (Sleep 10sec)."")
+                sleep(randint(5, 10))
+                pass","    def searchURL(self):
+        self.url = ""http://www.virustotal.com/vtapi/v2/url/report""
+        parameters = {""resource"": self.ioc,
+                      ""apikey"": self.key}
+
+
+        while True:
+            req = post(
+                self.url,
+                headers=self.config[""user_agent""],
+                proxies=self.config[""proxy_host""],
+                timeout=self.config[""requests_timeout""],
+                data = parameters
+            )
+            try:
+                json_content = json.loads(req.text)
+
+                break
+            except:
+                mod.display(self.module_name,
+                            self.ioc,
+                            ""WARNING"",
+                            ""Virustotal json decode fail. Blacklisted/Bad API key? (Sleep 10sec)."")
+                sleep(randint(5, 10))
+                pass"
+133,dansan/spring-replay-site,7090aa14404897a72ca07b3de03d4632c6d65938,srs/springmaps.py,complex,urllib,requests,"if self.map_info:
+            map_url = self.map_info[0]['mapimages'][0]
+            urllib.urlretrieve(map_url, self.full_image_filepath)
+            logger.info(""Downloaded map image from %r into %r."", map_url, self.full_image_filepath)"," if self.map_info:
+            map_url = self.map_info[0]['mapimages'][0]
+            logger.info(""Downloaded map image from %r into %r..."", map_url, self.full_image_filepath)
+            response = requests.get(map_url, stream=True)
+            if response.status_code == 200:
+                with open(self.full_image_filepath, 'wb') as fp:
+                    for chunk in response:
+                        fp.write(chunk)
+            else:
+                logger.error('Could not download image %r. Setting image to ""map_img_not_avail.jpg"".')
+                copyfile(path_join(settings.IMG_PATH, 'map_img_not_avail.jpg'), self.full_image_filepath)"
+134,davidhalter/depl,e21cc5321e53dbb42502e5a6b2c13528005a6b74,test/deploy/test_django.py,simple,urllib,requests,"def django_basic_test(tmpdir):
+    copy_to_temp(tmpdir)
+    main_run(['depl', 'deploy', 'localhost'])
+    assert urllib.urlopen(""http://localhost:8887/"").read() == ""django rocks\n""
+
+    txt = urllib.urlopen(""http://localhost:8887/static/something.txt"").read()
+    assert txt == ""static files\n""
+    # django plays with the db
+    assert urllib.urlopen(""http://localhost:8887/db_add.html"").read() == ""saved\n""","def django_basic_test(tmpdir):
+    copy_to_temp(tmpdir)
+    main_run(['depl', 'deploy', 'localhost'])
+    assert requests.get(""http://localhost:8887/"").text == ""django rocks\n""
+
+    txt = requests.get(""http://localhost:8887/static/something.txt"").text
+    assert txt == ""static files\n""
+    # django plays with the db
+    assert requests.get(""http://localhost:8887/db_add.html"").text == ""saved\n"""
+135,davidhalter/depl,e21cc5321e53dbb42502e5a6b2c13528005a6b74,test/deploy/test_django.py,simple,urllib,requests,"def django_pg_test(tmpdir):
+    django_basic_test(tmpdir)
+    # django plays with the db
+    content = urllib.urlopen(""http://localhost:8887/db_show.html"").read()
+    assert content == 'django.db.backends.postgresql_psycopg2: 1\n'
+    delete_pg_connection()","def django_pg_test(tmpdir):
+    django_basic_test(tmpdir)
+    # django plays with the db
+    content = requests.get(""http://localhost:8887/db_show.html"").text
+    assert content == 'django.db.backends.postgresql_psycopg2: 1\n'
+    delete_pg_connection()"
+136,davidhalter/depl,e21cc5321e53dbb42502e5a6b2c13528005a6b74,test/deploy/test_django.py,simple,urllib,requests,"def test_django_sqlite(tmpdir):
+    django_basic_test(tmpdir)
+    content =  urllib.urlopen(""http://localhost:8887/db_show.html"").read()
+    assert content == 'django.db.backends.sqlite3: 1\n'","def test_django_sqlite(tmpdir):
+    django_basic_test(tmpdir)
+    content = requests.get(""http://localhost:8887/db_show.html"").text
+    assert content == 'django.db.backends.sqlite3: 1\n'"
+137,dcos/dcos,c3012f9f331fe06ff1ab038293d4cad2212354f2,packages/exhibitor/extra/exhibitor_wait.py,complex,urllib,requests,"try:
+    response = urllib.request.urlopen(EXHIBITOR_STATUS_URL)
+except urllib.error.URLError:
+    print('Could not get exhibitor status: {}'.format(
+        EXHIBITOR_STATUS_URL), file=sys.stderr)
+    sys.exit(1)
+reader = codecs.getreader(""utf-8"")
+data = json.load(reader(response))","resp = requests.get(EXHIBITOR_STATUS_URL)
+if resp.status_code != 200:
+    print('Could not get exhibitor status: {}, Status code: {}'.format(
+          EXHIBITOR_STATUS_URL, resp.status_code), file=sys.stderr)
+
+    sys.exit(1)
+
+data = resp.json()"
+138,dissemin/dissemin,bb03947562f044fd5887b964223a1822a3813d75,backend/base.py,simple,urllib,requests,"from urllib2 import urlopen, URLError
+from urllib import urlencode","import requests
+import requests.exceptions"
+139,dissemin/dissemin,bb03947562f044fd5887b964223a1822a3813d75,backend/base.py,simple,urllib,requests,"  f = urlopen(request)
+            response = f.read()"," f = requests.get(base_url, params=query_args)
+            response = f.text"
+140,dissemin/dissemin,bb03947562f044fd5887b964223a1822a3813d75,backend/base.py,simple,urllib,requests,"    except URLError as e:
+        raise MetadataSourceException('Error while fetching metadata from BASE:\n'+
+                'Unable to open the URL: '+request+'\n'+
+                'Error was: '+str(e))"," except requests.exceptions.RequestException as e:
+        raise MetadataSourceException('Error while fetching metadata from BASE:\n'+
+                'Unable to open the URL: '+request+'\n'+
+                'Error was: '+str(e))"
+141,dissemin/dissemin,bb03947562f044fd5887b964223a1822a3813d75,backend/core.py,simple,urllib,requests,"from urllib2 import urlopen, URLError
+from urllib import urlencode, quote_plus","import requests
+import requests.exceptions"
+142,dissemin/dissemin,bb03947562f044fd5887b964223a1822a3813d75,backend/core.py,complex,urllib,requests," while offset < nb_results and no_match < max_no_match_before_give_up:
+            query_args = {'api_key':core_api_key,
+                    'offset':str(offset)}
+            request = base_url+search_terms+'?'+urlencode(query_args)
+            f = urlopen(request)
+            response = f.read()
+            root = etree.fromstring(response)
+            result_list = list(root.iter('record'))","        while offset < nb_results and no_match < max_no_match_before_give_up:
+            query_args = {'api_key':core_api_key,
+                    'offset':str(offset)}
+            f = requests.get(base_url+search_terms, params=query_args)
+            response = f.text
+
+            root = etree.fromstring(response)
+            result_list = list(root.iter('record'))"
+143,dissemin/dissemin,bb03947562f044fd5887b964223a1822a3813d75,backend/core.py,simple,urllib,requests,"    except URLError as e:
+        raise MetadataSourceException('Error while fetching metadata from CORE:\n'+
+                'Unable to open the URL: '+request+'\n'+
+                'Error was: '+str(e))","    except requests.exceptions.RequestException as e:
+        raise MetadataSourceException('Error while fetching metadata from CORE:\n'+
+                'Unable to open the URL: '+request+'\n'+
+                'Error was: '+str(e))"
+144,dissemin/dissemin,bb03947562f044fd5887b964223a1822a3813d75,backend/romeo.py,simple,urllib,requests," try:
+        response = urlopen(request).read()
+    except URLError as e:
+        raise MetadataSourceException('Error while querying RoMEO.\n'+
+                'URL was: '+request+'\n'
+                'Error is: '+str(e))","    try:
+        response = requests.get(base_url, params=search_terms).text
+    except requests.exceptions.RequestException as e:
+        raise MetadataSourceException('Error while querying RoMEO.\n'+
+                'URL was: '+request+'\n'
+                'Error is: '+str(e))"
+145,egirault/googleplay-api,7d278c6702f3b3dba271c86da7ebfee50ba343d3,googleplay.py,complex,urllib,requests,"try:
+                data = urllib2.urlopen(self.URL_LOGIN, urllib.urlencode(params)).read()
+                data = data.split()
+                params = {}
+                for d in data:
+                    if not ""="" in d: continue
+                    k, v = d.split(""="")
+                    params[k.strip().lower()] = v.strip()
+                if ""auth"" in params:
+                    self.setAuthSubToken(params[""auth""])
+                else:
+                    raise LoginError(""Auth token not found."")
+            except urllib2.HTTPError, e:
+                if e.code == 403:
+                    data = e.fp.read().split()
+                    params = {}
+                    for d in data:
+                        k, v = d.split(""="", 1)
+                        params[k.strip().lower()] = v.strip()
+                    if ""error"" in params:
+                        raise LoginError(params[""error""])
+                    else:
+                        raise LoginError(""Login failed."")
+                else:
+                    raise e"," headers = {
+                ""Accept-Encoding"": """",
+            }
+            response = requests.post(self.URL_LOGIN, data=params, headers=headers, verify=False)
+            data = response.text.split()
+            params = {}
+            for d in data:
+                if not ""="" in d: continue
+                k, v = d.split(""="")
+                params[k.strip().lower()] = v.strip()
+            if ""auth"" in params:
+                self.setAuthSubToken(params[""auth""])
+            elif ""error"" in params:
+                raise LoginError(""server says: "" + params[""error""])
+            else:
+                raise LoginError(""Auth token not found."")"
+146,egirault/googleplay-api,7d278c6702f3b3dba271c86da7ebfee50ba343d3,googleplay.py,simple,urllib,requests,"if (datapost is not None):
+                headers[""Content-Type""] = post_content_type
+
+            request = urllib2.Request(""https://android.clients.google.com/fdfe/%s"" % path, datapost, headers)
+            data = urllib2.urlopen(request).read()"," if datapost is not None:
+                headers[""Content-Type""] = post_content_type
+
+            url = ""https://android.clients.google.com/fdfe/%s"" % path
+            if datapost is not None:
+                response = requests.post(url, data=datapost, headers=headers, verify=False)
+            else:
+                response = requests.get(url, headers=headers, verify=False)
+            data = response.content"
+147,egirault/googleplay-api,7d278c6702f3b3dba271c86da7ebfee50ba343d3,googleplay.py,simple,urllib,requests,"  def search(self, query, nb_results=None, offset=None):
+        """"""Search for apps.""""""
+        path = ""search?c=3&q=%s"" % urllib.quote_plus(query)     # TODO handle categories
+        if (nb_results is not None):
+            path += ""&n=%d"" % int(nb_results)","  def search(self, query, nb_results=None, offset=None):
+        """"""Search for apps.""""""
+        path = ""search?c=3&q=%s"" % requests.utils.quote(query) # TODO handle categories
+        if (nb_results is not None):
+            path += ""&n=%d"" % int(nb_results)"
+148,egirault/googleplay-api,7d278c6702f3b3dba271c86da7ebfee50ba343d3,googleplay.py,simple,urllib,requests,"        path = ""details?doc=%s"" % urllib.quote_plus(packageName)","        path = ""details?doc=%s"" % requests.utils.quote(packageName)"
+149,egirault/googleplay-api,7d278c6702f3b3dba271c86da7ebfee50ba343d3,googleplay.py,simple,urllib,requests,"  path = ""browse?c=3""
+        if (cat != None):
+            path += ""&cat=%s"" % urllib.quote_plus(cat)
+        if (ctr != None):
+            path += ""&ctr=%s"" % urllib.quote_plus(ctr)
+        message = self.executeRequestApi2(path)
+        return message.payload.browseResponse"," path = ""browse?c=3""
+        if (cat != None):
+            path += ""&cat=%s"" % requests.utils.quote(cat)
+        if (ctr != None):
+            path += ""&ctr=%s"" % requests.utils.quote(ctr)
+        message = self.executeRequestApi2(path)
+        return message.payload.browseResponse"
+150,egirault/googleplay-api,7d278c6702f3b3dba271c86da7ebfee50ba343d3,googleplay.py,simple,urllib,requests," path = ""list?c=3&cat=%s"" % urllib.quote_plus(cat)
+        if (ctr != None):
+            path += ""&ctr=%s"" % urllib.quote_plus(ctr)
+        if (nb_results != None):
+            path += ""&n=%s"" % urllib.quote_plus(nb_results)
+        if (offset != None):
+            path += ""&o=%s"" % urllib.quote_plus(offset)
+        message = self.executeRequestApi2(path)
+        return message.payload.listResponse","        path = ""list?c=3&cat=%s"" % requests.utls.quote(cat)
+        if (ctr != None):
+            path += ""&ctr=%s"" % requests.utils.quote(ctr)
+        if (nb_results != None):
+            path += ""&n=%s"" % requests.utils.quote(nb_results)
+        if (offset != None):
+            path += ""&o=%s"" % requests.utils.quote(offset)
+        message = self.executeRequestApi2(path)
+        return message.payload.listResponse"
+151,egirault/googleplay-api,7d278c6702f3b3dba271c86da7ebfee50ba343d3,googleplay.py,simple,urllib,requests,"  ""User-Agent"" : ""AndroidDownloadManager/4.1.1 (Linux; U; Android 4.1.1; Nexus S Build/JRO03E)""}
+        request = urllib2.Request(url, None, headers)
+        data = urllib2.urlopen(request).read()
+        return data","                   ""User-Agent"" : ""AndroidDownloadManager/4.1.1 (Linux; U; Android 4.1.1; Nexus S Build/JRO03E)"",
+                   ""Accept-Encoding"": """",
+                  }
+        response = requests.get(url, headers=headers) # TODO might be POST ?
+        return response.content"
+152,ericmandel/pyjs9,054c33e4a451b8b516baf81b9faa9ccc510090c5,pyjs9/__init__.py,simple,urllib,requests,"try:
+            url = urllib.urlopen(self.host + '/' + msg, jstr)","try:
+            url = requests.get(self.host + '/' + msg, params=jstr)"
+153,explosion/spaCy,d4cc736b7c8f042e2385a16816aa3f9316478f8c,spacy/cli/download.py,simple,urllib,requests,"def get_json(url, desc, ssl_verify):
+    try:
+        data = url_read(url, verify=ssl_verify)
+    except HTTPError as e:
+        prints(Messages.M004.format(desc, about.__version__),
+               title=Messages.M003.format(e.code, e.reason), exits=1)
+    return ujson.loads(data)","def get_json(url, desc):
+    r = requests.get(url)
+    if r.status_code != 200:
+        prints(Messages.M004.format(desc=desc, version=about.__version__),
+               title=Messages.M003.format(code=r.status_code), exits=1)
+    return r.json()"
+154,explosion/spaCy,d4cc736b7c8f042e2385a16816aa3f9316478f8c,spacy/cli/validate.py,simple,urllib,requests," try:
+        data = url_read(about.__compatibility__)
+    except HTTPError as e:
+        title = Messages.M003.format(code=e.code, desc=e.reason)
+        prints(Messages.M021, title=title, exits=1)
+    compat = ujson.loads(data)['spacy']","    r = requests.get(about.__compatibility__)
+    if r.status_code != 200:
+        prints(Messages.M021, title=Messages.M003.format(code=r.status_code),
+               exits=1)
+    compat = r.json()['spacy']"
+155,openstack/cloud-init,0d7c6696c281f59300eb99c65c88f0f339965636,cloudinit/url_helper.py,simple,urllib,requests,"            except exceptions.HTTPError as e:
+                reason = ""http error [%s]"" % e.code","            except exceptions.RequestException as e:
+                reason = ""request error [%s]"" % e"
+156,mixpanel/mixpanel-python,e8a9330448f8fd4ec2cdb1ab35e0de9a05d9717f,test_mixpanel.py,complex,urllib,requests,"def test_send_events(self):
+        with self._assertSends('https://api.mixpanel.com/track', {""ip"": 0, ""verbose"": 1, ""data"": '{""foo"":""bar""}'}):
+            self.consumer.send('events', '{""foo"":""bar""}')","def test_send_events(self):
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST,
+                'https://api.mixpanel.com/track',
+                json={""status"": 1, ""error"": None},
+                status=200,
+                match=[responses.urlencoded_params_matcher({""ip"": ""0"", ""verbose"": ""1"", ""data"": '{""foo"":""bar""}'})],
+            )
+            self.consumer.send('events', '{""foo"":""bar""}')"
+157,mixpanel/mixpanel-python,e8a9330448f8fd4ec2cdb1ab35e0de9a05d9717f,test_mixpanel.py,complex,urllib,requests,"def test_send_people(self):
+        with self._assertSends('https://api.mixpanel.com/engage', {""ip"": 0, ""verbose"": 1, ""data"": '{""foo"":""bar""}'}):
+            self.consumer.send('people', '{""foo"":""bar""}')","def test_send_people(self):
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST,
+                'https://api.mixpanel.com/engage',
+                json={""status"": 1, ""error"": None},
+                status=200,
+                match=[responses.urlencoded_params_matcher({""ip"": ""0"", ""verbose"": ""1"", ""data"": '{""foo"":""bar""}'})],
+            )
+            self.consumer.send('people', '{""foo"":""bar""}')"
+158,mixpanel/mixpanel-python,e8a9330448f8fd4ec2cdb1ab35e0de9a05d9717f,test_mixpanel.py,complex,urllib,requests,"def test_consumer_override_api_host(self):
+        consumer = mixpanel.Consumer(api_host=""api-eu.mixpanel.com"")
+        with self._assertSends('https://api-eu.mixpanel.com/track', {""ip"": 0, ""verbose"": 1, ""data"": '{""foo"":""bar""}'}, consumer=consumer):
+            consumer.send('events', '{""foo"":""bar""}')
+        with self._assertSends('https://api-eu.mixpanel.com/engage', {""ip"": 0, ""verbose"": 1, ""data"": '{""foo"":""bar""}'}, consumer=consumer):
+            consumer.send('people', '{""foo"":""bar""}')","def test_consumer_override_api_host(self):
+        consumer = mixpanel.Consumer(api_host=""api-zoltan.mixpanel.com"")
+
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST,
+                'https://api-zoltan.mixpanel.com/track',
+                json={""status"": 1, ""error"": None},
+                status=200,
+                match=[responses.urlencoded_params_matcher({""ip"": ""0"", ""verbose"": ""1"", ""data"": '{""foo"":""bar""}'})],
+            )
+            consumer.send('events', '{""foo"":""bar""}')
+
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST,
+                'https://api-zoltan.mixpanel.com/engage',
+                json={""status"": 1, ""error"": None},
+                status=200,
+                match=[responses.urlencoded_params_matcher({""ip"": ""0"", ""verbose"": ""1"", ""data"": '{""foo"":""bar""}'})],
+            )
+            consumer.send('people', '{""foo"":""bar""}')"
+159,mixpanel/mixpanel-python,e8a9330448f8fd4ec2cdb1ab35e0de9a05d9717f,test_mixpanel.py,complex,urllib,requests,"def test_useful_reraise_in_flush_endpoint(self):
+        error_mock = Mock()
+        error_mock.data = six.b('{""status"": 0, ""error"": ""arbitrary error""}')
+        broken_json = '{broken JSON'
+        consumer = mixpanel.BufferedConsumer(2)
+        with patch('mixpanel.urllib3.PoolManager.request', return_value=error_mock):
+            consumer.send('events', broken_json)
+
+            with pytest.raises(mixpanel.MixpanelException) as excinfo:
+                consumer.flush()
+            assert excinfo.value.message == '[%s]' % broken_json
+            assert excinfo.value.endpoint == 'events'","def test_useful_reraise_in_flush_endpoint(self):
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST,
+                'https://api.mixpanel.com/track',
+                json={""status"": 0, ""error"": ""arbitrary error""},
+                status=200,
+            )
+
+            broken_json = '{broken JSON'
+            consumer = mixpanel.BufferedConsumer(2)
+            consumer.send('events', broken_json)
+
+            with pytest.raises(mixpanel.MixpanelException) as excinfo:
+                consumer.flush()
+            assert excinfo.value.message == '[%s]' % broken_json
+            assert excinfo.value.endpoint == 'events'"
+160,mixpanel/mixpanel-python,e8a9330448f8fd4ec2cdb1ab35e0de9a05d9717f,test_mixpanel.py,complex,urllib,requests,"def test_track_functional(self):
+        expect_data = {'event': 'button_press', 'properties': {'size': 'big', 'color': 'blue', 'mp_lib': 'python', 'token': '12345', 'distinct_id': 'player1', '$lib_version': mixpanel.__version__, 'time': 1000, '$insert_id': 'xyz1200'}}
+        with self._assertRequested('https://api.mixpanel.com/track', expect_data):
+            self.mp.track('player1', 'button_press', {'size': 'big', 'color': 'blue', '$insert_id': 'xyz1200'})","def test_track_functional(self):
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST,
+                'https://api.mixpanel.com/track',
+                json={""status"": 1, ""error"": None},
+                status=200,
+            )
+
+            self.mp.track('player1', 'button_press', {'size': 'big', 'color': 'blue', '$insert_id': 'xyz1200'})
+
+            body = six.ensure_str(rsps.calls[0].request.body)
+            wrapper = dict(urllib.parse.parse_qsl(body))
+            data = json.loads(wrapper[""data""])
+            del wrapper[""data""]
+
+            assert {""ip"": ""0"", ""verbose"": ""1""} == wrapper
+            expected_data = {'event': 'button_press', 'properties': {'size': 'big', 'color': 'blue', 'mp_lib': 'python', 'token': '12345', 'distinct_id': 'player1', '$lib_version': mixpanel.__version__, 'time': 1000, '$insert_id': 'xyz1200'}}
+            assert expected_data == data"
+161,mixpanel/mixpanel-python,e8a9330448f8fd4ec2cdb1ab35e0de9a05d9717f,test_mixpanel.py,complex,urllib,requests,"def test_people_set_functional(self):
+        expect_data = {'$distinct_id': 'amq', '$set': {'birth month': 'october', 'favorite color': 'purple'}, '$time': 1000, '$token': '12345'}
+        with self._assertRequested('https://api.mixpanel.com/engage', expect_data):
+            self.mp.people_set('amq', {'birth month': 'october', 'favorite color': 'purple'})","def test_people_set_functional(self):
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST,
+                'https://api.mixpanel.com/engage',
+                json={""status"": 1, ""error"": None},
+                status=200,
+            )
+
+            self.mp.people_set('amq', {'birth month': 'october', 'favorite color': 'purple'})
+            body = six.ensure_str(rsps.calls[0].request.body)
+            wrapper = dict(urllib.parse.parse_qsl(body))
+            data = json.loads(wrapper[""data""])
+            del wrapper[""data""]
+
+            assert {""ip"": ""0"", ""verbose"": ""1""} == wrapper
+            expected_data = {'$distinct_id': 'amq', '$set': {'birth month': 'october', 'favorite color': 'purple'}, '$time': 1000, '$token': '12345'}
+            assert expected_data == data"
+162,miguelgrinberg/python-engineio,41b8e29e49560170e852df1c5c070c6d311452d5,engineio/client.py,complex,urllib,requests,"def _send_request(
+            self, method, url, headers=None, body=None):  # pragma: no cover
+        if self.http is None:
+            self.http = urllib3.PoolManager()
+        try:
+            return self.http.request(method, url, headers=headers, body=body)
+        except urllib3.exceptions.MaxRetryError:
+            pass","def _send_request(
+            self, method, url, headers=None, body=None):  # pragma: no cover
+        if self.http is None:
+            self.http = requests.Session()
+        try:
+            return self.http.request(method, url, headers=headers, data=body)
+        except requests.exceptions.ConnectionError:
+            pass"
+163,miguelgrinberg/python-engineio,41b8e29e49560170e852df1c5c070c6d311452d5,tests/common/test_client.py,simple,urllib,requests,"@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_404(self, _send_request):
+        _send_request.return_value.status = 404
+        c = client.Client()
+        self.assertRaises(exceptions.ConnectionError, c.connect, 'http://foo')","@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_404(self, _send_request):
+        _send_request.return_value.status_code = 404
+        c = client.Client()
+        self.assertRaises(exceptions.ConnectionError, c.connect, 'http://foo')"
+164,miguelgrinberg/python-engineio,41b8e29e49560170e852df1c5c070c6d311452d5,tests/common/test_client.py,simple,urllib,requests,"@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_invalid_packet(self, _send_request):
+        _send_request.return_value.status = 200
+        _send_request.return_value.data = b'foo'
+        c = client.Client()
+        self.assertRaises(exceptions.ConnectionError, c.connect, 'http://foo')","@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_invalid_packet(self, _send_request):
+        _send_request.return_value.status_code = 200
+        _send_request.return_value.content = b'foo'
+        c = client.Client()
+        self.assertRaises(exceptions.ConnectionError, c.connect, 'http://foo')"
+165,miguelgrinberg/python-engineio,41b8e29e49560170e852df1c5c070c6d311452d5,tests/common/test_client.py,simple,urllib,requests,"@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_no_open_packet(self, _send_request):
+        _send_request.return_value.status = 200
+        _send_request.return_value.data = payload.Payload(packets=[
+            packet.Packet(packet.CLOSE, {
+                'sid': '123', 'upgrades': [], 'pingInterval': 10,
+                'pingTimeout': 20
+            })
+        ]).encode()
+        c = client.Client()
+        self.assertRaises(exceptions.ConnectionError, c.connect, 'http://foo')","@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_no_open_packet(self, _send_request):
+        _send_request.return_value.status_code = 200
+        _send_request.return_value.content = payload.Payload(packets=[
+            packet.Packet(packet.CLOSE, {
+                'sid': '123', 'upgrades': [], 'pingInterval': 10,
+                'pingTimeout': 20
+            })
+        ]).encode()
+        c = client.Client()
+        self.assertRaises(exceptions.ConnectionError, c.connect, 'http://foo')"
+166,miguelgrinberg/python-engineio,41b8e29e49560170e852df1c5c070c6d311452d5,tests/common/test_client.py,simple,urllib,requests,"@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_successful(self, _send_request):
+        _send_request.return_value.status = 200
+        _send_request.return_value.data = payload.Payload(packets=[
+            packet.Packet(packet.OPEN, {
+                'sid': '123', 'upgrades': [], 'pingInterval': 1000,
+                'pingTimeout': 2000
+            })
+        ]).encode()","@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_successful(self, _send_request):
+        _send_request.return_value.status_code = 200
+        _send_request.return_value.content = payload.Payload(packets=[
+            packet.Packet(packet.OPEN, {
+                'sid': '123', 'upgrades': [], 'pingInterval': 1000,
+                'pingTimeout': 2000
+            })
+        ]).encode()"
+167,miguelgrinberg/python-engineio,41b8e29e49560170e852df1c5c070c6d311452d5,tests/common/test_client.py,simple,urllib,requests,"@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_with_more_packets(self, _send_request):
+        _send_request.return_value.status = 200
+        _send_request.return_value.data = payload.Payload(packets=[
+            packet.Packet(packet.OPEN, {
+                'sid': '123', 'upgrades': [], 'pingInterval': 1000,
+                'pingTimeout': 2000
+            }),
+            packet.Packet(packet.NOOP)
+        ]).encode()","@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_with_more_packets(self, _send_request):
+        _send_request.return_value.status_code = 200
+        _send_request.return_value.content = payload.Payload(packets=[
+            packet.Packet(packet.OPEN, {
+                'sid': '123', 'upgrades': [], 'pingInterval': 1000,
+                'pingTimeout': 2000
+            }),
+            packet.Packet(packet.NOOP)
+        ]).encode()"
+168,miguelgrinberg/python-engineio,41b8e29e49560170e852df1c5c070c6d311452d5,tests/common/test_client.py,simple,urllib,requests,"@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_upgraded(self, _send_request):
+        _send_request.return_value.status = 200
+        _send_request.return_value.data = payload.Payload(packets=[
+            packet.Packet(packet.OPEN, {
+                'sid': '123', 'upgrades': ['websocket'], 'pingInterval': 1000,
+                'pingTimeout': 2000
+            })
+        ]).encode()","@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_upgraded(self, _send_request):
+        _send_request.return_value.status_code = 200
+        _send_request.return_value.content = payload.Payload(packets=[
+            packet.Packet(packet.OPEN, {
+                'sid': '123', 'upgrades': ['websocket'], 'pingInterval': 1000,
+                'pingTimeout': 2000
+            })
+        ]).encode()"
+169,miguelgrinberg/python-engineio,41b8e29e49560170e852df1c5c070c6d311452d5,tests/common/test_client.py,simple,urllib,requests,"@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_not_upgraded(self, _send_request):
+        _send_request.return_value.status = 200
+        _send_request.return_value.data = payload.Payload(packets=[
+            packet.Packet(packet.OPEN, {
+                'sid': '123', 'upgrades': ['websocket'], 'pingInterval': 1000,
+                'pingTimeout': 2000
+            })
+        ]).encode()","@mock.patch('engineio.client.Client._send_request')
+    def test_polling_connection_not_upgraded(self, _send_request):
+        _send_request.return_value.status_code = 200
+        _send_request.return_value.content = payload.Payload(packets=[
+            packet.Packet(packet.OPEN, {
+                'sid': '123', 'upgrades': ['websocket'], 'pingInterval': 1000,
+                'pingTimeout': 2000
+            })
+        ]).encode()"
+170,liip/ckanext-ddi,6cf61b5bec33c9bcbfae300142b929f87bed0878,ckanext/ddi/importer/ddiimporter.py,simple,urllib,requests,"class DdiImporter(HarvesterBase):
+    def run(self, file_path=None, url=None):
+        pkg_dict = None
+        ckan_metadata = metadata.DdiCkanMetadata()
+        if file_path is not None:
+            with open(file_path) as xml_file:
+                pkg_dict = ckan_metadata.load(xml_file.read())
+        elif url is not None:
+            log.debug('Fetch file from %s' % url)
+            http = urllib3.PoolManager()
+            xml_file = http.request('GET', url)
+
+            # fd, temp_path = tempfile.mkstemp()
+            # fd.write(xml_file.data)
+            pkg_dict = ckan_metadata.load(xml_file.data)
+            # os.close(fd)
+            # os.remove(temp_path)","class DdiImporter(HarvesterBase):
+    def run(self, file_path=None, url=None):
+        pkg_dict = None
+        ckan_metadata = metadata.DdiCkanMetadata()
+        if file_path is not None:
+            with open(file_path) as xml_file:
+                pkg_dict = ckan_metadata.load(xml_file.read())
+        elif url is not None:
+            log.debug('Fetch file from %s' % url)
+            r = requests.get(url)
+            xml_file = r.text
+
+            # fd, temp_path = tempfile.mkstemp()
+            # fd.write(xml_file.data)
+            pkg_dict = ckan_metadata.load(xml_file)
+            # os.close(fd)
+            # os.remove(temp_path)"
+171,canonical/cloud-init,0fc887d97626132e9024490b271888bed162c867,cloudinit/url_helper.py,simple,urllib,requests,"resp = readurl(url, headers=headers, timeout=timeout)","resp = readurl(url, headers=headers, timeout=timeout,
+                               check_status=False)"
+172,canonical/cloud-init,0fc887d97626132e9024490b271888bed162c867,cloudinit/url_helper.py,simple,urllib,requests,"except exceptions.HTTPError as e:
+                reason = ""http error [%s]"" % e.code","except exceptions.RequestException as e:
+                reason = ""request error [%s]"" % e"
+173,Budabot/Tyrbot,1a0f23fdc9bd779c300226d91c97d2656b15da3f,modules/standard/items/auno_controller.py,simple,urllib,requests,"def get_combined_response(self, low_id, high_id, name):
+        combined_response = self.get_auno_response(low_id, high_id)
+
+        if len(combined_response) > 0:
+            # high id comments
+            soup = BeautifulSoup(combined_response[0].data, features=""html.parser"")
+            comments: List[AunoComment] = self.find_comments(soup)
+
+            if len(combined_response) > 1:
+                # low id comments
+                soup = BeautifulSoup(combined_response[1].data, features=""html.parser"")
+                comments += self.find_comments(soup)","def get_combined_response(self, low_id, high_id, name):
+        combined_response = self.get_auno_response(low_id, high_id)
+
+        if len(combined_response) > 0:
+            # high id comments
+            soup = BeautifulSoup(combined_response[0].text, features=""html.parser"")
+            comments: List[AunoComment] = self.find_comments(soup)
+
+            if len(combined_response) > 1:
+                # low id comments
+                soup = BeautifulSoup(combined_response[1].text, features=""html.parser"")
+                comments += self.find_comments(soup)"
+174,Budabot/Tyrbot,1a0f23fdc9bd779c300226d91c97d2656b15da3f,modules/standard/items/auno_controller.py,simple,urllib,requests,"def get_auno_response(self, low_id, high_id):
+        auno_request_low = self.get_auno_request_url(low_id)
+        auno_request_high = self.get_auno_request_url(high_id)
+
+        auno_http = urllib3.PoolManager(ca_certs=certifi.where())
+        auno_response_h = auno_http.request('GET', auno_request_high)
+        auno_response_l = None
+
+        if low_id != high_id:
+            auno_response_l = auno_http.request('GET', auno_request_low)
+
+        combined_response = []
+
+        if auno_response_h:
+            if auno_response_h.status == 200:
+                combined_response.append(auno_response_h)
+        if auno_response_l:
+            if auno_response_l.status == 200:
+                combined_response.append(auno_response_l)
+
+        return combined_response","def get_auno_response(self, low_id, high_id):
+        auno_request_low = self.get_auno_request_url(low_id)
+        auno_request_high = self.get_auno_request_url(high_id)
+
+        auno_response_h = requests.get(auno_request_high)
+
+        auno_response_l = None
+
+        if low_id != high_id:
+            auno_response_l = requests.get(auno_request_low)
+
+        combined_response = []
+
+        if auno_response_h:
+            if auno_response_h.status_code == 200:
+                combined_response.append(auno_response_h)
+        if auno_response_l:
+            if auno_response_l.status_code == 200:
+                combined_response.append(auno_response_l)
+
+        return combined_response"
+175,vmware/pyvmomi,1fbab0927669bfddde7655393483397ea66521bb,pyVim/connect.py,simple,urllib,requests,"try:
+      with closing(urllib2.urlopen(url)) as sock:
+         if sock.getcode() == 200:
+            tree.parse(sock)
+            return tree
+   except ExpatError:
+      pass","try:
+      sock = requests.get(url, verify=False)
+      if sock.status_code == 200:
+         tree = ElementTree.fromstring(sock.content)
+         return tree
+   except ExpatError:
+      pass"
+176,vmware/pyvmomi,1fbab0927669bfddde7655393483397ea66521bb,pyVim/connect.py,simple,urllib,requests,"try:
+      with closing(urllib2.urlopen(url)) as sock:
+         if sock.getcode() == 200:
+            tree.parse(sock)
+            return tree
+   except ExpatError:
+      pass","try:
+      sock = requests.get(url, verify=False)
+      if sock.status_code == 200:
+         tree = ElementTree.fromstring(sock.content)
+         return tree
+   except ExpatError:
+      pass"
+177,trezor/python-trezor,fdc3cff1d64124882a16a4723c1de1ddf76d1093,trezorctl,simple,urllib,requests,"def firmware_update(self, args):
+        if args.file:
+            fp = open(args.file, 'r')
+        elif args.url:
+            print(""Downloading from"", args.url)
+            resp = urllib.urlretrieve(args.url)
+            fp = open(resp[0], 'r')
+            urllib.urlcleanup() # We still keep file pointer open
+        else:
+            resp = urllib.urlopen(""https://mytrezor.com/data/firmware/releases.json"")
+            releases = json.load(resp)
+            version = lambda r: r['version']
+            version_string = lambda r: ""."".join(map(str, version(r)))
+            if args.version:
+                release = next((r for r in releases if version_string(r) == args.version))","def firmware_update(self, args):
+        if args.file:
+            fp = open(args.file, 'r')
+        elif args.url:
+            print(""Downloading from"", args.url)
+            r = requests.get(args.url)
+            fp = r.content
+
+        else:
+            r = requests.get('https://mytrezor.com/data/firmware/releases.json')
+            releases = r.json()
+            version = lambda r: r['version']
+            version_string = lambda r: ""."".join(map(str, version(r)))
+            if args.version:
+                release = next((r for r in releases if version_string(r) == args.version))"
+178,torre76/gd_shortener,86eee4b150b02402622ef1d31cf84c3389980080,gdshortener/gdshortener.py,simple,urllib,requests,"opener = urllib2.build_opener()
+        headers = {'User-Agent': self._user_agent}
+        req = urllib2.Request(""{0}/forward.php"".format(self.shortener_url), urllib.urlencode(data), headers)
+        f_desc = opener.open(req, timeout=self._timeout)
+        response = json.loads(f_desc.read())","
+        headers = {'User-Agent': self._user_agent}
+        f_desc = requests.get(""{0}/forward.php"".format(self.shortener_url), params=data, headers=headers)
+        response = json.loads(f_desc.text)
+"
+179,torre76/gd_shortener,86eee4b150b02402622ef1d31cf84c3389980080,gdshortener/gdshortener.py,simple,urllib,requests,"opener = urllib2.build_opener()
+        headers = {'User-Agent' : self._user_agent}
+        req = urllib2.Request(""{0}/create.php"".format(self.shortener_url), urllib.urlencode(data), headers)
+        f_desc = opener.open(req, timeout=self._timeout)
+        response = json.loads(f_desc.read())","headers = {'User-Agent': self._user_agent}
+        f_desc = requests.get(""{0}/create.php"".format(self.shortener_url), params=data, headers=headers)
+        response = json.loads(f_desc.text)"
+180,tam7t/photograbber,d4147717adf15f4f524b86bcc975dd44b6c20822,downloader.py,simple,urllib,requests,"while retry:
+            try:
+                logger.info('downloading:%s' % photo['src_big'])
+                data = urllib2.urlopen(handler)
+                retry = False
+
+                # save file
+                picout.write(data.read())
+                picout.close()
+                created_time = time.strptime(photo['created_time'], '%Y-%m-%dT%H:%M:%S+0000')
+                photo['created_time_int'] = int(time.mktime(created_time))","while retry:
+            try:
+                logger.info('downloading:%s' % photo['src_big'])
+                r = requests.get(photo['src_big'])
+                retry = False
+
+                # save file
+                picout.write(r.content)
+                picout.close()
+                created_time = time.strptime(photo['created_time'], '%Y-%m-%dT%H:%M:%S+0000')
+                photo['created_time_int'] = int(time.mktime(created_time))"
+181,sunlightlabs/python-transparencydata,383245afcceac3a8a188236eb78eacd8d0e5d42d,influenceexplorer.py,simple,urllib,requests,"full_url = self.base_url + path + '?' + urllib.urlencode(params)
+
+        fp = urllib2.urlopen(full_url)
+
+        return json.loads(fp.read())","full_url = self.base_url + path
+
+        r = requests.get(full_url, params=params)
+
+        return r.json()"
+182,sonata-nfv/son-emu,3fc139384794a089e702ecdab035390b9f63a455,src/emuvim/dcemulator/net.py,simple,urllib,requests,"def ryu_REST(self, prefix, dpid=None, data=None):
+        try:
+            if dpid:
+                url = self.ryu_REST_api + '/' + str(prefix) + '/' + str(dpid)
+            else:
+                url = self.ryu_REST_api + '/' + str(prefix)
+            if data:
+                #LOG.info('POST: {0}'.format(str(data)))
+                req = urllib2.Request(url, str(data))
+
+            else:
+                req = urllib2.Request(url)
+
+
+            ret = urllib2.urlopen(req).read()
+
+            return ret
+        except:
+            LOG.info('error url: {0}'.format(str(url)))","def ryu_REST(self, prefix, dpid=None, data=None):
+        try:
+            if dpid:
+                url = self.ryu_REST_api + '/' + str(prefix) + '/' + str(dpid)
+            else:
+                url = self.ryu_REST_api + '/' + str(prefix)
+            if data:
+                #LOG.info('POST: {0}'.format(str(data)))
+                #req = urllib2.Request(url, str(data))
+                req = requests.post(url, data=str(data))
+            else:
+                #req = urllib2.Request(url)
+                req = requests.get(url)
+
+            #ret = urllib2.urlopen(req).read()
+            ret = req.text
+            return ret
+        except:
+            LOG.info('error url: {0}'.format(str(url)))"
+183,sethblack/python-seo-analyzer,d35e078336ce5c789b85209b9206971f98c989b7,analyze.py,simple,urllib,requests,"try:
+            page = urlopen(self.url)
+        except urllib2.HTTPError:
+            self.warn('Returned 404')
+            return","try:
+            page = requests.get(self.url)
+        except requests.exceptions.HTTPError as e:
+            self.warn(u'Returned {0}'.format(page.status_code))
+            return"
+184,sethblack/python-seo-analyzer,d35e078336ce5c789b85209b9206971f98c989b7,analyze.py,simple,urllib,requests,"try:
+            page = urlopen('http://api.ak.facebook.com/restserver.php?v=1.0&method=links.getStats&urls=%s&format=json'
+                % self.url)
+            fb_data = loads(page.read())
+            fb_share_count = fb_data[0]['share_count']
+            fb_comment_count = fb_data[0]['comment_count']
+            fb_like_count = fb_data[0]['like_count']
+            fb_click_count = fb_data[0]['click_count']
+        except:
+            pass","try:
+            page = requests.get('http://api.ak.facebook.com/restserver.php?v=1.0&method=links.getStats&urls=%s&format=json'
+                % self.url)
+            fb_data = loads(page.read())
+            fb_share_count = fb_data[0]['share_count']
+            fb_comment_count = fb_data[0]['comment_count']
+            fb_like_count = fb_data[0]['like_count']
+            fb_click_count = fb_data[0]['click_count']
+        except:
+            pass"
+185,sethblack/python-seo-analyzer,d35e078336ce5c789b85209b9206971f98c989b7,analyze.py,simple,urllib,requests,"try:
+            page = urlopen('http://urls.api.twitter.com/1/urls/count.json?url=%s&callback=twttr.receiveCount' % self.url)
+            page_text = page.read()
+            twitter_count = loads(page_text[page_text.index('{'):-2])['count']
+        except:
+            pass","try:
+            page = requests.get('http://urls.api.twitter.com/1/urls/count.json?url=%s&callback=twttr.receiveCount' % self.url)
+            page_text = page.text
+            twitter_count = loads(page_text[page_text.index('{'):-2])['count']
+        except:
+            pass"
+186,sethblack/python-seo-analyzer,d35e078336ce5c789b85209b9206971f98c989b7,analyze.py,simple,urllib,requests,"def main(site, sitemap):
+    if sitemap is not None:
+        page = urlopen(sitemap)
+        xml_raw = page.read()
+        xmldoc = minidom.parseString(xml_raw)
+        urls = xmldoc.getElementsByTagName('loc')","def main(site, sitemap):
+    if sitemap is not None:
+        page = requests.get(sitemap)
+        xml_raw = page.read()
+        xmldoc = minidom.parseString(xml_raw)
+        urls = xmldoc.getElementsByTagName('loc')"
+187,scholrly/neo4django,155c266129d2d587b39e5d7acff86b123c94dda7,neo4django/tests/property_tests.py,simple,urllib,requests,"def get_raw_property_by_rest(node, property_name):
+    import urllib2, simplejson
+    data = simplejson.loads(
+        urllib2.urlopen(
+            node.connection.url + ""node/%i/properties"" % node.pk).read())
+    return data[property_name]","def get_raw_property_by_rest(node, property_name):
+    import requests, json
+    data = json.loads(
+        requests.get(node.connection.url + ""node/%i/properties"" % node.pk))
+
+    return data[property_name]"
+188,sailthru/sailthru-python-client,0988c16d598d3a7ee72359c879a8561a9229f57a,sailthru/sailthru_http.py,simple,urllib,requests,"def sailthru_http_request(url, data, method):
+    """"""
+    Perform an HTTP GET / POST / DELETE request
+    """"""
+    data = flatten_nested_hash(data)
+    data = urllib.urlencode(data, True)
+    opener = urllib2.build_opener(urllib2.HTTPHandler)
+    try:
+        if method == 'POST':
+            req = urllib2.Request(url, data)
+        else:
+            url += '?' + data
+            req = urllib2.Request(url)
+        req.add_header('User-Agent', 'Sailthru API Python Client')
+        req.get_method = lambda: method
+        response = opener.open(req)
+        response_data = response.read()
+        response.close()
+        return response_data
+    except urllib2.HTTPError, e:
+        return e.read()
+    except urllib2.URLError, e:
+        return str(e)","def sailthru_http_request(url, data, method, file_data = None):
+	""""""
+	Perform an HTTP GET / POST / DELETE request
+	""""""
+	files = {}
+	data = flatten_nested_hash(data)
+	try:
+		if file_data is not None:
+			files = file_data
+		headers = { 'User-Agent': 'Sailthru API Python Client' }
+		response = requests.request(method, url, data, None, headers, None, files)
+		if (response.status_code == requests.codes.ok):
+			return response.content
+		else:
+			response.raise_for_status()
+			return response
+	except requests.HTTPError, e:
+		return str(e)
+	except requests.RequestException, e:
+		return str(e)"
+189,ryanlarrabure/DarkSky.py,271e4c153ecc122e7620e93b43156341132e4673,src/darksky/abstract_io/HTTP.py,simple,urllib,requests,"def __init__ (
+        self,
+        urllib2_mod = None
+    ):
+        self.urllib2 = urllib2_mod or urllib2","def __init__ (
+        self,
+        get = None
+    ):
+        self.get = get or requests.get"
+190,rossigee/backups,0a5749cf2e52ff37dc5e45ab4d1277dea9b16adc,backups/notifications/discord.py,simple,urllib,requests,"try:
+            r = urllib2.Request(self.url, json.dumps(data), headers)
+            f = urllib2.urlopen(r)
+            response = f.read()
+            logging.info(""Sent success notification via Discord."")
+        except urllib2.HTTPError, error:
+            contents = error.read()
+            logging.error(""Unable to send Discord success notification: "" + contents)","try:
+            r = requests.post(self.url, data=data)
+            r.raise_for_status()
+
+            logging.info(""Sent success notification via Discord."")
+        except requests.exceptions.HTTPError as err:
+            logging.error(""Unable to send Discord success notification: "" + err)"
+191,rossigee/backups,0a5749cf2e52ff37dc5e45ab4d1277dea9b16adc,backups/notifications/discord.py,simple,urllib,requests,"try:
+            r = urllib2.Request(self.url, json.dumps(data), headers)
+            f = urllib2.urlopen(r)
+            response = f.read()
+            logging.info(""Sent failure notification via Discord."")
+        except urllib2.HTTPError, error:
+            contents = error.read()
+            logging.error(""Unable to send Discord failure notification: "" + contents)","try:
+            r = requests.post(self.url, data=data)
+            r.raise_for_status()
+
+            logging.info(""Sent failure notification via Discord."")
+        except requests.exceptions.HTTPError as err:
+            logging.error(""Unable to send Discord failure notification: "" + err)"
+192,rhinstaller/anaconda,4e9169e47c593e7b7dc31ce623365aa746e3a33b,pyanaconda/geoloc.py,simple,urllib,requests,"def _refresh(self):
+        try:
+            reply = urllib2.urlopen(self.API_URL, timeout=
+                                    constants.NETWORK_CONNECTION_TIMEOUT)
+            if reply:
+                json_reply = json.load(reply)
+                territory = json_reply.get(""country_code"", None)
+                timezone_source = ""GeoIP""
+                timezone_code = json_reply.get(""time_zone"", None)","def _refresh(self):
+        try:
+            reply = requests.get(self.API_URL, timeout=constants.NETWORK_CONNECTION_TIMEOUT, verify=True)
+            if reply.status_code == requests.codes.ok:
+                json_reply = reply.json()
+
+                territory = json_reply.get(""country_code"", None)
+                timezone_source = ""GeoIP""
+                timezone_code = json_reply.get(""time_zone"", None)"
+193,rhinstaller/anaconda,4e9169e47c593e7b7dc31ce623365aa746e3a33b,pyanaconda/geoloc.py,simple,urllib,requests,"except urllib2.URLError as e:
+            log.debug(""Geoloc: URLError for Fedora GeoIP API lookup:\n%s"", e)","except requests.exceptions.RequestException as e:
+            log.debug(""Geoloc: RequestException for Fedora GeoIP API lookup:\n%s"", e)"
+194,rhinstaller/anaconda,4e9169e47c593e7b7dc31ce623365aa746e3a33b,pyanaconda/geoloc.py,simple,urllib,requests,"def _refresh(self):
+        try:
+            reply = urllib2.urlopen(self.API_URL, timeout=
+                                    constants.NETWORK_CONNECTION_TIMEOUT)
+            if reply:
+                reply_dict = json.load(reply)
+                territory = reply_dict.get(""country_code"", None)","def _refresh(self):
+        try:
+            reply = requests.get(self.API_URL, timeout=constants.NETWORK_CONNECTION_TIMEOUT, verify=True)
+            if reply.status_code == requests.codes.ok:
+                reply_dict = reply.json()
+
+                territory = reply_dict.get(""country_code"", None)"
+195,rhinstaller/anaconda,4e9169e47c593e7b7dc31ce623365aa746e3a33b,pyanaconda/geoloc.py,simple,urllib,requests,"try:
+            reply = urllib2.urlopen(url, timeout=
+                                    constants.NETWORK_CONNECTION_TIMEOUT)
+            if reply:
+                reply_dict = json.load(reply)","        try:
+            reply = requests.get(url, timeout=constants.NETWORK_CONNECTION_TIMEOUT, verify=True)
+            if reply.status_code == requests.codes.ok:
+                reply_dict = reply.json()
+"
+196,rhinstaller/anaconda,4e9169e47c593e7b7dc31ce623365aa746e3a33b,pyanaconda/packaging/livepayload.py,simple,urllib,requests,"req = urllib.urlopen(self.data.method.url, proxies=self._proxies)","response = requests.get(self.data.method.url, proxies=self._proxies, verify=True)"
+197,rhinstaller/anaconda,4e9169e47c593e7b7dc31ce623365aa746e3a33b,pyanaconda/packaging/livepayload.py,simple,urllib,requests,"if req.info().get(""content-length""):
+                self._min_size = int(req.info().get(""content-length"")) * 4","if response.headers.get('content-length'):
+                self._min_size = int(response.headers.get('content-length')) * 4"
+198,rhinstaller/anaconda,4e9169e47c593e7b7dc31ce623365aa746e3a33b,pyanaconda/packaging/livepayload.py,simple,urllib,requests,"if method.startswith(""http"") and req.getcode() != 200:
+                error = ""http request returned %s"" % req.getcode()","if method.startswith(""http"") and response.status_code != 200:
+                error = ""http request returned %s"" % response.getcode()"
+199,rbaron/dict.cc.py,98d93e4f6bce72c6980307bd0e622b51a02529ec,dictcc/dictcc.py,simple,urllib,requests,"@classmethod
+    def _get_response(cls, word, from_language, to_language):
+        subdomain = from_language.lower()+to_language.lower()
+
+        url = ""https://""+subdomain+"".dict.cc/?s="" + quote_plus(word.encode(""utf-8""))
+
+        req = urllib2.Request(
+            url,
+            None,
+            {'User-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0'}
+        )
+
+        res = urllib2.urlopen(req).read()
+        return res.decode(""utf-8"")","@classmethod
+    def _get_response(cls, word, from_language, to_language):
+        res = requests.get(
+            url=""https://"" + from_language.lower() + to_language.lower() + "".dict.cc"",
+            params={""s"": word.encode(""utf-8"")},
+            headers={'User-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0'}
+
+
+
+
+        )
+        return res.content.decode(""utf-8"")"
+200,fboender/sec-tools,9108f28398f37b0cca4026d6efa30989dcf3655a,src/bins/gather_http_headers.py,complex,urllib,requests,"def get_url_headers(url):
+    ctx = ssl.create_default_context()
+    # Turn off SSL validation, because we don't care for headers
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    response = urllib.request.urlopen(url, context=ctx, timeout=4)
+
+    result = {}
+    for header in headers:
+        result[header] = response.getheader(header)
+    return result","def get_url_headers(url):
+    r = requests.get(url, headers={""User-Agent"": ""curl/7.58.0""})
+
+
+
+
+
+    result = {}
+    for header in headers:
+        result[header] = r.headers.get(header)
+    return result"

@@ -15,7 +15,7 @@ class OllamaClient(BaseClient):
         formatted = template.format(
             PROMPT=config.prompt_template,
             LANGUAGE_NAME=task.language,
-            OLD_LIB_NAME=task.source_lib,
+            OLD_LIB_NAME=task.legacy_lib,
             NEW_LIB_NAME=task.target_lib,
             CODE_BEFORE_MIGRATION=task.code_before,
         )
