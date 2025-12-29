@@ -1,110 +1,138 @@
+#!/usr/bin/env python3
+"""
+Legacy wrapper for run_migrations.py - converts old batch interface to new code-migration CLI.
+
+DEPRECATED: Use 'code-migration batch' or 'code-migration pipeline' instead.
+See USAGE.md for migration guide.
+"""
+
 import argparse
 import csv
-import subprocess
+import json
 import sys
 import tempfile
 from pathlib import Path
-import os
 
-def run_all_migrations(csv_path, llm_name, prompt_template):
+try:
+    from code_migration.pipeline.batch import run_batch
+    from code_migration.manifest import MigrationTask, write_tasks_csv
+    NEW_CLI_AVAILABLE = True
+except ImportError:
+    NEW_CLI_AVAILABLE = False
+
+
+def _convert_legacy_csv_to_new_format(csv_path: str, output_csv: Path) -> None:
     """
-    Reads a CSV file, creates a temporary file for the source code,
-    and runs the main.py script for each row.
+    Convert legacy CSV format to new format.
+    Legacy: legacy_lib, target_lib, repo_name, code_before, id, etc.
+    New: task_id, language, source_lib, target_lib, repo_name, code_before, etc.
     """
-    script_dir = Path(__file__).resolve().parent
-    main_py_path = script_dir / "main.py"
-    if not main_py_path.is_file():
-        print(f"Error: 'main.py' could not be found at the expected location: {main_py_path}")
+    with open(csv_path, mode='r', newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        tasks = []
+        for row in reader:
+            # Map old column names to new ones
+            task_id = row.get('id', f"task_{len(tasks) + 1}")
+            source_lib = row.get('legacy_lib', row.get('rmv_lib', ''))
+            target_lib = row.get('target_lib', row.get('add_lib', ''))
+            repo_name = row.get('repo_name', row.get('repo', ''))
+            code_before = row.get('code_before', row.get('before', ''))
+            code_after = row.get('code_after', row.get('after', ''))
+            migration_type = row.get('migration_type', row.get('type', ''))
+            
+            tasks.append(MigrationTask(
+                task_id=str(task_id),
+                language="python",  # Default for legacy
+                source_lib=source_lib,
+                target_lib=target_lib,
+                repo_name=repo_name,
+                code_before=code_before,
+                code_after=code_after if code_after else None,
+                migration_type=migration_type if migration_type else None,
+            ))
+    
+    write_tasks_csv(output_csv, tasks)
+
+
+def run_all_migrations(csv_path, llm_name, model, prompt_template):
+    """
+    Legacy function signature maintained for backward compatibility.
+    
+    Note: The 'model' parameter is ignored - use llm_name for the model version.
+    """
+    if not NEW_CLI_AVAILABLE:
+        print("ERROR: New CLI not available. Please install the package: pip install -e .")
         return
-
-    base_temp_dir = script_dir / "temp_output"
-    base_temp_dir.mkdir(exist_ok=True)
-
-    try:
-        with open(csv_path, mode='r', newline='', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            migration_tasks = list(reader)
-            if not migration_tasks:
-                print("CSV file is empty. No migrations to run.")
-                return
-
-            total_tasks = len(migration_tasks)
-            print(f"Found {total_tasks} migration tasks in '{csv_path}'. Starting process...\n")
-
-            for i, row in enumerate(migration_tasks, 1):
-                with tempfile.TemporaryDirectory(dir=base_temp_dir) as temp_dir:
-                    try:
-                        temp_dir_path = Path(temp_dir)
-                        language = "python"
-                        old_lib = row['legacy_lib']
-                        repo_name = row['repo_name']
-                        filename = f"python_{row['legacy_lib']}_{row['target_lib']}" + row['id']
-                        source_code = row['code_before']
-                        
-                        temp_source_file = temp_dir_path / 'input' / language / prompt_template / old_lib / repo_name / filename
-
-                        parent_dir = temp_source_file.parent
-
-                        parent_dir.mkdir(parents=True, exist_ok=True)
-                                                
-                        temp_source_file.write_text(source_code, encoding='utf-8')
-
-                        print(f"--- [ {i}/{total_tasks} ] Running migration for: {repo_name}/{filename} ---")
-                        
-                        command = [
-                            sys.executable,
-                            str(main_py_path),
-                            language,
-                            old_lib,
-                            row['target_lib'],
-                            "ollama",
-                            llm_name,
-                            prompt_template,
-                            str(temp_source_file)
-                        ]
-
-                        result = subprocess.run(
-                            command, 
-                            check=True, 
-                            capture_output=True, 
-                            text=True, 
-                            encoding='utf-8'
-                        )
-
-                        print(result.stdout.strip())
-                        if result.stderr:
-                            print("STDERR:", result.stderr.strip())
-
-                    except KeyError as e:
-                        print(f"Error: CSV file is missing required column: {e}. Skipping this row.")
-                    except subprocess.CalledProcessError as e:
-                        print(f"An error occurred while executing main.py for row {i}.")
-                        print(f"   Return Code: {e.returncode}")
-                        print(f"   Output:\n{e.stdout.strip()}")
-                        print(f"   Error Output:\n{e.stderr.strip()}")
-                    
-                    print(f"Migration complete. Temporary files cleaned up. 🧹")
-                    print("-" * 60 + "\n")
-
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+    
+    print(f"⚠️  DEPRECATED: This script is a compatibility wrapper.")
+    print(f"   Consider using: code-migration batch --tasks {csv_path} --config <config.json> --out artifacts/<run_id>")
+    print()
+    
+    # Create temporary config
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir)
+        config_json = tmp_path / "config.json"
+        converted_csv = tmp_path / "tasks.csv"
+        out_dir = Path("artifacts") / f"legacy_run_{prompt_template}"
+        
+        # Convert CSV format
+        _convert_legacy_csv_to_new_format(csv_path, converted_csv)
+        
+        # Create config
+        config_json.write_text(json.dumps({
+            "client_family": "ollama",  # Legacy script hardcodes ollama
+            "model_version": llm_name,
+            "prompt_template": prompt_template,
+            "language": "python",
+        }, indent=2), encoding="utf-8")
+        
+        # Run new batch CLI
+        run_batch(
+            tasks_path=str(converted_csv),
+            config_path=str(config_json),
+            out_dir=str(out_dir),
+        )
+        
+        print(f"\n✅ Batch migration complete. Results in: {out_dir}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run multiple code migrations defined in a CSV file."
+        description="Run multiple code migrations defined in a CSV file (LEGACY)"
     )
+
     parser.add_argument(
-        "csv_file", 
+        "--csv_file", 
         help="Path to the CSV file containing migration parameters."
     )
+
     parser.add_argument(
-        "llm_name", 
+        "--llm_name", 
         help="Name of the LLM to be run."
     )
+
+    default_templates = ['zero_shot', 'one_shot', 'chain_of_thoughts']
+
+    parser.add_argument(
+        "--prompt_template", 
+        nargs="+",
+        default=default_templates,
+        help="Prompt template to be used."
+    )
+
+    parser.add_argument(
+        "--model", 
+        help="Model to be used (ignored, use --llm_name instead)."
+    )
+    
     args = parser.parse_args()
+    
+    if not args.csv_file or not args.llm_name:
+        parser.print_help()
+        sys.exit(1)
 
-    templates = ['zero_shot', 'one_shot', 'chain_of_thoughts']
-
-    for template in templates:
-        run_all_migrations(args.csv_file, args.llm_name, template)
+    for template in args.prompt_template:
+        print(f"\n{'='*60}")
+        print(f"Running migrations with template: {template}")
+        print(f"{'='*60}\n")
+        run_all_migrations(args.csv_file, args.llm_name, args.model, template)

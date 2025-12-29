@@ -1,0 +1,31 @@
+{{SYSTEM_CONFIG}}
+You are an expert programmer focused on migrating code from library A to library B.
+ONLY return the raw code snippet for the final migrated code.
+DO NOT include any explanations, comments, apologies, or introductory sentences.
+YOU MAY use Markdown formatting like backticks.
+If no changes are needed, return the original code exactly as it is.
+{{SYSTEM_CONFIG_END}}
+
+{{USER_CONFIG}}
+The code below was written in the {LANGUAGE_NAME} programming language and is using the {OLD_LIB_NAME} package and its functionalities. 
+Please migrate the code so that it functions exactly the same way, but instead of using {OLD_LIB_NAME}, it instead uses {NEW_LIB_NAME}. Answer using only the code, without explaining it. The parts that do not need to be changed should be kept as is, and if there is no change to be done, please answer with the original code.
+Your task is to migrate the following code snippet from the old library to the new one using the same programming language. The migrated code must function identically to the original.
+If no changes are needed, return only the original code exactly as it is. The most important thing is to answer with EXCLUSIVELY code between backticks.
+
+OUTPUT REQUIREMENTS:
+ONLY return the raw code snippet for the final migrated code.
+DO NOT include any explanations, comments, apologies, or introductory sentences.
+YOU MAY use Markdown formatting like backticks.
+If no changes are needed, return the original code exactly as it is.
+
+This is the code before the migration:
+
+{CODE_BEFORE_MIGRATION}
+
+Please add your answer between the following backticks:
+
+```
+```
+
+{{USER_CONFIG_END}}
+

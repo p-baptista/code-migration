@@ -1,159 +1,130 @@
+#!/usr/bin/env python3
+"""
+Legacy wrapper for get_codebleu_metric.py - converts old interface to new code-migration CLI.
+
+DEPRECATED: Use 'code-migration score' instead.
+See USAGE.md for migration guide.
+
+This script maintains backward compatibility by reading from the old hard-coded paths
+at the top of the file and converting them to the new CLI format.
+"""
+
+import argparse
 import os
-import pandas as pd
-import logging
-from codebleu import calc_codebleu
+import sys
+from pathlib import Path
 
-# --- Configuration ---
+try:
+    from code_migration.pipeline.score import run_score
+    from code_migration.manifest import load_tasks, write_tasks_csv
+    NEW_CLI_AVAILABLE = True
+except ImportError:
+    NEW_CLI_AVAILABLE = False
 
-# 📂 DIRECTORY PATHS (NEW: UPDATE THESE PATHS)
-# Set the path to the folder containing your CSV files.
-CSV_DIRECTORY = './input/python' 
-# Set the path to the folder that contains the 'zero_shot', 'one_shot', etc. folders.
+# Legacy configuration (for backward compatibility)
+# These can be overridden via command-line arguments
+CSV_DIRECTORY = './input/python'
 MODEL_NAME = "codeqwen:latest"
-SNIPPETS_DIRECTORY = f'./parsed/python/ollama/{MODEL_NAME}' 
-
-# List of your CSV files (just the filenames)
+SNIPPETS_DIRECTORY = f'./parsed/python/ollama/{MODEL_NAME}'
 CSV_FILES = ['Boto-Boto3.csv', 'Request-Urllib.csv']
-
-# Folders containing the generated code snippets (just the folder names)
 GENERATION_FOLDERS = ['zero_shot/code-migration', 'one_shot/code-migration', 'chain_of_thoughts/code-migration']
-
-# Output filenames
-DETAILED_LOG_FILE = f'{MODEL_NAME}_analysis.log'
-SUMMARY_REPORT_FILE = f'{MODEL_NAME}_summary_report.txt'
-
-# --- Logger Setup ---
-logger = logging.getLogger('MigrationAnalysis')
-logger.setLevel(logging.INFO)
-if logger.hasHandlers():
-    logger.handlers.clear()
-file_handler = logging.FileHandler(DETAILED_LOG_FILE, mode='w')
-file_handler.setFormatter(
-    logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-)
-logger.addHandler(file_handler)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-logger.addHandler(stream_handler)
 
 
 def analyze_migrations():
     """
-    Main function to orchestrate the analysis of code migration snippets.
+    Legacy function that reads from hard-coded paths and runs scoring.
     """
-    all_results = []
-
+    if not NEW_CLI_AVAILABLE:
+        print("ERROR: New CLI not available. Please install the package: pip install -e .")
+        return
+    
+    print(f"⚠️  DEPRECATED: This script uses hard-coded paths.")
+    print(f"   Consider using: code-migration score --tasks <tasks.csv> --pred <parsed_dir> --out <metrics_dir>")
+    print()
+    
+    import tempfile
+    from pathlib import Path as P
+    
+    # Collect all tasks from CSV files
+    all_tasks = []
     for csv_file in CSV_FILES:
-        # Build the full path to the CSV file (CHANGED)
         csv_path = os.path.join(CSV_DIRECTORY, csv_file)
-        
         if not os.path.exists(csv_path):
-            logger.warning(f"CSV file not found: {csv_path}. Skipping.")
+            print(f"Warning: CSV file not found: {csv_path}. Skipping.")
             continue
-
-        logger.info(f"--- Processing migrations from {csv_path} ---")
-        df = pd.read_csv(csv_path)
-
-        for index, row in df.iterrows():
-            migration_id = row['id']
-            migration_type = row['type']
-            source_lib = row['legacy_lib']
-            target_lib = row['target_lib']
-            ground_truth_code = str(row['code_after'])
-
-            for folder in GENERATION_FOLDERS:
-                # --- Fallback Logic (CHANGED) ---
-                # 1. Define the primary and fallback (inverted) filenames
-                primary_filename = f"python_{source_lib}_{target_lib}{migration_id}.txt"
-                fallback_filename = f"python_{target_lib}_{source_lib}{migration_id}.txt"
-
-                # 2. Build full paths for both possibilities
-                primary_path = os.path.join(SNIPPETS_DIRECTORY, folder, primary_filename)
-                fallback_path = os.path.join(SNIPPETS_DIRECTORY, folder, fallback_filename)
-                
-                path_to_open = None
-                
-                # 3. Check for the primary path first, then the fallback path
-                if os.path.exists(primary_path):
-                    path_to_open = primary_path
-                elif os.path.exists(fallback_path):
-                    path_to_open = fallback_path
-                    logger.info(
-                        f"[{migration_type} ID: {migration_id}] [{folder}] -> "
-                        f"Primary name not found. Using fallback: {fallback_filename}"
-                    )
-                
-                # 4. Process the file if it was found (either primary or fallback)
-                if path_to_open:
-                    with open(path_to_open, 'r', encoding='utf-8') as f:
-                        prediction_code = f.read()
-
-                    result = calc_codebleu(
-                        predictions=[prediction_code],
-                        references=[[ground_truth_code]],
-                        lang='python'
-                    )
-                    
-                    codebleu_score = result['codebleu']
-
-                    logger.info(
-                        f"[{migration_type} ID: {migration_id}] [{folder}] -> "
-                        f"CodeBLEU: {codebleu_score:.4f}"
-                    )
-
-                    all_results.append({
-                        'migration_file': csv_file, 'migration_type': migration_type,
-                        'id': migration_id, 'method': folder, 'score': codebleu_score
-                    })
-                else:
-                    # If neither file was found, log the failure
-                    logger.warning(
-                        f"[{migration_type} ID: {migration_id}] [{folder}] -> "
-                        f"File not found. Tried: {primary_path} and {fallback_path}"
-                    )
-                    all_results.append({
-                        'migration_file': csv_file, 'migration_type': migration_type,
-                        'id': migration_id, 'method': folder, 'score': None
-                    })
-
-    if all_results:
-        generate_summary_report(all_results, filename=SUMMARY_REPORT_FILE)
-    else:
-        logger.info("No results were generated. Please check your file paths and configurations.")
-
-
-def generate_summary_report(results, filename):
-    """
-    Calculates, prints, and saves a summary of the average CodeBLEU scores.
-    """
-    results_df = pd.DataFrame(results)
-    report_lines = []
-    report_lines.append("="*25 + " ANALYSIS SUMMARY " + "="*25)
-
-    for csv_file, file_group in results_df.groupby('migration_file'):
-        report_lines.append(f"\n📊 Results for: {csv_file}")
-        report_lines.append("-" * (len(csv_file) + 16))
-        summary = file_group.groupby('method')['score'].agg(['mean', 'count', 'size']).reset_index()
-        summary = summary.rename(columns={
-            'mean': 'Average CodeBLEU', 'count': 'Samples Found', 'size': 'Total Samples'
-        })
-        for index, row in summary.iterrows():
-            report_lines.append(f"  - Method: {row['method']}")
-            report_lines.append(f"    - Average CodeBLEU: {row['Average CodeBLEU']:.4f}")
-            report_lines.append(f"    - Snippets Compared: {int(row['Samples Found'])}/{int(row['Total Samples'])}")
+        
+        tasks = load_tasks(csv_path)
+        all_tasks.extend(tasks)
     
-    report_lines.append("\n" + "="*68)
-    final_report = "\n".join(report_lines)
+    if not all_tasks:
+        print("No tasks found. Please check CSV_DIRECTORY and CSV_FILES configuration.")
+        return
     
-    try:
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(final_report)
-        logger.info(f"Summary report successfully saved to '{filename}'")
-    except IOError as e:
-        logger.error(f"Failed to write summary report to file: {e}")
-
-    print(final_report)
+    # For each generation folder, run scoring
+    for folder in GENERATION_FOLDERS:
+        print(f"\n{'='*60}")
+        print(f"Processing folder: {folder}")
+        print(f"{'='*60}\n")
+        
+        pred_dir = os.path.join(SNIPPETS_DIRECTORY, folder)
+        if not os.path.exists(pred_dir):
+            print(f"Warning: Prediction directory not found: {pred_dir}. Skipping.")
+            continue
+        
+        # Create temporary tasks CSV with ground truth
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = P(tmpdir)
+            tasks_csv = tmp_path / "tasks.csv"
+            
+            # Write tasks with ground truth
+            write_tasks_csv(tasks_csv, all_tasks)
+            
+            # Create output directory
+            output_dir = P("artifacts") / "legacy_metrics" / folder.replace("/", "_")
+            
+            # Run new score CLI
+            run_score(
+                tasks_path=str(tasks_csv),
+                pred_dir=pred_dir,
+                out_dir=str(output_dir),
+            )
+            
+            print(f"\n✅ Metrics saved to: {output_dir}")
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Compute CodeBLEU scores (LEGACY - use 'code-migration score' instead)"
+    )
+    parser.add_argument(
+        "--csv-dir",
+        default=CSV_DIRECTORY,
+        help=f"Directory containing CSV files (default: {CSV_DIRECTORY})"
+    )
+    parser.add_argument(
+        "--model-name",
+        default=MODEL_NAME,
+        help=f"Model name for snippets directory (default: {MODEL_NAME})"
+    )
+    parser.add_argument(
+        "--snippets-dir",
+        help=f"Directory containing parsed snippets (default: ./parsed/python/ollama/<model_name>)"
+    )
+    
+    args = parser.parse_args()
+    
+    # Update globals if provided
+    if args.csv_dir:
+        CSV_DIRECTORY = args.csv_dir
+    if args.model_name:
+        MODEL_NAME = args.model_name
+        if not args.snippets_dir:
+            SNIPPETS_DIRECTORY = f'./parsed/python/ollama/{MODEL_NAME}'
+    if args.snippets_dir:
+        SNIPPETS_DIRECTORY = args.snippets_dir
+    
+    if not NEW_CLI_AVAILABLE:
+        print("ERROR: New CLI not available. Please install the package: pip install -e .")
+        sys.exit(1)
+    
     analyze_migrations()

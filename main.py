@@ -1,96 +1,147 @@
-import argparse
-import os
+#!/usr/bin/env python3
+"""
+Legacy wrapper for main.py - converts old CLI interface to new code-migration CLI.
 
-from models.gpt_client import GPTClient
-from models.ollama_client import OllamaClient
+DEPRECATED: Use 'code-migration run' instead.
+See USAGE.md for migration guide.
+"""
+
+import argparse
+import json
+import sys
+import tempfile
 from pathlib import Path
 
+# Try to import new CLI, fallback to old implementation if not available
+try:
+    from code_migration.pipeline.migrate import run_one
+    from code_migration.config import RunConfig
+    from code_migration.manifest import MigrationTask
+    NEW_CLI_AVAILABLE = True
+except ImportError:
+    NEW_CLI_AVAILABLE = False
 
-def get_client_by_model(model_name):
-    if model_name == "gpt":
-        return GPTClient()
-    elif model_name == "ollama":
-        return OllamaClient()
-    else:
-        raise Exception(f"Unsupported model: {model_name}")
+
+def _extract_repo_name_from_path(input_path: str) -> str:
+    """Extract repo name from old path structure: input/lang/lib/repo/file"""
+    path_obj = Path(input_path)
+    parts = path_obj.parts
+    # Old structure: input/lang/lib/repo/file or input/lang/prompt/lib/repo/file
+    if len(parts) >= 4:
+        # Try to find repo name (usually 3rd or 4th part)
+        for i, part in enumerate(parts):
+            if part in ["input", "python", "boto", "requests", "urllib"]:
+                continue
+            if i > 2:  # Skip input/lang/lib
+                return part
+    return "unknown_repo"
 
 
-def save_result_to_file(input_path, language_name, model_name, version_name, result_content, prompt_template):
-    try:
-        has_think_tag = '<think>' in result_content
+def _create_task_from_args(args) -> MigrationTask:
+    """Create MigrationTask from old-style arguments."""
+    input_path = Path(args.INPUT_PATH)
+    code_before = input_path.read_text(encoding="utf-8")
+    
+    # Extract task_id from filename (remove extension)
+    task_id = input_path.stem
+    
+    # Extract repo_name from path
+    repo_name = _extract_repo_name_from_path(args.INPUT_PATH)
+    
+    return MigrationTask(
+        task_id=task_id,
+        language=args.LANGUAGE_NAME,
+        source_lib=args.OLD_LIB_NAME,
+        target_lib=args.NEW_LIB_NAME,
+        repo_name=repo_name,
+        code_before=code_before,
+        code_after=None,
+        migration_type=None,
+    )
 
-        if has_think_tag:
-            processed_content = result_content.split('</think>', 1)[-1].lstrip()
-        else:
-            processed_content = result_content
 
-        path_obj = Path(input_path)
-        repo_name = path_obj.parts[3]
-        original_filename = path_obj.name
-
-        output_dir = Path("output") / language_name / model_name / version_name / prompt_template / repo_name
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        output_file_path = output_dir / original_filename
-        counter = 1
-        
-        file_stem = output_file_path.stem
-        file_suffix = output_file_path.suffix
-        
-        while output_file_path.exists():
-            new_filename = f"{file_stem}({counter}){file_suffix}"
-            output_file_path = output_dir / new_filename
-            counter += 1
-            
-        output_file_path.write_text(processed_content, encoding="utf-8")
-
-        if has_think_tag:
-            raw_output_dir = output_dir / "raw"
-            raw_output_dir.mkdir(parents=True, exist_ok=True)
-            # Use the 'name' of the unique path for the raw file to ensure they match
-            raw_output_file_path = raw_output_dir / output_file_path.name
-            raw_output_file_path.write_text(result_content, encoding="utf-8")
-            
-        return str(output_file_path)
-
-    except IndexError:
-        return (
-            f"ERRO: O caminho de entrada '{input_path}' não possui a estrutura esperada "
-            f"de 'input/linguagem/biblioteca/repositorio/arquivo'."
-        )
-    except Exception as e:
-        return f"Ocorreu um erro ao tentar salvar o arquivo: {e}"
+def _create_config_from_args(args) -> RunConfig:
+    """Create RunConfig from old-style arguments."""
+    return RunConfig(
+        client_family=args.MODEL,
+        model_version=args.VERSION,
+        prompt_template=args.PROMPT,
+        language=args.LANGUAGE_NAME,
+    )
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run code migration using GPT.")
+    parser = argparse.ArgumentParser(
+        description="Run code migration (LEGACY - use 'code-migration run' instead)"
+    )
     parser.add_argument("LANGUAGE_NAME", help="Programming language (e.g., python)")
     parser.add_argument("OLD_LIB_NAME", help="Original library name (e.g., boto)")
     parser.add_argument("NEW_LIB_NAME", help="New library name (e.g., boto3)")
     parser.add_argument("MODEL", help="Model family (e.g., gpt)")
     parser.add_argument("VERSION", help="Model version (e.g., gpt-4)")
     parser.add_argument("PROMPT", help="Prompt template (e.g., one_shot)")
-    parser.add_argument(
-        "INPUT_PATH", help="Input file path (e.g., input/python/boto/ex.txt)"
-    )
+    parser.add_argument("INPUT_PATH", help="Input file path (e.g., input/python/boto/ex.txt)")
 
     args = parser.parse_args()
 
+    if not NEW_CLI_AVAILABLE:
+        print("ERROR: New CLI not available. Please install the package: pip install -e .")
+        sys.exit(1)
+
     try:
-        client = get_client_by_model(args.MODEL)
-        result = client.process(args)
-        saved_path = save_result_to_file(
-            input_path=args.INPUT_PATH,
-            language_name=args.LANGUAGE_NAME,
-            model_name=args.MODEL,
-            version_name=args.VERSION,
-            result_content=result,
-            prompt_template=args.PROMPT
-        )
-        print("\nMigração concluída com sucesso!")
-        print(f"Resultado salvo em: {saved_path}")
+        # Convert old args to new format
+        task = _create_task_from_args(args)
+        config = _create_config_from_args(args)
+        
+        # Create temporary files for new CLI
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            task_json = tmp_path / "task.json"
+            config_json = tmp_path / "config.json"
+            out_dir = tmp_path / "output"
+            
+            # Write task and config
+            task_json.write_text(json.dumps({
+                "task_id": task.task_id,
+                "language": task.language,
+                "source_lib": task.source_lib,
+                "target_lib": task.target_lib,
+                "repo_name": task.repo_name,
+                "code_before": task.code_before,
+            }, indent=2), encoding="utf-8")
+            
+            config_json.write_text(json.dumps({
+                "client_family": config.client_family,
+                "model_version": config.model_version,
+                "prompt_template": config.prompt_template,
+                "language": config.language,
+            }, indent=2), encoding="utf-8")
+            
+            # Run new CLI
+            run_one(
+                task_path=str(task_json),
+                config_path=str(config_json),
+                out_dir=str(out_dir),
+            )
+            
+            # Read output and save to old location for compatibility
+            clean_output = Path(out_dir) / "migrations" / "clean" / f"{task.task_id}.txt"
+            if clean_output.exists():
+                # Try to save to old output location
+                output_dir = Path("output") / args.LANGUAGE_NAME / args.MODEL / args.VERSION / args.PROMPT / task.repo_name
+                output_dir.mkdir(parents=True, exist_ok=True)
+                output_file = output_dir / f"{task.task_id}.txt"
+                output_file.write_text(clean_output.read_text(encoding="utf-8"), encoding="utf-8")
+                print("\nMigração concluída com sucesso!")
+                print(f"Resultado salvo em: {output_file}")
+            else:
+                print(f"\nMigração concluída. Resultado em: {out_dir}")
+                
     except Exception as e:
-        print(e)
+        print(f"Erro: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -1,52 +1,54 @@
-import os
-import re
+#!/usr/bin/env python3
+"""
+Legacy wrapper for parser.py - converts old interface to new code-migration CLI.
 
-# usage: python parser.py /path/to/your/folder --output codes
-# where 'codes' is the output folder name
+DEPRECATED: Use 'code-migration parse' instead.
+See USAGE.md for migration guide.
+"""
 
-def extract_code_blocks(text: str) -> list[str]:
-    pattern = r"```(?:\w+)?\s*(.*?)```"
-    matches = re.findall(pattern, text, re.DOTALL)
-    return [m.strip() for m in matches] if matches else [text]
+import argparse
+import sys
+
+try:
+    from code_migration.pipeline.parse import run_parse
+    NEW_CLI_AVAILABLE = True
+except ImportError:
+    NEW_CLI_AVAILABLE = False
 
 
 def process_directory(input_dir: str, output_dir: str = "output"):
-    block_counter = 0
-
-    for root, _, files in os.walk(input_dir):
-        for filename in files:
-            if filename:
-                input_path = os.path.join(root, filename)
-
-                with open(input_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                code_blocks = extract_code_blocks(content)
-                if not code_blocks:
-                    continue
-
-                relative_path = os.path.relpath(root, input_dir)
-                target_dir = os.path.join(output_dir, relative_path)
-                os.makedirs(target_dir, exist_ok=True)
-
-                for i, block in enumerate(code_blocks, 1):
-                    block_counter += 1
-                    output_file = os.path.join(
-                        target_dir,
-                        f"{os.path.splitext(filename)[0]}.txt"
-                    )
-                    with open(output_file, "w", encoding="utf-8") as out:
-                        out.write(block)
-
-    print(f"Extraction complete! {block_counter} blocks saved in '{output_dir}/'")
+    """
+    Legacy function signature maintained for backward compatibility.
+    """
+    if not NEW_CLI_AVAILABLE:
+        print("ERROR: New CLI not available. Please install the package: pip install -e .")
+        return
+    
+    print(f"⚠️  DEPRECATED: This script is a compatibility wrapper.")
+    print(f"   Consider using: code-migration parse --in {input_dir} --out {output_dir} --policy first")
+    print()
+    
+    # Run new parse CLI with default policy
+    run_parse(
+        input_dir=input_dir,
+        out_dir=output_dir,
+        policy="first",  # Default policy for legacy compatibility
+    )
+    
+    print(f"✅ Extraction complete! Files saved in '{output_dir}/'")
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Extract code blocks from .txt files, preserving folder structure")
+    parser = argparse.ArgumentParser(
+        description="Extract code blocks from .txt files (LEGACY - use 'code-migration parse' instead)"
+    )
     parser.add_argument("input_dir", help="Directory containing .txt files")
     parser.add_argument("--output", default="output", help="Output directory (default: output)")
 
     args = parser.parse_args()
+    
+    if not NEW_CLI_AVAILABLE:
+        print("ERROR: New CLI not available. Please install the package: pip install -e .")
+        sys.exit(1)
+    
     process_directory(args.input_dir, args.output)

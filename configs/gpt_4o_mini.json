@@ -1,0 +1,7 @@
+{
+  "client_family": "gpt",
+  "model_version": "gpt-4o-mini",
+  "prompt_template": "zero_shot",
+  "language": "python"
+}
+

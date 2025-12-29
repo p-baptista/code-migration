@@ -1,32 +1,74 @@
 # code-migration
+
 Studying the ability of public LLMs to migrate code between two equivalent libraries.
 
-## Instructions
+## Quick Start
 
-### 1. Create and Activate Venv
-`python3 -m venv venv`
+### 1. Installation
 
-`source venv/bin/activate`
+```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-### 2. Install Dependencies
-`pip install -r requirements.txt`
+# Install dependencies
+pip install -r requirements.txt
 
-Remember to update the requirements when installing a new lib:
+# Install package in development mode
+pip install -e .
+```
 
-`pip freeze > requirements.txt`
+### 2. Setup
 
-### 3. Generate Input Examples
-First, make sure the migrations dataset is available inside the input folder, then run:
+**For GPT models:** Set your OpenAI API key:
+```bash
+export OPENAI_API_KEY=sk-...
+# Or create a .env file
+```
 
-`python3 generate_examples.py path_to_df`
+**For Ollama models:** Ensure Ollama is running:
+```bash
+ollama serve  # In one terminal
+ollama pull codeqwen:latest  # Pull your model
+```
 
-If you want to use your own df, please insert it in input/programming_language to keep code consistency. Remember to add your new example dir inside the gitignore.
+### 3. Run Pipeline
 
-### 3. Usage
-Understand better in:
+```bash
+# Full pipeline (recommended)
+code-migration pipeline \
+  --tasks input/python/treated_python_commits.csv \
+  --config configs/ollama_codeqwen.json \
+  --out artifacts/run_001
+```
 
-`python3 main.py --help`
+## Documentation
 
-Or try your luck with:
+For detailed usage instructions, command reference, and examples, see **[USAGE.md](USAGE.md)**.
 
-usage: main.py <LANGUAGE_NAME> <OLD_LIB_NAME> <NEW_LIB_NAME> <MODEL> <VERSION> <PROMPT>
+## Pipeline Overview
+
+The refactored pipeline consists of four stages:
+
+1. **Batch Migration** (`batch`) - Run LLM migrations for multiple tasks
+2. **Parsing** (`parse`) - Extract code blocks from model outputs
+3. **Scoring** (`score`) - Compute CodeBLEU metrics against ground truth
+4. **Full Pipeline** (`pipeline`) - Run all stages sequentially
+
+Each run creates a self-contained directory under `artifacts/<run_id>/` with:
+- Configuration snapshot (`config.json`)
+- Task manifest (`tasks.csv`)
+- Raw and cleaned model outputs (`migrations/`)
+- Parsed code snippets (`parsed/`)
+- Metrics and reports (`metrics/`)
+
+## Legacy Scripts
+
+The following scripts are still available as thin wrappers around the new CLI:
+
+- `main.py` → `code-migration run`
+- `run_migrations.py` → `code-migration batch`
+- `parser.py` → `code-migration parse`
+- `get_codebleu_metric.py` → `code-migration score`
+
+See [USAGE.md](USAGE.md) for migration guide and examples.

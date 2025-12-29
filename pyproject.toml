@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "code-migration"
+version = "0.1.0"
+description = "Studying the ability of public LLMs to migrate code between two equivalent libraries."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "codebleu>=0.7.0",
+    "ollama>=0.5.0",
+    "openai>=1.82.0",
+    "pandas>=2.3.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.32.0",
+]
+
+[project.scripts]
+code-migration = "code_migration.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+code_migration = ["templates/*.txt"]
+
+

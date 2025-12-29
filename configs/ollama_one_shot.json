@@ -1,0 +1,7 @@
+{
+  "client_family": "ollama",
+  "model_version": "codeqwen:latest",
+  "prompt_template": "one_shot",
+  "language": "python"
+}
+
