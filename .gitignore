@@ -197,4 +197,8 @@ cython_debug/
 input/python/boto
 input/python/urllib
 
-output
+output/
+parsed/
+results/
+reports/
+temp_output/

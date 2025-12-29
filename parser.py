@@ -7,7 +7,7 @@ import re
 def extract_code_blocks(text: str) -> list[str]:
     pattern = r"```(?:\w+)?\s*(.*?)```"
     matches = re.findall(pattern, text, re.DOTALL)
-    return [m.strip() for m in matches]
+    return [m.strip() for m in matches] if matches else [text]
 
 
 def process_directory(input_dir: str, output_dir: str = "output"):
@@ -15,7 +15,7 @@ def process_directory(input_dir: str, output_dir: str = "output"):
 
     for root, _, files in os.walk(input_dir):
         for filename in files:
-            if filename.endswith(".txt"):
+            if filename:
                 input_path = os.path.join(root, filename)
 
                 with open(input_path, "r", encoding="utf-8") as f:

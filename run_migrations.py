@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 import os
 
-def run_all_migrations(csv_path, prompt_template):
+def run_all_migrations(csv_path, llm_name, prompt_template):
     """
     Reads a CSV file, creates a temporary file for the source code,
     and runs the main.py script for each row.
@@ -35,11 +35,11 @@ def run_all_migrations(csv_path, prompt_template):
                 with tempfile.TemporaryDirectory(dir=base_temp_dir) as temp_dir:
                     try:
                         temp_dir_path = Path(temp_dir)
-                        language = "java"
-                        old_lib = row['rmv_lib']
-                        repo_name = row['repo']
-                        filename = f"java_{row['rmv_lib']}_{row['add_lib']}" + row['id']
-                        source_code = row['before']
+                        language = "python"
+                        old_lib = row['legacy_lib']
+                        repo_name = row['repo_name']
+                        filename = f"python_{row['legacy_lib']}_{row['target_lib']}" + row['id']
+                        source_code = row['code_before']
                         
                         temp_source_file = temp_dir_path / 'input' / language / prompt_template / old_lib / repo_name / filename
 
@@ -56,9 +56,9 @@ def run_all_migrations(csv_path, prompt_template):
                             str(main_py_path),
                             language,
                             old_lib,
-                            row['add_lib'],
+                            row['target_lib'],
                             "ollama",
-                            "codeqwen:latest",
+                            llm_name,
                             prompt_template,
                             str(temp_source_file)
                         ]
@@ -99,9 +99,12 @@ if __name__ == "__main__":
         help="Path to the CSV file containing migration parameters."
     )
     parser.add_argument(
-        "prompt_template", 
-        help="Prompt template name (zero_shot, one_shot or chain_of_thoughts)"
+        "llm_name", 
+        help="Name of the LLM to be run."
     )
     args = parser.parse_args()
-    
-    run_all_migrations(args.csv_file, args.prompt_template)
+
+    templates = ['zero_shot', 'one_shot', 'chain_of_thoughts']
+
+    for template in templates:
+        run_all_migrations(args.csv_file, args.llm_name, template)

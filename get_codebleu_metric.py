@@ -7,19 +7,20 @@ from codebleu import calc_codebleu
 
 # 📂 DIRECTORY PATHS (NEW: UPDATE THESE PATHS)
 # Set the path to the folder containing your CSV files.
-CSV_DIRECTORY = './input/java' 
+CSV_DIRECTORY = './input/python' 
 # Set the path to the folder that contains the 'zero_shot', 'one_shot', etc. folders.
-SNIPPETS_DIRECTORY = './output/java/ollama/codeqwen:latest' 
+MODEL_NAME = "codeqwen:latest"
+SNIPPETS_DIRECTORY = f'./parsed/python/ollama/{MODEL_NAME}' 
 
 # List of your CSV files (just the filenames)
-CSV_FILES = ['junit_testng.csv', 'mockito_easymock.csv']
+CSV_FILES = ['Boto-Boto3.csv', 'Request-Urllib.csv']
 
 # Folders containing the generated code snippets (just the folder names)
-GENERATION_FOLDERS = ['zero_shot', 'one_shot', 'chain_of_thoughts']
+GENERATION_FOLDERS = ['zero_shot/code-migration', 'one_shot/code-migration', 'chain_of_thoughts/code-migration']
 
 # Output filenames
-DETAILED_LOG_FILE = 'analysis.log'
-SUMMARY_REPORT_FILE = 'summary_report.txt'
+DETAILED_LOG_FILE = f'{MODEL_NAME}_analysis.log'
+SUMMARY_REPORT_FILE = f'{MODEL_NAME}_summary_report.txt'
 
 # --- Logger Setup ---
 logger = logging.getLogger('MigrationAnalysis')
@@ -56,15 +57,15 @@ def analyze_migrations():
         for index, row in df.iterrows():
             migration_id = row['id']
             migration_type = row['type']
-            source_lib = row['rmv_lib']
-            target_lib = row['add_lib']
-            ground_truth_code = str(row['after'])
+            source_lib = row['legacy_lib']
+            target_lib = row['target_lib']
+            ground_truth_code = str(row['code_after'])
 
             for folder in GENERATION_FOLDERS:
                 # --- Fallback Logic (CHANGED) ---
                 # 1. Define the primary and fallback (inverted) filenames
-                primary_filename = f"java_{source_lib}_{target_lib}{migration_id}"
-                fallback_filename = f"java_{target_lib}_{source_lib}{migration_id}"
+                primary_filename = f"python_{source_lib}_{target_lib}{migration_id}.txt"
+                fallback_filename = f"python_{target_lib}_{source_lib}{migration_id}.txt"
 
                 # 2. Build full paths for both possibilities
                 primary_path = os.path.join(SNIPPETS_DIRECTORY, folder, primary_filename)
@@ -90,7 +91,7 @@ def analyze_migrations():
                     result = calc_codebleu(
                         predictions=[prediction_code],
                         references=[[ground_truth_code]],
-                        lang='java'
+                        lang='python'
                     )
                     
                     codebleu_score = result['codebleu']
