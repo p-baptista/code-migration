@@ -30,3 +30,16 @@ Understand better in:
 Or try your luck with:
 
 usage: main.py <LANGUAGE_NAME> <OLD_LIB_NAME> <NEW_LIB_NAME> <MODEL> <VERSION> <PROMPT>
+
+### 4. Code diffs
+Quick helper: compare_dataset.py
+
+This repository includes `compare_dataset.py` which compares two text columns (per row) in a CSV and appends a JSON result column with an alignment and similarity score.
+
+Minimal usage:
+
+```bash
+python compare_dataset.py --input input.csv --col_a left --col_b right --out output.csv
+```
+
+The new column default name is `comparison_result`. It contains a JSON object with `overall_score` and `pairs` describing the aligned lines and per-pair similarity.
