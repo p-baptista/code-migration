@@ -1,0 +1,7 @@
+{
+  "client_family": "ollama",
+  "model_version": "deepseek-r1:14b",
+  "prompt_template": "zero_shot",
+  "language": "java"
+}
+

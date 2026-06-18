@@ -1,0 +1,7 @@
+{
+  "client_family": "ollama",
+  "model_version": "codellama:13b",
+  "prompt_template": "chain_of_thoughts",
+  "language": "java"
+}
+

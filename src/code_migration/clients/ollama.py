@@ -25,8 +25,8 @@ class OllamaClient(BaseClient):
         system_config = self.generate_request_dict("system", system_match[0])
         user_config_1 = self.generate_request_dict("user", user_match[0])
 
-        if config.prompt_template != "one_shot":
-            return [system_config, user_config_1]
+        # if config.prompt_template != "one_shot":
+        return [system_config, user_config_1]
 
         assistant_match = self.find_pattern(formatted, "ASSISTANT_CONFIG")
         assistant_config = self.generate_request_dict("assistant", assistant_match[0])

@@ -1,7 +1,7 @@
 {
   "client_family": "ollama",
   "model_version": "codeqwen:latest",
-  "prompt_template": "zero_shot",
+  "prompt_template": "chain_of_thoughts",
   "language": "java"
 }
 
